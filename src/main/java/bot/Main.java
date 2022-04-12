@@ -7,12 +7,12 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 import javax.security.auth.login.LoginException;
 
-public class Main extends ListenerAdapter {
+public class Main {
     public static void main(String args[]) {
-        final String botToken = "ODkxNzU4NzU2MzE1MTY0Njgy.YVDBDw.MC03pWhSReU5jTqv87ZkFpY3sdg";
+//        final String botToken = "ODkxNzU4NzU2MzE1MTY0Njgy.YVDBDw.MC03pWhSReU5jTqv87ZkFpY3sdg";
 
         try {
-            JDA jda = JDABuilder.createDefault(botToken)
+            JDA jda = JDABuilder.createDefault(System.getProperty("botToken"))
                     .setActivity(Activity.playing("Your mom's clit"))
                     .addEventListeners(new BotApplicationManager())
                     .build();

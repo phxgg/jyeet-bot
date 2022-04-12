@@ -1,6 +1,8 @@
 package bot;
 
-import bot.controller.BotCommandHandler;
+import bot.controller.BotCommandMappingHandler;
+import bot.controller.BotController;
+import bot.controller.BotControllerManager;
 import bot.music.MusicController;
 import com.sedmelluq.discord.lavaplayer.player.AudioConfiguration;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
@@ -14,9 +16,6 @@ import com.sedmelluq.discord.lavaplayer.source.twitch.TwitchStreamAudioSourceMan
 import com.sedmelluq.discord.lavaplayer.source.vimeo.VimeoAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import com.sedmelluq.lava.common.tools.DaemonThreadFactory;
-import bot.controller.BotCommandMappingHandler;
-import bot.controller.BotController;
-import bot.controller.BotControllerManager;
 import net.dv8tion.jda.api.entities.ChannelType;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
