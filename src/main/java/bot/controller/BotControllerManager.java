@@ -14,7 +14,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 
 public class BotControllerManager {
-    private final List<bot.controller.BotControllerFactory> controllerFactories;
+    private final List<BotControllerFactory> controllerFactories;
     private final Map<String, Command> commands;
 
     public BotControllerManager() {
@@ -22,13 +22,13 @@ public class BotControllerManager {
         commands = new HashMap<>();
     }
 
-    public void registerController(bot.controller.BotControllerFactory factory) {
+    public void registerController(BotControllerFactory factory) {
         controllerFactories.add(factory);
 
         Class<?> controllerClass = factory.getControllerClass();
 
         for (Method method : controllerClass.getDeclaredMethods()) {
-            bot.controller.BotCommandHandler annotation = method.getAnnotation(bot.controller.BotCommandHandler.class);
+            BotCommandHandler annotation = method.getAnnotation(BotCommandHandler.class);
 
             if (annotation != null) {
                 registerControllerMethod(controllerClass, method, annotation);
@@ -36,7 +36,7 @@ public class BotControllerManager {
         }
     }
 
-    private void registerControllerMethod(Class<?> controllerClass, Method method, bot.controller.BotCommandHandler annotation) {
+    private void registerControllerMethod(Class<?> controllerClass, Method method, BotCommandHandler annotation) {
         String commandName = annotation.name().isEmpty() ? method.getName().toLowerCase() : annotation.name();
         String usage = annotation.usage().isEmpty() ? null : annotation.usage();
 
@@ -56,8 +56,13 @@ public class BotControllerManager {
         commands.put(command.name, command);
     }
 
-    public void dispatchMessage(Map<Class<? extends bot.controller.BotController>, bot.controller.BotController> instances, String prefix, Message message,
-                                bot.controller.BotCommandMappingHandler handler) {
+    public void dispatchMessage(
+            Map<Class<? extends BotController>,
+            bot.controller.BotController> instances,
+            String prefix,
+            Message message,
+            BotCommandMappingHandler handler
+    ) {
 
         String content = message.getContentDisplay().trim();
         String[] separated = content.split("\\s+", 2);
@@ -144,9 +149,9 @@ public class BotControllerManager {
         }
     }
 
-    public List<bot.controller.BotController> createControllers(BotApplicationManager applicationManager, BotGuildContext context, Guild guild) {
-        List<bot.controller.BotController> controllers = new ArrayList<>();
-        for (bot.controller.BotControllerFactory factory : controllerFactories) {
+    public List<BotController> createControllers(BotApplicationManager applicationManager, BotGuildContext context, Guild guild) {
+        List<BotController> controllers = new ArrayList<>();
+        for (BotControllerFactory factory : controllerFactories) {
             controllers.add(factory.create(applicationManager, context, guild));
         }
         return controllers;

@@ -9,9 +9,11 @@ import com.sedmelluq.discord.lavaplayer.filter.equalizer.EqualizerFactory;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
+import com.sedmelluq.discord.lavaplayer.player.FunctionalResultHandler;
 import com.sedmelluq.discord.lavaplayer.remote.RemoteNode;
 import com.sedmelluq.discord.lavaplayer.remote.message.NodeStatisticsMessage;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeSearchProvider;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.tools.PlayerLibrary;
 import com.sedmelluq.discord.lavaplayer.tools.io.MessageInput;
@@ -28,11 +30,14 @@ import java.awt.*;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class MusicController implements BotController {
     private static final float[] BASS_BOOST = { 0.2f, 0.15f, 0.1f, 0.05f, 0.0f, -0.05f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f,
@@ -52,12 +57,12 @@ public class MusicController implements BotController {
         this.equalizer = new EqualizerFactory();
 
         player = manager.getPlayerManager().createPlayer();
-        guild.getAudioManager().setSendingHandler(new bot.music.AudioPlayerSendHandler(player));
+        guild.getAudioManager().setSendingHandler(new AudioPlayerSendHandler(player));
 
         outputChannel = new AtomicReference<>();
 
         messageDispatcher = new GlobalDispatcher();
-        scheduler = new bot.music.MusicScheduler(player, messageDispatcher, manager.getExecutorService());
+        scheduler = new MusicScheduler(player, messageDispatcher, manager.getExecutorService());
 
         player.addListener(scheduler);
     }
@@ -265,6 +270,7 @@ public class MusicController implements BotController {
     private void leave(Message message) {
         scheduler.clearQueue();
         player.setVolume(100);
+        player.setFilterFactory(null);
         player.destroy();
 //        guild.getAudioManager().setSendingHandler(null);
         guild.getAudioManager().closeAudioConnection();
@@ -274,6 +280,7 @@ public class MusicController implements BotController {
     private void stop(Message message) {
         scheduler.clearQueue();
         player.setVolume(100);
+        player.setFilterFactory(null);
         player.destroy();
 //        guild.getAudioManager().setSendingHandler(null);
         guild.getAudioManager().closeAudioConnection();
@@ -345,12 +352,26 @@ public class MusicController implements BotController {
     private void addTrack(final Message message, final String identifier, final boolean now) {
         outputChannel.set((TextChannel) message.getChannel());
 
-        manager.loadItemOrdered(this, identifier, new AudioLoadResultHandler() {
+        String searchQuery = identifier;
+
+        try {
+            // If it's a URL, continue.
+            URL url = new URL(searchQuery);
+        } catch (MalformedURLException e) {
+            // Not a URL. Perform a youtube search and only play the first result.
+            searchQuery = "ytsearch: " + identifier;
+        }
+
+        Boolean isSearchQuery = (!searchQuery.equals(identifier));
+
+        manager.loadItemOrdered(this, searchQuery, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
                 connectToVoiceChannel(message, guild.getAudioManager());
 
-                messageDispatcher.sendMessage("Starting now: " + track.getInfo().title + " (length " + track.getDuration() + ")");
+//                String duration = String.format("%d:%02d", track.getDuration() / 60000, (track.getDuration() / 1000) % 60);
+
+                messageDispatcher.sendMessage("Added to queue: " + track.getInfo().title);
 
                 if (now) {
                     scheduler.playNow(track, true);
@@ -362,28 +383,44 @@ public class MusicController implements BotController {
             @Override
             public void playlistLoaded(AudioPlaylist playlist) {
                 List<AudioTrack> tracks = playlist.getTracks();
-                messageDispatcher.sendMessage("Loaded playlist: " + playlist.getName() + " (" + tracks.size() + ")");
+
+                if (!isSearchQuery)
+                    messageDispatcher.sendMessage("Loaded playlist: " + playlist.getName() + " (" + tracks.size() + ")");
 
                 connectToVoiceChannel(message, guild.getAudioManager());
 
-                AudioTrack selected = playlist.getSelectedTrack();
+                // If it's not a search query then normally load the playlist.
+                if (!isSearchQuery) {
+                    AudioTrack selected = playlist.getSelectedTrack();
 
-                if (selected != null) {
-                    messageDispatcher.sendMessage("Selected track from playlist: " + selected.getInfo().title);
+                    if (selected != null) {
+                        messageDispatcher.sendMessage("Selected track from playlist: " + selected.getInfo().title);
+                    } else {
+                        selected = tracks.get(0);
+                        messageDispatcher.sendMessage("Added first track from playlist: " + selected.getInfo().title);
+                    }
+
+                    if (now) {
+                        scheduler.playNow(selected, true);
+                    } else {
+                        scheduler.addToQueue(selected);
+                    }
+
+                    for (int i = 0; i < Math.min(10, playlist.getTracks().size()); i++) {
+                        if (tracks.get(i) != selected) {
+                            scheduler.addToQueue(tracks.get(i));
+                        }
+                    }
                 } else {
-                    selected = tracks.get(0);
-                    messageDispatcher.sendMessage("Added first track from playlist: " + selected.getInfo().title);
-                }
+                    // Otherwise, only play the first result from playlist.
+                    AudioTrack track = playlist.getTracks().get(0);
 
-                if (now) {
-                    scheduler.playNow(selected, true);
-                } else {
-                    scheduler.addToQueue(selected);
-                }
+                    messageDispatcher.sendMessage("Added to queue: " + track.getInfo().title);
 
-                for (int i = 0; i < Math.min(10, playlist.getTracks().size()); i++) {
-                    if (tracks.get(i) != selected) {
-                        scheduler.addToQueue(tracks.get(i));
+                    if (now) {
+                        scheduler.playNow(track, true);
+                    } else {
+                        scheduler.addToQueue(track);
                     }
                 }
             }
