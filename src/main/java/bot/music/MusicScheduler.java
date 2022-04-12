@@ -35,6 +35,10 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
         executorService.scheduleAtFixedRate(this, 3000L, 15000L, TimeUnit.MILLISECONDS);
     }
 
+    public void clearQueue() {
+        queue.clear();
+    }
+
     public void addToQueue(AudioTrack audioTrack) {
         queue.addLast(audioTrack);
         startNextTrack(true);

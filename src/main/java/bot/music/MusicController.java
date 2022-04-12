@@ -145,15 +145,15 @@ public class MusicController implements BotController {
         player.setVolume(volume);
     }
 
-    @BotCommandHandler
-    private void nodes(Message message, String addressList) {
-        manager.useRemoteNodes(addressList.split(" "));
-    }
-
-    @BotCommandHandler
-    private void local(Message message) {
-        manager.useRemoteNodes();
-    }
+//    @BotCommandHandler
+//    private void nodes(Message message, String addressList) {
+//        manager.useRemoteNodes(addressList.split(" "));
+//    }
+//
+//    @BotCommandHandler
+//    private void local(Message message) {
+//        manager.useRemoteNodes();
+//    }
 
     @BotCommandHandler
     private void skip(Message message) {
@@ -239,13 +239,13 @@ public class MusicController implements BotController {
         message.getChannel().sendMessage(PlayerLibrary.VERSION).queue();
     }
 
-    @BotCommandHandler
-    private void nodeinfo(Message message) {
-        for (RemoteNode node : manager.getRemoteNodeRegistry().getNodes()) {
-            String report = buildReportForNode(node);
-            message.getChannel().sendMessage(report).queue();
-        }
-    }
+//    @BotCommandHandler
+//    private void nodeinfo(Message message) {
+//        for (RemoteNode node : manager.getRemoteNodeRegistry().getNodes()) {
+//            String report = buildReportForNode(node);
+//            message.getChannel().sendMessage(report).queue();
+//        }
+//    }
 
     @BotCommandHandler
     private void provider(Message message) {
@@ -268,14 +268,26 @@ public class MusicController implements BotController {
     }
 
     @BotCommandHandler
+    private void clearq(Message message) {
+        scheduler.clearQueue();
+        messageDispatcher.sendMessage("Cleared queue.");
+    }
+
+    @BotCommandHandler
     private void leave(Message message) {
+        scheduler.clearQueue();
+        player.setVolume(100);
         player.destroy();
+//        guild.getAudioManager().setSendingHandler(null);
         guild.getAudioManager().closeAudioConnection();
     }
 
     @BotCommandHandler
     private void stop(Message message) {
+        scheduler.clearQueue();
+        player.setVolume(100);
         player.destroy();
+//        guild.getAudioManager().setSendingHandler(null);
         guild.getAudioManager().closeAudioConnection();
     }
 
