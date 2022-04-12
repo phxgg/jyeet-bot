@@ -9,7 +9,6 @@ import com.sedmelluq.discord.lavaplayer.filter.equalizer.EqualizerFactory;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
-import com.sedmelluq.discord.lavaplayer.player.FunctionalResultHandler;
 import com.sedmelluq.discord.lavaplayer.remote.RemoteNode;
 import com.sedmelluq.discord.lavaplayer.remote.message.NodeStatisticsMessage;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
