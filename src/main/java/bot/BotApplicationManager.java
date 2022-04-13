@@ -42,7 +42,7 @@ public class BotApplicationManager extends ListenerAdapter {
     private final AudioPlayerManager playerManager;
     private final ScheduledExecutorService executorService;
 
-    private final Spotify spotify = new Spotify();
+//    private final Spotify spotify = new Spotify();
 
     public BotApplicationManager() {
         guildContexts = new HashMap<>();

@@ -1,6 +1,8 @@
 package bot.music;
 
-import bot.*;
+import bot.BotApplicationManager;
+import bot.BotGuildContext;
+import bot.MessageDispatcher;
 import bot.controller.BotCommandHandler;
 import bot.controller.BotController;
 import bot.controller.BotControllerFactory;
@@ -9,7 +11,6 @@ import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
-import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubePlaylistLoader;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.tools.io.MessageInput;
 import com.sedmelluq.discord.lavaplayer.tools.io.MessageOutput;
@@ -19,13 +20,6 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.managers.AudioManager;
 import net.iharder.Base64;
-import org.apache.hc.core5.http.ParseException;
-import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
-import se.michaelthelin.spotify.model_objects.AbstractModelObject;
-import se.michaelthelin.spotify.model_objects.IPlaylistItem;
-import se.michaelthelin.spotify.model_objects.specification.*;
-import se.michaelthelin.spotify.requests.data.AbstractDataRequest;
-import se.michaelthelin.spotify.requests.data.tracks.GetTrackRequest;
 
 import java.awt.*;
 import java.io.ByteArrayInputStream;
