@@ -23,6 +23,20 @@ dependencies {
     runtimeOnly 'ch.qos.logback:logback-classic:1.2.11'
 }
 
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Main-Class': 'bot.Main'
+    }
+    archiveClassifier = 'all'
+    configurations.implementation.setCanBeResolved(true)
+    from {
+        configurations.implementation.collect { it.isDirectory() ? it : zipTree(it) }
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    with jar
+    duplicatesStrategy DuplicatesStrategy.EXCLUDE
+}
+
 test {
     useJUnitPlatform()
 }
