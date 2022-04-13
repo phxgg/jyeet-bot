@@ -8,6 +8,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import net.dv8tion.jda.api.entities.Message;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -41,6 +42,13 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
 
     public void clearQueue() {
         queue.clear();
+    }
+
+    public void shuffleQueue() {
+        List<AudioTrack> q = drainQueue();
+        Collections.shuffle(q);
+        queue.clear();
+        queue.addAll(q);
     }
 
     public void addToQueue(AudioTrack audioTrack) {

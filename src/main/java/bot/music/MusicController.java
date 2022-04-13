@@ -3,21 +3,18 @@ package bot.music;
 import bot.BotApplicationManager;
 import bot.BotGuildContext;
 import bot.MessageDispatcher;
-import bot.controller.BotControllerFactory;
 import bot.controller.BotCommandHandler;
+import bot.controller.BotController;
+import bot.controller.BotControllerFactory;
 import com.sedmelluq.discord.lavaplayer.filter.equalizer.EqualizerFactory;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
-import com.sedmelluq.discord.lavaplayer.remote.RemoteNode;
-import com.sedmelluq.discord.lavaplayer.remote.message.NodeStatisticsMessage;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
-import com.sedmelluq.discord.lavaplayer.tools.PlayerLibrary;
 import com.sedmelluq.discord.lavaplayer.tools.io.MessageInput;
 import com.sedmelluq.discord.lavaplayer.tools.io.MessageOutput;
 import com.sedmelluq.discord.lavaplayer.track.*;
-import bot.controller.BotController;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
@@ -31,12 +28,10 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 public class MusicController implements BotController {
     private static final float[] BASS_BOOST = { 0.2f, 0.15f, 0.1f, 0.05f, 0.0f, -0.05f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f,
@@ -94,7 +89,13 @@ public class MusicController implements BotController {
         for (AudioTrack track : _queue) {
             builder.addField(String.format("%d", i), String.format("%s", track.getInfo().title), true);
             i++;
+
+            // Only display 10 tracks for now
+            if (i >= 10) {
+                break;
+            }
         }
+
         message.getChannel().sendMessageEmbeds(builder.build()).queue();
     }
 
@@ -223,7 +224,13 @@ public class MusicController implements BotController {
     @BotCommandHandler
     private void clearq(Message message) {
         scheduler.clearQueue();
-        messageDispatcher.sendMessage("Cleared queue.");
+        messageDispatcher.sendDisposableMessage("Cleared queue.");
+    }
+
+    @BotCommandHandler
+    private void shuffle(Message message) {
+        scheduler.shuffleQueue();
+        messageDispatcher.sendDisposableMessage("Shuffled queue.");
     }
 
     @BotCommandHandler

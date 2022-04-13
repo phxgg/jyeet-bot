@@ -21,6 +21,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.slf4j.Logger;
@@ -129,6 +130,21 @@ public class BotApplicationManager extends ListenerAdapter {
             }
 
         });
+    }
+
+    // TODO: Clear queue and destroy player when disconnected from voice channel.
+    @Override
+    public void onGuildVoiceLeave(final GuildVoiceLeaveEvent event) {
+        Member member = event.getMember();
+        Guild guild = event.getGuild();
+
+        BotGuildContext guildContext = getContext(event.getGuild());
+
+//        scheduler.clearQueue();
+//        player.setVolume(100);
+//        player.setFilterFactory(null);
+//        player.destroy();
+//        guild.getAudioManager().closeAudioConnection();
     }
 
     @Override
