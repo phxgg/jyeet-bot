@@ -359,7 +359,7 @@ public class MusicController implements BotController {
 
 //                String duration = String.format("%d:%02d", track.getDuration() / 60000, (track.getDuration() / 1000) % 60);
 
-                messageDispatcher.sendMessage("Added to queue: " + track.getInfo().title);
+                messageDispatcher.sendDisposableMessage("Added to queue: " + track.getInfo().title);
 
                 if (now) {
                     scheduler.playNow(track, true);
@@ -373,7 +373,7 @@ public class MusicController implements BotController {
                 List<AudioTrack> tracks = playlist.getTracks();
 
                 if (!isSearchQuery)
-                    messageDispatcher.sendMessage("Loaded playlist: " + playlist.getName() + " (" + tracks.size() + ")");
+                    messageDispatcher.sendDisposableMessage("Loaded playlist: " + playlist.getName() + " (" + tracks.size() + ")");
 
                 if (!connectToVoiceChannel(message, guild.getAudioManager()))
                     return;
@@ -383,10 +383,10 @@ public class MusicController implements BotController {
                     AudioTrack selected = playlist.getSelectedTrack();
 
                     if (selected != null) {
-                        messageDispatcher.sendMessage("Selected track from playlist: " + selected.getInfo().title);
+                        messageDispatcher.sendDisposableMessage("Selected track from playlist: " + selected.getInfo().title);
                     } else {
                         selected = tracks.get(0);
-                        messageDispatcher.sendMessage("Added first track from playlist: " + selected.getInfo().title);
+                        messageDispatcher.sendDisposableMessage("Added first track from playlist: " + selected.getInfo().title);
                     }
 
                     if (now) {
@@ -405,7 +405,7 @@ public class MusicController implements BotController {
                     // Otherwise, only play the first result from playlist.
                     AudioTrack track = playlist.getTracks().get(0);
 
-                    messageDispatcher.sendMessage("Added to queue: " + track.getInfo().title);
+                    messageDispatcher.sendDisposableMessage("Added to queue: " + track.getInfo().title);
 
                     if (now) {
                         scheduler.playNow(track, true);
@@ -491,11 +491,11 @@ public class MusicController implements BotController {
 
     private class GlobalDispatcher implements MessageDispatcher {
         @Override
-        public void sendMessage(String message, Consumer<Message> success, Consumer<Throwable> failure) {
+        public void sendMessage(MessageEmbed messageEmbed, Consumer<Message> success, Consumer<Throwable> failure) {
             TextChannel channel = outputChannel.get();
 
             if (channel != null) {
-                channel.sendMessage(message).queue(success, failure);
+                channel.sendMessageEmbeds(messageEmbed).queue(success, failure);
             }
         }
 
