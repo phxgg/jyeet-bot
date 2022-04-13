@@ -68,25 +68,38 @@ public class MusicController implements BotController {
         player.destroy();
 //        guild.getAudioManager().setSendingHandler(null);
         guild.getAudioManager().closeAudioConnection();
+        messageDispatcher.sendDisposableMessage("Player stopped.");
     }
 
     @BotCommandHandler
     private void play(Message message, String identifier) {
+        if (canPerformAction(message, guild.getAudioManager()))
+            return;
+
         addTrack(message, identifier, false);
     }
 
     @BotCommandHandler
     private void p(Message message, String identifier) {
+        if (!canPerformAction(message, guild.getAudioManager()))
+            return;
+
         addTrack(message, identifier, false);
     }
 
     @BotCommandHandler
     private void playnow(Message message, String identifier) {
+        if (canPerformAction(message, guild.getAudioManager()))
+            return;
+
         addTrack(message, identifier, true);
     }
 
     @BotCommandHandler
     private void queue(Message message) {
+        if (!canPerformAction(message, guild.getAudioManager()))
+            return;
+
         // TODO: Implement queue
 
         BlockingDeque<AudioTrack> _queue = scheduler.getQueue();
@@ -95,22 +108,26 @@ public class MusicController implements BotController {
             return;
         }
 
-        EmbedBuilder builder = new EmbedBuilder();
-        builder.setTitle("Queue");
-        builder.setColor(Color.CYAN);
+        EmbedBuilder eb = new EmbedBuilder();
+        eb.setTitle("Queue");
+        eb.setColor(Color.CYAN);
         // for each track in the queue add a line to the embed
         int i = 1;
         for (AudioTrack track : _queue) {
-            builder.addField(String.format("%d", i), String.format("%s", track.getInfo().title), true);
+            eb.addField(String.format("%d", i), String.format("%s", track.getInfo().title), true);
             i++;
 
             // Only display 10 tracks for now
-            if (i >= 10) {
+            if (i > 10) {
                 break;
             }
         }
 
-        message.getChannel().sendMessageEmbeds(builder.build()).queue();
+        if (_queue.size() > i) {
+            eb.setFooter(String.format("and %d more...", _queue.size()-i), null);
+        }
+
+        message.getChannel().sendMessageEmbeds(eb.build()).queue();
     }
 
     @BotCommandHandler
@@ -151,6 +168,9 @@ public class MusicController implements BotController {
 
     @BotCommandHandler
     private void volume(Message message, int volume) {
+        if (!canPerformAction(message, guild.getAudioManager()))
+            return;
+
         player.setVolume(volume);
     }
 
@@ -166,56 +186,89 @@ public class MusicController implements BotController {
 
     @BotCommandHandler
     private void skip(Message message) {
+        if (!canPerformAction(message, guild.getAudioManager()))
+            return;
+
         scheduler.skip();
     }
 
     @BotCommandHandler
     private void next(Message message) {
+        if (!canPerformAction(message, guild.getAudioManager()))
+            return;
+
         scheduler.skip();
     }
 
     @BotCommandHandler
     private void n(Message message) {
+        if (!canPerformAction(message, guild.getAudioManager()))
+            return;
+
         scheduler.skip();
     }
 
     @BotCommandHandler
     private void forward(Message message, int duration) {
+        if (!canPerformAction(message, guild.getAudioManager()))
+            return;
+
         forPlayingTrack(track -> track.setPosition(track.getPosition() + duration));
     }
 
     @BotCommandHandler
     private void back(Message message, int duration) {
+        if (!canPerformAction(message, guild.getAudioManager()))
+            return;
+
         forPlayingTrack(track -> track.setPosition(Math.max(0, track.getPosition() - duration)));
     }
 
     @BotCommandHandler
     private void pause(Message message) {
+        if (!canPerformAction(message, guild.getAudioManager()))
+            return;
+
         player.setPaused(!player.isPaused());
     }
 
     @BotCommandHandler
     private void resume(Message message) {
+        if (!canPerformAction(message, guild.getAudioManager()))
+            return;
+
         player.setPaused(false);
     }
 
     @BotCommandHandler
     private void duration(Message message) {
+        if (!canPerformAction(message, guild.getAudioManager()))
+            return;
+
         forPlayingTrack(track -> message.getChannel().sendMessage("Duration is " + track.getDuration()).queue());
     }
 
     @BotCommandHandler
     private void seek(Message message, long position) {
+        if (!canPerformAction(message, guild.getAudioManager()))
+            return;
+
         forPlayingTrack(track -> track.setPosition(position));
     }
 
     @BotCommandHandler
     private void pos(Message message) {
+        if (!canPerformAction(message, guild.getAudioManager()))
+            return;
+
         forPlayingTrack(track -> messageDispatcher.sendMessage("Position is " + track.getPosition()));
     }
 
     @BotCommandHandler
     private void marker(final Message message, long position, final String text) {
+        if (!canPerformAction(message, guild.getAudioManager()))
+            return;
+
         forPlayingTrack(track ->
                 track.setMarker(
                         new TrackMarker(position,
@@ -225,6 +278,9 @@ public class MusicController implements BotController {
 
     @BotCommandHandler
     private void unmark(Message message) {
+        if (!canPerformAction(message, guild.getAudioManager()))
+            return;
+
         forPlayingTrack(track -> track.setMarker(null));
     }
 
@@ -237,29 +293,47 @@ public class MusicController implements BotController {
 
     @BotCommandHandler
     private void clearq(Message message) {
+        if (!canPerformAction(message, guild.getAudioManager()))
+            return;
+
         scheduler.clearQueue();
         messageDispatcher.sendDisposableMessage("Cleared queue.");
     }
 
     @BotCommandHandler
     private void shuffle(Message message) {
+        if (!canPerformAction(message, guild.getAudioManager()))
+            return;
+
         scheduler.shuffleQueue();
         messageDispatcher.sendDisposableMessage("Shuffled queue.");
     }
 
     @BotCommandHandler
-    private void leave(Message message) {
-        destroyPlayer();
-    }
-
-    @BotCommandHandler
     private void stop(Message message) {
-        destroyPlayer();
+        if (!canPerformAction(message, guild.getAudioManager()))
+            return;
+
+        // Instead of calling destroyPlayer(), we can just close the audio connection.
+        // That's because when the connection is closed, the onGuildVoiceLeave event is triggered,
+        // which will call destroyPlayer() for us.
+        guild.getAudioManager().closeAudioConnection();
     }
 
     @BotCommandHandler
     private void dc(Message message) {
-        destroyPlayer();
+        if (!canPerformAction(message, guild.getAudioManager()))
+            return;
+
+        guild.getAudioManager().closeAudioConnection();
+    }
+
+    @BotCommandHandler
+    private void leave(Message message) {
+        if (!canPerformAction(message, guild.getAudioManager()))
+            return;
+
+        guild.getAudioManager().closeAudioConnection();
     }
 
     private void addTrack(final Message message, final String identifier, final boolean now) {
@@ -271,7 +345,7 @@ public class MusicController implements BotController {
             // If it's a URL, continue.
             URL url = new URL(searchQuery);
         } catch (MalformedURLException e) {
-            // Not a URL. Perform a youtube search and only play the first result.
+            // Not a URL. Perform a YouTube search and only play the first result.
             searchQuery = "ytsearch: " + identifier;
         }
 
@@ -280,7 +354,8 @@ public class MusicController implements BotController {
         manager.loadItemOrdered(this, searchQuery, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
-                connectToVoiceChannel(message, guild.getAudioManager());
+                if (!connectToVoiceChannel(message, guild.getAudioManager()))
+                    return;
 
 //                String duration = String.format("%d:%02d", track.getDuration() / 60000, (track.getDuration() / 1000) % 60);
 
@@ -300,7 +375,8 @@ public class MusicController implements BotController {
                 if (!isSearchQuery)
                     messageDispatcher.sendMessage("Loaded playlist: " + playlist.getName() + " (" + tracks.size() + ")");
 
-                connectToVoiceChannel(message, guild.getAudioManager());
+                if (!connectToVoiceChannel(message, guild.getAudioManager()))
+                    return;
 
                 // If it's not a search query then normally load the playlist.
                 if (!isSearchQuery) {
@@ -319,9 +395,8 @@ public class MusicController implements BotController {
                         scheduler.addToQueue(selected);
                     }
 
-                    // TODO: Delete minimum of 20 songs in the queue.
-                    // Math.min 20 because we don't want to add more than 20 tracks to the queue.
-                    for (int i = 0; i < Math.min(20, playlist.getTracks().size()); i++) {
+                    // Maximum of 1000 tracks.
+                    for (int i = 0; i < Math.min(1000, playlist.getTracks().size()); i++) {
                         if (tracks.get(i) != selected) {
                             scheduler.addToQueue(tracks.get(i));
                         }
@@ -360,26 +435,54 @@ public class MusicController implements BotController {
         }
     }
 
-    private void connectToVoiceChannel(final Message message, AudioManager audioManager) {
+    private boolean canPerformAction(final Message message, AudioManager audioManager) {
         Member member = message.getMember();
         if (member == null)
-            return;
+            return false;
 
+        // Check permissions
         if (!message.getGuild().getSelfMember().hasPermission(message.getGuildChannel(), Permission.VOICE_CONNECT)) {
-            messageDispatcher.sendDisposableMessage("I do not have permissions to join a voice channel.");
-            return;
+            messageDispatcher.sendDisposableMessage("Yeet does not have permissions to join a voice channel.");
+            return false;
         }
 
-        VoiceChannel connectedChannel = (VoiceChannel) message.getMember().getVoiceState().getChannel();
-        if (connectedChannel == null) {
+        // Check if bot is already connected to a voice channel.
+        if (audioManager.isConnected()) {
+            // Allow for admins to perform actions even if they are not connected to the same voice channel.
+            if (!member.hasPermission(Permission.ADMINISTRATOR)) {
+                // Check if bot is connected to a different voice channel from the user.
+                if (audioManager.getConnectedChannel().getIdLong() != member.getVoiceState().getChannel().getIdLong()) {
+                    messageDispatcher.sendDisposableMessage("Yeet is playing in another voice channel.");
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private boolean connectToVoiceChannel(final Message message, AudioManager audioManager) {
+//        if (!voiceChannelChecksOK(message, audioManager))
+//            return;
+
+        Member member = message.getMember();
+        if (member == null)
+            return false;
+
+        // Check if user is connected to a voice channel.
+        VoiceChannel memberVoiceChannel = (VoiceChannel) member.getVoiceState().getChannel();
+        if (memberVoiceChannel == null) {
             messageDispatcher.sendDisposableMessage("You are not connected to a voice channel.");
-            return;
+            return false;
         }
 
+        // Join voice channel of user.
         if (!audioManager.isConnected()) {
-            audioManager.openAudioConnection(connectedChannel);
+            audioManager.openAudioConnection(memberVoiceChannel);
             audioManager.setSelfDeafened(true);
         }
+
+        return true;
     }
 
     private interface TrackOperation {
