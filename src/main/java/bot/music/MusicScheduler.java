@@ -114,13 +114,13 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
         if (endReason.mayStartNext) {
             startNextTrack(true);
-            messageDispatcher.sendDisposableMessage(String.format("Track %s finished.", track.getInfo().title));
+            messageDispatcher.sendDisposableMessage(String.format("Track **%s** finished.", track.getInfo().title));
         }
     }
 
     @Override
     public void onTrackStuck(AudioPlayer player, AudioTrack track, long thresholdMs) {
-        messageDispatcher.sendDisposableMessage(String.format("Track %s got stuck, skipping.", track.getInfo().title));
+        messageDispatcher.sendDisposableMessage(String.format("Track **%s** got stuck, skipping.", track.getInfo().title));
 
         startNextTrack(false);
     }
@@ -139,10 +139,10 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
         AudioTrack track = player.getPlayingTrack();
 
         if (track == null || newMessage) {
-            Message message = boxMessage.getAndSet(null);
+            Message oldMessage = boxMessage.getAndSet(null);
 
-            if (message != null) {
-                message.delete();
+            if (oldMessage != null) {
+                oldMessage.delete().queue();
             }
         }
 

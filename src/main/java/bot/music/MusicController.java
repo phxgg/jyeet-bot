@@ -212,20 +212,28 @@ public class MusicController implements BotController {
 //        scheduler.playPrevious();
     }
 
+    /**
+     * @param message The message that triggered the command
+     * @param duration The duration in seconds
+     */
     @BotCommandHandler
     private void forward(Message message, int duration) {
         if (!canPerformAction(message, guild.getAudioManager()))
             return;
 
-        forPlayingTrack(track -> track.setPosition(track.getPosition() + duration));
+        forPlayingTrack(track -> track.setPosition(track.getPosition() + duration * 1000L));
     }
 
+    /**
+     * @param message The message that triggered the command
+     * @param duration The duration in seconds
+     */
     @BotCommandHandler
     private void back(Message message, int duration) {
         if (!canPerformAction(message, guild.getAudioManager()))
             return;
 
-        forPlayingTrack(track -> track.setPosition(Math.max(0, track.getPosition() - duration)));
+        forPlayingTrack(track -> track.setPosition(Math.max(0, track.getPosition() - duration * 1000L)));
     }
 
     @BotCommandHandler
