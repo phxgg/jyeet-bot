@@ -208,6 +208,17 @@ public class MusicController implements BotController {
         scheduler.skip();
     }
 
+    // TODO: Implement this
+    @BotCommandHandler
+    private void previous(Message message) {
+        return;
+
+//        if (!canPerformAction(message, guild.getAudioManager()))
+//            return;
+//
+//        scheduler.playPrevious();
+    }
+
     @BotCommandHandler
     private void forward(Message message, int duration) {
         if (!canPerformAction(message, guild.getAudioManager()))

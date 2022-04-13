@@ -41,6 +41,21 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
         return queue;
     }
 
+    // TODO: Implement this
+    public void playPrevious() {
+        AudioTrack previous = queue.pollFirst(); // pollFirst() returns the head element of the list
+
+        if (previous != null) {
+            if (!player.startTrack(previous, false)) {
+                queue.addFirst(previous);
+            }
+        } else {
+            player.stopTrack();
+
+            messageDispatcher.sendDisposableMessage("Queue finished.");
+        }
+    }
+
     public void clearQueue() {
         queue.clear();
     }
