@@ -147,8 +147,10 @@ public class BotApplicationManager extends ListenerAdapter {
 
     @Override
     public void onGuildVoiceLeave(final GuildVoiceLeaveEvent event) {
-        BotGuildContext guildContext = getContext(event.getGuild());
-        controllerManager.destroyPlayer(guildContext.controllers);
+        if (event.getMember().getUser() == event.getJDA().getSelfUser()) {
+            BotGuildContext guildContext = getContext(event.getGuild());
+            controllerManager.destroyPlayer(guildContext.controllers);
+        }
     }
 
     @Override
