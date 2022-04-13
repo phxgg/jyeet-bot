@@ -45,7 +45,11 @@ public class SpotifyAudioSourceManager implements AudioSourceManager {
     public SpotifyAudioSourceManager(YoutubeAudioSourceManager yt) {
         this.yt = yt;
         this.spotifyApi = SpotifySingleton.getInstance().getSpotifyApi();
-        loaders = List.of(new SpotifyTrackLoader(yt, this), new SpotifyPlaylistLoader(yt, this), new SpotifyAlbumLoader(yt, this));
+        loaders = List.of(
+                new SpotifyTrackLoader(yt, this),
+                new SpotifyPlaylistLoader(yt, this),
+                new SpotifyAlbumLoader(yt, this)
+        );
     }
 
     @Override

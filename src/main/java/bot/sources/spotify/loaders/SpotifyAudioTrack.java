@@ -14,7 +14,17 @@ public final class SpotifyAudioTrack extends YoutubeAudioTrack implements Metada
 
     public SpotifyAudioTrack(YoutubeAudioTrack baseAudioTack, String artist, String album,
                              String song, String image, SpotifyAudioSourceManager sourceManager) {
-        super(new AudioTrackInfo(song, artist, baseAudioTack.getInfo().length, baseAudioTack.getIdentifier(), baseAudioTack.getInfo().isStream, baseAudioTack.getInfo().uri), (YoutubeAudioSourceManager) baseAudioTack.getSourceManager());
+        super(
+                new AudioTrackInfo(
+                        song,
+                        artist,
+                        baseAudioTack.getInfo().length,
+                        baseAudioTack.getIdentifier(),
+                        baseAudioTack.getInfo().isStream,
+                        baseAudioTack.getInfo().uri),
+                (YoutubeAudioSourceManager) baseAudioTack.getSourceManager()
+        );
+
         this.album = album;
         this.image = image;
         this.sourceManager = sourceManager;
