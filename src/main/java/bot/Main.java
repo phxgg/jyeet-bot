@@ -11,6 +11,7 @@ public class Main {
 //        final String botToken = "ODkxNzU4NzU2MzE1MTY0Njgy.YVDBDw.MC03pWhSReU5jTqv87ZkFpY3sdg";
 
         try {
+            // Setup JDA
             JDA jda = JDABuilder.createDefault(System.getProperty("botToken"))
                     .setActivity(Activity.playing("Your mom's clit"))
                     .addEventListeners(new BotApplicationManager())

@@ -1,8 +1,6 @@
 package bot.music;
 
-import bot.BotApplicationManager;
-import bot.BotGuildContext;
-import bot.MessageDispatcher;
+import bot.*;
 import bot.controller.BotCommandHandler;
 import bot.controller.BotController;
 import bot.controller.BotControllerFactory;
@@ -11,6 +9,7 @@ import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubePlaylistLoader;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.tools.io.MessageInput;
 import com.sedmelluq.discord.lavaplayer.tools.io.MessageOutput;
@@ -20,6 +19,13 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.managers.AudioManager;
 import net.iharder.Base64;
+import org.apache.hc.core5.http.ParseException;
+import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
+import se.michaelthelin.spotify.model_objects.AbstractModelObject;
+import se.michaelthelin.spotify.model_objects.IPlaylistItem;
+import se.michaelthelin.spotify.model_objects.specification.*;
+import se.michaelthelin.spotify.requests.data.AbstractDataRequest;
+import se.michaelthelin.spotify.requests.data.tracks.GetTrackRequest;
 
 import java.awt.*;
 import java.io.ByteArrayInputStream;
@@ -45,7 +51,10 @@ public class MusicController implements BotController {
     private final Guild guild;
     private final EqualizerFactory equalizer;
 
+//    private final Spotify spotify;
+
     public MusicController(BotApplicationManager manager, BotGuildContext state, Guild guild) {
+//        this.spotify = manager.getSpotify();
         this.manager = manager.getPlayerManager();
         this.guild = guild;
         this.equalizer = new EqualizerFactory();
@@ -73,10 +82,10 @@ public class MusicController implements BotController {
 
     @BotCommandHandler
     private void play(Message message, String identifier) {
-        if (canPerformAction(message, guild.getAudioManager()))
+        if (!canPerformAction(message, guild.getAudioManager()))
             return;
 
-        addTrack(message, identifier, false);
+        addTrack(message, identifier, false, false);
     }
 
     @BotCommandHandler
@@ -84,15 +93,15 @@ public class MusicController implements BotController {
         if (!canPerformAction(message, guild.getAudioManager()))
             return;
 
-        addTrack(message, identifier, false);
+        addTrack(message, identifier, false, false);
     }
 
     @BotCommandHandler
     private void playnow(Message message, String identifier) {
-        if (canPerformAction(message, guild.getAudioManager()))
+        if (!canPerformAction(message, guild.getAudioManager()))
             return;
 
-        addTrack(message, identifier, true);
+        addTrack(message, identifier, true, false);
     }
 
     @BotCommandHandler
@@ -173,16 +182,6 @@ public class MusicController implements BotController {
 
         player.setVolume(volume);
     }
-
-//    @BotCommandHandler
-//    private void nodes(Message message, String addressList) {
-//        manager.useRemoteNodes(addressList.split(" "));
-//    }
-//
-//    @BotCommandHandler
-//    private void local(Message message) {
-//        manager.useRemoteNodes();
-//    }
 
     @BotCommandHandler
     private void skip(Message message) {
@@ -347,7 +346,62 @@ public class MusicController implements BotController {
         guild.getAudioManager().closeAudioConnection();
     }
 
-    private void addTrack(final Message message, final String identifier, final boolean now) {
+//    @BotCommandHandler
+//    private void spotify(Message message, String url) {
+//        SpotifyURLType spotifyURLType = spotify.getURLType(url);
+//        if (spotifyURLType == null) {
+//            messageDispatcher.sendDisposableMessage("Invalid Spotify URL.");
+//            return;
+//        }
+//
+//        AbstractDataRequest<?> request;
+//
+//        String id = spotify.getIdFromURL(url);
+//        if (id == null) {
+//            messageDispatcher.sendDisposableMessage("Could not get Spotify ID from URL.");
+//            return;
+//        }
+//
+//        switch (spotifyURLType) {
+//            case Track:
+//                request = spotify.getApi().getTrack(id).build();
+//                try {
+//                    final Track track = (Track) request.execute();
+//
+//                    addTrack(message, String.format("%s %s", track.getName(), track.getArtists()[0].getName()), false, false);
+//                } catch (Exception e) {
+//                    messageDispatcher.sendDisposableMessage("Could not get track from Spotify.");
+//                }
+//                break;
+//            case Playlist:
+//                // TODO
+//                request = spotify.getApi().getPlaylist(id).build();
+//                try {
+//                    final Playlist playlist = (Playlist) request.execute();
+//
+////                    playlist.getTracks().getItems()[0].getTrack().getName();
+//
+//                    for (int i = 0; i < playlist.getTracks().getItems().length; i++) {
+//                        final IPlaylistItem track = playlist.getTracks().getItems()[i].getTrack();
+//                        addTrack(message, String.format("%s", track.getName()), false, true);
+//                    }
+//                } catch (Exception e) {
+//                    messageDispatcher.sendDisposableMessage("Could not get playlist from Spotify.");
+//                }
+//                break;
+//            case Album:
+//                request = spotify.getApi().getAlbum(id).build();
+//                try {
+//                    final Album album = (Album) request.execute();
+//                    System.out.println(album.getName());
+//                } catch (Exception e) {
+//                    messageDispatcher.sendDisposableMessage("Could not get album from Spotify.");
+//                }
+//                break;
+//        }
+//    }
+
+    private void addTrack(final Message message, final String identifier, final boolean now, final boolean spotifyPlaylist) {
         outputChannel.set((TextChannel) message.getChannel());
 
         String searchQuery = identifier;
@@ -370,7 +424,8 @@ public class MusicController implements BotController {
 
 //                String duration = String.format("%d:%02d", track.getDuration() / 60000, (track.getDuration() / 1000) % 60);
 
-                messageDispatcher.sendDisposableMessage("Added to queue: " + track.getInfo().title);
+                if (!spotifyPlaylist)
+                    messageDispatcher.sendDisposableMessage("Added to queue: " + track.getInfo().title);
 
                 if (now) {
                     scheduler.playNow(track, true);

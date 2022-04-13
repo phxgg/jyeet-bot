@@ -1,9 +1,11 @@
 package bot;
 
+import bot.apis.spotify.SpotifySingleton;
 import bot.controller.BotCommandMappingHandler;
 import bot.controller.BotController;
 import bot.controller.BotControllerManager;
 import bot.music.MusicController;
+import bot.sources.spotify.SpotifyAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.player.AudioConfiguration;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
@@ -40,16 +42,23 @@ public class BotApplicationManager extends ListenerAdapter {
     private final AudioPlayerManager playerManager;
     private final ScheduledExecutorService executorService;
 
+    private final Spotify spotify = new Spotify();
+
     public BotApplicationManager() {
         guildContexts = new HashMap<>();
         controllerManager = new BotControllerManager();
 
         controllerManager.registerController(new MusicController.Factory());
 
+        SpotifySingleton.init("c568993de30842e78c598306469aa613", "34040d4b2975409187928f90c596cca6");
+        YoutubeAudioSourceManager yasm = new YoutubeAudioSourceManager();
+
         playerManager = new DefaultAudioPlayerManager();
 //        playerManager.useRemoteNodes("localhost:8080");
         playerManager.getConfiguration().setResamplingQuality(AudioConfiguration.ResamplingQuality.LOW);
-        playerManager.registerSourceManager(new YoutubeAudioSourceManager());
+//        playerManager.registerSourceManager(new YoutubeAudioSourceManager());
+        playerManager.registerSourceManager(new SpotifyAudioSourceManager(yasm));
+        playerManager.registerSourceManager(yasm);
         playerManager.registerSourceManager(SoundCloudAudioSourceManager.createDefault());
         playerManager.registerSourceManager(new BandcampAudioSourceManager());
         playerManager.registerSourceManager(new VimeoAudioSourceManager());
@@ -68,6 +77,10 @@ public class BotApplicationManager extends ListenerAdapter {
     public AudioPlayerManager getPlayerManager() {
         return playerManager;
     }
+
+//    public Spotify getSpotify() {
+//        return spotify;
+//    }
 
     private BotGuildContext createGuildState(long guildId, Guild guild) {
         BotGuildContext context = new BotGuildContext(guildId);
