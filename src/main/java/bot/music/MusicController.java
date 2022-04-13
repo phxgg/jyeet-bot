@@ -61,8 +61,22 @@ public class MusicController implements BotController {
         player.addListener(scheduler);
     }
 
+    public void destroyPlayer() {
+        scheduler.clearQueue();
+        player.setVolume(100);
+        player.setFilterFactory(null);
+        player.destroy();
+//        guild.getAudioManager().setSendingHandler(null);
+        guild.getAudioManager().closeAudioConnection();
+    }
+
     @BotCommandHandler
     private void play(Message message, String identifier) {
+        addTrack(message, identifier, false);
+    }
+
+    @BotCommandHandler
+    private void p(Message message, String identifier) {
         addTrack(message, identifier, false);
     }
 
@@ -235,22 +249,17 @@ public class MusicController implements BotController {
 
     @BotCommandHandler
     private void leave(Message message) {
-        scheduler.clearQueue();
-        player.setVolume(100);
-        player.setFilterFactory(null);
-        player.destroy();
-//        guild.getAudioManager().setSendingHandler(null);
-        guild.getAudioManager().closeAudioConnection();
+        destroyPlayer();
     }
 
     @BotCommandHandler
     private void stop(Message message) {
-        scheduler.clearQueue();
-        player.setVolume(100);
-        player.setFilterFactory(null);
-        player.destroy();
-//        guild.getAudioManager().setSendingHandler(null);
-        guild.getAudioManager().closeAudioConnection();
+        destroyPlayer();
+    }
+
+    @BotCommandHandler
+    private void dc(Message message) {
+        destroyPlayer();
     }
 
     private void addTrack(final Message message, final String identifier, final boolean now) {

@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import bot.music.MusicController;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 
@@ -56,9 +58,16 @@ public class BotControllerManager {
         commands.put(command.name, command);
     }
 
+    public void destroyPlayer(Map<Class<? extends BotController>, BotController> instances) {
+        instances.forEach((controllerClass, controller) -> {
+            if (controller instanceof MusicController) {
+                ((MusicController) controller).destroyPlayer();
+            }
+        });
+    }
+
     public void dispatchMessage(
-            Map<Class<? extends BotController>,
-            bot.controller.BotController> instances,
+            Map<Class<? extends BotController>, BotController> instances,
             String prefix,
             Message message,
             BotCommandMappingHandler handler

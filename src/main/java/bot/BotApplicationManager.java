@@ -132,19 +132,11 @@ public class BotApplicationManager extends ListenerAdapter {
         });
     }
 
-    // TODO: Clear queue and destroy player when disconnected from voice channel.
     @Override
     public void onGuildVoiceLeave(final GuildVoiceLeaveEvent event) {
-        Member member = event.getMember();
-        Guild guild = event.getGuild();
-
         BotGuildContext guildContext = getContext(event.getGuild());
 
-//        scheduler.clearQueue();
-//        player.setVolume(100);
-//        player.setFilterFactory(null);
-//        player.destroy();
-//        guild.getAudioManager().closeAudioConnection();
+        controllerManager.destroyPlayer(guildContext.controllers);
     }
 
     @Override
