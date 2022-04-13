@@ -4,5 +4,4 @@ public interface MetadataTrack {
     String getAlbum();
 
     String getImage();
-
 }

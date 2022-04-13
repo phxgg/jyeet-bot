@@ -20,7 +20,6 @@ public class ScrobbledTrack extends ScrobbledArtist {
     private String spotifyId;
     private int popularity;
 
-
     public ScrobbledTrack(String artist, String name, int plays, boolean isLoved, int duration, String imageUrl, String artistMbid, String mbid) {
         super(artist, plays, null);
         this.name = name;
@@ -30,7 +29,6 @@ public class ScrobbledTrack extends ScrobbledArtist {
         this.artistMbid = artistMbid;
         this.mbid = mbid;
     }
-
 
     public String getName() {
         return name;
@@ -47,7 +45,6 @@ public class ScrobbledTrack extends ScrobbledArtist {
     public void setMbid(String mbid) {
         this.mbid = mbid;
     }
-
 
     public boolean isLoved() {
         return isLoved;

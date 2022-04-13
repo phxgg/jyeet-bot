@@ -71,7 +71,6 @@ public class ScrobbledArtist {
     }
 
     public void setUrl(String url) {
-
         this.url = url;
     }
 
@@ -109,7 +108,6 @@ public class ScrobbledArtist {
 
     @Override
     public String toString() {
-
         return ". " +
                 "[" +
                 LinkUtils.cleanMarkdownCharacter(artist) +

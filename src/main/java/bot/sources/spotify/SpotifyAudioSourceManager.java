@@ -17,6 +17,7 @@
  */
 package bot.sources.spotify;
 
+import bot.apis.spotify.Spotify;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
@@ -30,6 +31,8 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import bot.apis.spotify.SpotifySingleton;
 import bot.sources.spotify.loaders.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import se.michaelthelin.spotify.SpotifyApi;
 
 import java.io.DataInput;

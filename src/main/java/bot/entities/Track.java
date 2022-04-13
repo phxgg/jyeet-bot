@@ -21,7 +21,6 @@ public class Track {
         this.plays = plays;
         this.isLoved = isLoved;
         this.duration = duration;
-
     }
 
     public String getImageUrl() {
@@ -96,7 +95,6 @@ public class Track {
 
     @Override
     public String toString() {
-
         return ". " +
                 "[" +
                 LinkUtils.cleanMarkdownCharacter(artist) + " - " + LinkUtils.cleanMarkdownCharacter(name) +

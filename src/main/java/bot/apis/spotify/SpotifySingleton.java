@@ -2,22 +2,22 @@ package bot.apis.spotify;
 
 public class SpotifySingleton {
     private static Spotify instance;
-    private static String secret;
-    private static String clientID;
+    private static String clientSecret;
+    private static String clientId;
 
     private SpotifySingleton() {
     }
 
     //Not pretty
-    public static void init(String secret2, String clientID2) {
-        secret = secret2;
-        clientID = clientID2;
+    public static void init(String _clientSecret, String _clientId) {
+        clientSecret = _clientSecret;
+        clientId = _clientId;
     }
 
 
     public static synchronized Spotify getInstance() {
         if (instance == null) {
-            instance = new Spotify(secret, clientID);
+            instance = new Spotify(clientSecret, clientId);
         }
         return instance;
     }
