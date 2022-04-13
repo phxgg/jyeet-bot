@@ -12,7 +12,6 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.remote.RemoteNode;
 import com.sedmelluq.discord.lavaplayer.remote.message.NodeStatisticsMessage;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
-import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeSearchProvider;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.tools.PlayerLibrary;
 import com.sedmelluq.discord.lavaplayer.tools.io.MessageInput;
@@ -33,6 +32,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -77,6 +77,28 @@ public class MusicController implements BotController {
     }
 
     @BotCommandHandler
+    private void queue(Message message) {
+        // TODO: Implement queue
+
+        BlockingDeque<AudioTrack> _queue = scheduler.getQueue();
+        if (_queue.isEmpty()) {
+            messageDispatcher.sendDisposableMessage("The queue is empty.");
+            return;
+        }
+
+        EmbedBuilder builder = new EmbedBuilder();
+        builder.setTitle("Queue");
+        builder.setColor(Color.CYAN);
+        // for each track in the queue add a line to the embed
+        int i = 1;
+        for (AudioTrack track : _queue) {
+            builder.addField(String.format("%d", i), String.format("%s", track.getInfo().title), true);
+            i++;
+        }
+        message.getChannel().sendMessageEmbeds(builder.build()).queue();
+    }
+
+    @BotCommandHandler
     private void hex(Message message, int pageCount) {
         manager.source(YoutubeAudioSourceManager.class).setPlaylistPageCount(pageCount);
     }
@@ -109,41 +131,6 @@ public class MusicController implements BotController {
             if (holder.decodedTrack != null) {
                 scheduler.addToQueue(holder.decodedTrack);
             }
-        }
-    }
-
-    @BotCommandHandler
-    private void eqsetup(Message message) {
-        manager.getConfiguration().setFilterHotSwapEnabled(true);
-        player.setFrameBufferDuration(500);
-    }
-
-    @BotCommandHandler
-    private void eqstart(Message message) {
-        player.setFilterFactory(equalizer);
-    }
-
-    @BotCommandHandler
-    private void eqstop(Message message) {
-        player.setFilterFactory(null);
-    }
-
-    @BotCommandHandler
-    private void eqband(Message message, int band, float value) {
-        equalizer.setGain(band, value);
-    }
-
-    @BotCommandHandler
-    private void eqhighbass(Message message, float diff) {
-        for (int i = 0; i < BASS_BOOST.length; i++) {
-            equalizer.setGain(i, BASS_BOOST[i] + diff);
-        }
-    }
-
-    @BotCommandHandler
-    private void eqlowbass(Message message, float diff) {
-        for (int i = 0; i < BASS_BOOST.length; i++) {
-            equalizer.setGain(i, -BASS_BOOST[i] + diff);
         }
     }
 
@@ -227,32 +214,6 @@ public class MusicController implements BotController {
     }
 
     @BotCommandHandler
-    private void version(Message message) {
-        message.getChannel().sendMessage(PlayerLibrary.VERSION).queue();
-    }
-
-//    @BotCommandHandler
-//    private void nodeinfo(Message message) {
-//        for (RemoteNode node : manager.getRemoteNodeRegistry().getNodes()) {
-//            String report = buildReportForNode(node);
-//            message.getChannel().sendMessage(report).queue();
-//        }
-//    }
-
-    @BotCommandHandler
-    private void provider(Message message) {
-        forPlayingTrack(track -> {
-            RemoteNode node = manager.getRemoteNodeRegistry().getNodeUsedForTrack(track);
-
-            if (node != null) {
-                message.getChannel().sendMessage("Node " + node.getAddress()).queue();
-            } else {
-                message.getChannel().sendMessage("Not played by a remote node.").queue();
-            }
-        });
-    }
-
-    @BotCommandHandler
     private void song(Message message) {
         AudioTrackInfo current = player.getPlayingTrack().getInfo();
 
@@ -283,69 +244,6 @@ public class MusicController implements BotController {
         player.destroy();
 //        guild.getAudioManager().setSendingHandler(null);
         guild.getAudioManager().closeAudioConnection();
-    }
-
-    private String buildReportForNode(RemoteNode node) {
-        StringBuilder builder = new StringBuilder();
-        builder.append("--- ").append(node.getAddress()).append(" ---\n");
-        builder.append("Connection state: ").append(node.getConnectionState()).append("\n");
-
-        NodeStatisticsMessage statistics = node.getLastStatistics();
-        builder.append("Node global statistics: \n").append(statistics == null ? "unavailable" : "");
-
-        if (statistics != null) {
-            builder.append("   playing tracks: ").append(statistics.playingTrackCount).append("\n");
-            builder.append("   total tracks: ").append(statistics.totalTrackCount).append("\n");
-            builder.append("   system CPU usage: ").append(statistics.systemCpuUsage).append("\n");
-            builder.append("   process CPU usage: ").append(statistics.processCpuUsage).append("\n");
-        }
-
-        builder.append("Minimum tick interval: ").append(node.getTickMinimumInterval()).append("\n");
-        builder.append("Tick history capacity: ").append(node.getTickHistoryCapacity()).append("\n");
-
-        List<RemoteNode.Tick> ticks = node.getLastTicks(false);
-        builder.append("Number of ticks in history: ").append(ticks.size()).append("\n");
-
-        if (ticks.size() > 0) {
-            int tail = Math.min(ticks.size(), 3);
-            builder.append("Last ").append(tail).append(" ticks:\n");
-
-            for (int i = ticks.size() - tail; i < ticks.size(); i++) {
-                RemoteNode.Tick tick = ticks.get(i);
-
-                builder.append("   [duration ").append(tick.endTime - tick.startTime).append("]\n");
-                builder.append("   start time: ").append(tick.startTime).append("\n");
-                builder.append("   end time: ").append(tick.endTime).append("\n");
-                builder.append("   response code: ").append(tick.responseCode).append("\n");
-                builder.append("   request size: ").append(tick.requestSize).append("\n");
-                builder.append("   response size: ").append(tick.responseSize).append("\n");
-            }
-        }
-
-        List<AudioTrack> tracks = node.getPlayingTracks();
-
-        builder.append("Number of playing tracks: ").append(tracks.size()).append("\n");
-
-        if (tracks.size() > 0) {
-            int head = Math.min(tracks.size(), 3);
-            builder.append("First ").append(head).append(" tracks:\n");
-
-            for (int i = 0; i < head; i++) {
-                AudioTrack track = tracks.get(i);
-
-                builder.append("   [identifier ").append(track.getInfo().identifier).append("]\n");
-                builder.append("   name: ").append(track.getInfo().author).append(" - ").append(track.getInfo().title).append("\n");
-                builder.append("   progress: ").append(track.getPosition()).append(" / ").append(track.getDuration()).append("\n");
-            }
-        }
-
-        builder.append("Balancer penalties: ").append(tracks.size()).append("\n");
-
-        for (Map.Entry<String, Integer> penalty : node.getBalancerPenaltyDetails().entrySet()) {
-            builder.append("   ").append(penalty.getKey()).append(": ").append(penalty.getValue()).append("\n");
-        }
-
-        return builder.toString();
     }
 
     private void addTrack(final Message message, final String identifier, final boolean now) {
@@ -405,7 +303,9 @@ public class MusicController implements BotController {
                         scheduler.addToQueue(selected);
                     }
 
-                    for (int i = 0; i < Math.min(10, playlist.getTracks().size()); i++) {
+                    // TODO: Delete minimum of 20 songs in the queue.
+                    // Math.min 20 because we don't want to add more than 20 tracks to the queue.
+                    for (int i = 0; i < Math.min(20, playlist.getTracks().size()); i++) {
                         if (tracks.get(i) != selected) {
                             scheduler.addToQueue(tracks.get(i));
                         }
@@ -502,37 +402,6 @@ public class MusicController implements BotController {
             eb.setDescription(message);
 
             channel.sendMessageEmbeds(eb.build()).queue(m -> m.delete().queueAfter(MessageDispatcher.deleteSeconds, TimeUnit.SECONDS));
-        }
-    }
-
-    private static final class FixedDispatcher implements MessageDispatcher {
-        private final TextChannel channel;
-
-        private FixedDispatcher(TextChannel channel) {
-            this.channel = channel;
-        }
-
-        @Override
-        public void sendMessage(String message, Consumer<Message> success, Consumer<Throwable> failure) {
-            channel.sendMessage(message).queue(success, failure);
-        }
-
-        @Override
-        public void sendMessage(String message) {
-            EmbedBuilder eb = new EmbedBuilder();
-            eb.setColor(Color.CYAN);
-            eb.setDescription(message);
-
-            channel.sendMessageEmbeds(eb.build()).queue();
-        }
-
-        @Override
-        public void sendDisposableMessage(String message) {
-            EmbedBuilder eb = new EmbedBuilder();
-            eb.setColor(Color.CYAN);
-            eb.setDescription(message);
-
-            channel.sendMessageEmbeds(eb.build()).queueAfter(MessageDispatcher.deleteSeconds, TimeUnit.SECONDS);
         }
     }
 
