@@ -10,3 +10,5 @@ Original node.js version can be found [here](https://github.com/phxgg/yeet-bot).
 and unexpected results. Do some more testing...
 * Fix message dispatcher. Only reply the channel we sent the first command.
 * Delete trackbox when the track is finished.
+* Make bot leave channel after some time when queue is empty.
+* Make bot leave channel when nobody is in the channel.
