@@ -5,6 +5,7 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 
@@ -19,6 +20,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class MusicScheduler extends AudioEventAdapter implements Runnable {
+    private final Guild guild;
     private final AudioPlayer player;
     private final MessageDispatcher messageDispatcher;
     private final ScheduledExecutorService executorService;
@@ -26,7 +28,8 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
     private final AtomicReference<Message> boxMessage;
     private final AtomicBoolean creatingBoxMessage;
 
-    public MusicScheduler(AudioPlayer player, MessageDispatcher messageDispatcher, ScheduledExecutorService executorService) {
+    public MusicScheduler(Guild guild, AudioPlayer player, MessageDispatcher messageDispatcher, ScheduledExecutorService executorService) {
+        this.guild = guild;
         this.player = player;
         this.messageDispatcher = messageDispatcher;
         this.executorService = executorService;
@@ -100,8 +103,8 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
             }
         } else {
             player.stopTrack();
-
             messageDispatcher.sendDisposableMessage("Queue finished.");
+            guild.getAudioManager().closeAudioConnection();
         }
     }
 

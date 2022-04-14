@@ -24,8 +24,10 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -145,11 +147,48 @@ public class BotApplicationManager extends ListenerAdapter {
         });
     }
 
+    private boolean isAlone(Guild guild)
+    {
+        if(guild.getAudioManager().getConnectedChannel() == null) return false;
+        return guild.getAudioManager().getConnectedChannel().getMembers().stream()
+                .noneMatch(x ->
+                        !x.getVoiceState().isDeafened()
+                                && !x.getUser().isBot());
+    }
+
+    @Override
+    public void onGuildVoiceUpdate(@NotNull GuildVoiceUpdateEvent event) {
+//        super.onGuildVoiceUpdate(event);
+
+//        BotGuildContext guildContext = getContext(event.getGuild());
+//
+//        Guild guild = event.getEntity().getGuild();
+//        if (isAlone(guild)) {
+//            controllerManager.destroyPlayer(guildContext.controllers);
+//        }
+    }
+
     @Override
     public void onGuildVoiceLeave(final GuildVoiceLeaveEvent event) {
-        if (event.getMember().getUser() == event.getJDA().getSelfUser()) {
-            BotGuildContext guildContext = getContext(event.getGuild());
+        BotGuildContext guildContext = getContext(event.getGuild());
+
+        // Get number of members in voice channel
+        // If there's only one member in the channel, check if it's the bot.
+        // If it is, disconnect the voice channel.
+        if (!event.getMember().getUser().equals(event.getJDA().getSelfUser())
+                && event.getChannelLeft().getMembers().size() == 1
+                && event.getChannelLeft().getMembers().contains(event.getGuild().getSelfMember())) {
             controllerManager.destroyPlayer(guildContext.controllers);
+            return;
+        }
+
+        // If the bot leaves a voice channel, destroy player.
+        // But before doing so, check if the left channel has 0 members.
+        // If it does, this means that the player has already been destroyed
+        // because the bot left the channel due to nobody being in it. (see above)
+        if (event.getMember().getUser().equals(event.getJDA().getSelfUser())) {
+            controllerManager.destroyPlayer(guildContext.controllers);
+            return;
         }
     }
 

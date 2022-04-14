@@ -59,7 +59,7 @@ public class MusicController implements BotController {
         outputChannel = new AtomicReference<>();
 
         messageDispatcher = new GlobalDispatcher();
-        scheduler = new MusicScheduler(player, messageDispatcher, manager.getExecutorService());
+        scheduler = new MusicScheduler(guild, player, messageDispatcher, manager.getExecutorService());
 
         player.addListener(scheduler);
     }
