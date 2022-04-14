@@ -17,7 +17,7 @@ public class Main {
 
             jda.awaitReady();
 
-            System.out.println("Finished Building JDA!");
+            System.out.println("Logged in as " + jda.getSelfUser().getName() + "#" + jda.getSelfUser().getDiscriminator());
         } catch (LoginException | InterruptedException e) {
             e.printStackTrace();
         }
