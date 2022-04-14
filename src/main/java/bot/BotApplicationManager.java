@@ -17,7 +17,12 @@ import com.sedmelluq.discord.lavaplayer.source.soundcloud.SoundCloudAudioSourceM
 import com.sedmelluq.discord.lavaplayer.source.twitch.TwitchStreamAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.vimeo.VimeoAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeHttpContextFilter;
 import com.sedmelluq.lava.common.tools.DaemonThreadFactory;
+import com.sedmelluq.lava.extensions.youtuberotator.YoutubeIpRotatorSetup;
+import com.sedmelluq.lava.extensions.youtuberotator.planner.RotatingNanoIpRoutePlanner;
+import com.sedmelluq.lava.extensions.youtuberotator.tools.ip.IpBlock;
+import com.sedmelluq.lava.extensions.youtuberotator.tools.ip.Ipv6Block;
 import net.dv8tion.jda.api.entities.ChannelType;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -31,8 +36,9 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -44,6 +50,8 @@ public class BotApplicationManager extends ListenerAdapter {
     private final AudioPlayerManager playerManager;
     private final ScheduledExecutorService executorService;
 
+    private final String ipv6Block = System.getProperty("ipv6Block");
+
     public BotApplicationManager() {
         guildContexts = new HashMap<>();
         controllerManager = new BotControllerManager();
@@ -52,6 +60,22 @@ public class BotApplicationManager extends ListenerAdapter {
 
         SpotifySingleton.Init("34040d4b2975409187928f90c596cca6", "c568993de30842e78c598306469aa613");
         YoutubeAudioSourceManager yasm = new YoutubeAudioSourceManager();
+
+//        if (ipv6Block != null && !ipv6Block.isEmpty()) {
+//            @SuppressWarnings("rawtypes") List<IpBlock> blocks = List.of(new Ipv6Block(ipv6Block));
+//            RotatingNanoIpRoutePlanner planner = new RotatingNanoIpRoutePlanner(blocks);
+//            new YoutubeIpRotatorSetup(planner)
+//                    .withRetryLimit(6)
+//                    .forSource(yasm).setup();
+//        }
+//        Optional<Properties> opt = readYoutubeConfig();
+//        if (opt.isPresent()) {
+//            Properties props = opt.get();
+//            String PSID = props.getProperty("PSID");
+//            String PAPISID = props.getProperty("PAPISID");
+//            YoutubeHttpContextFilter.setPSID(PSID);
+//            YoutubeHttpContextFilter.setPAPISID(PAPISID);
+//        }
 
         playerManager = new DefaultAudioPlayerManager();
 //        playerManager.useRemoteNodes("localhost:8080");
@@ -69,6 +93,16 @@ public class BotApplicationManager extends ListenerAdapter {
 
         executorService = Executors.newScheduledThreadPool(1, new DaemonThreadFactory("bot"));
     }
+
+//    public static Optional<Properties> readYoutubeConfig() {
+//        Properties properties = new Properties();
+//        try (InputStream in = Main.class.getResourceAsStream("/youtube.properties")) {
+//            properties.load(in);
+//            return Optional.of(properties);
+//        } catch (IOException e) {
+//            return Optional.empty();
+//        }
+//    }
 
     public ScheduledExecutorService getExecutorService() {
         return executorService;

@@ -13,14 +13,14 @@ java -Dprefix=! -DbotToken=DISCORD_BOT_TOKEN -jar ~/jyeet-bot-1.0-SNAPSHOT-all.j
 
 ### TODO
 
-* Review the whole code and make it pretty.
 * The bot has been tested very few times. It is expected that there will be bugs
 and unexpected results. Do some more testing...
+* **HIGH:** YouTube ip rotator because the server IP keeps getting blocked by YouTube.
 * Fix message dispatcher. Only reply the channel we sent the first command.
-* Delete trackbox when the track is finished.
-* Spotify refresh token to keep using the spotifyApi.
 * Make bot leave channel after some time when queue is empty.
-**EDIT:** Currently exists instantly when queue is empty.
+  **EDIT:** Currently exists instantly when queue is empty.
 * Make bot leave channel when nobody is in the channel.
-**EDIT:** This kinda works, but the `destroyPlayer()` function gets called twice.
-Find what's wrong in the `onGuildVoiceLeave()` and `onGuildVoiceUpdate` events.
+  **EDIT:** This kinda works, but the `destroyPlayer()` function gets called twice.
+  Find what's wrong in the `onGuildVoiceLeave()` and `onGuildVoiceUpdate` events.
+* <s>Delete trackbox when the track is finished.</s>
+* <s>Spotify refresh token to keep using the spotifyApi. **FIXED**</s>
