@@ -10,8 +10,8 @@ public class TrackBoxBuilder {
     private static final String PROGRESS_FILL = "\u25a0";
     private static final String PROGRESS_EMPTY = "\u2015";
 
-    public static MessageEmbed buildTrackBox(int width, AudioTrack track, boolean isPaused, int volume) {
-        return boxify(width, track, isPaused, volume);
+    public static MessageEmbed buildTrackBox(int width, AudioTrack track, boolean isPaused, int volume, int queueSize) {
+        return boxify(width, track, isPaused, volume, queueSize);
     }
 
     private static String buildDurationLine(int width, AudioTrack track, boolean isPaused, int volume) {
@@ -69,7 +69,7 @@ public class TrackBoxBuilder {
         }
     }
 
-    private static MessageEmbed boxify(int width, AudioTrack track, boolean isPaused, int volume) {
+    private static MessageEmbed boxify(int width, AudioTrack track, boolean isPaused, int volume, int queueSize) {
         EmbedBuilder eb = new EmbedBuilder();
 
         String duration = formatTiming(track.getDuration(), track.getDuration());
@@ -83,6 +83,8 @@ public class TrackBoxBuilder {
         eb.addField("Link", String.format("[Click here](%s)", track.getInfo().uri), true);
         eb.addField("Volume", volume + "%", true);
 //        eb.addField("Requested by", String.format("%s"), true);
+
+        eb.setFooter("Tracks in queue: " + queueSize);
 
         return eb.build();
     }

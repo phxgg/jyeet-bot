@@ -44,15 +44,13 @@ public class BotApplicationManager extends ListenerAdapter {
     private final AudioPlayerManager playerManager;
     private final ScheduledExecutorService executorService;
 
-//    private final Spotify spotify = new Spotify();
-
     public BotApplicationManager() {
         guildContexts = new HashMap<>();
         controllerManager = new BotControllerManager();
 
         controllerManager.registerController(new MusicController.Factory());
 
-        SpotifySingleton.init("c568993de30842e78c598306469aa613", "34040d4b2975409187928f90c596cca6");
+        SpotifySingleton.Init("34040d4b2975409187928f90c596cca6", "c568993de30842e78c598306469aa613");
         YoutubeAudioSourceManager yasm = new YoutubeAudioSourceManager();
 
         playerManager = new DefaultAudioPlayerManager();

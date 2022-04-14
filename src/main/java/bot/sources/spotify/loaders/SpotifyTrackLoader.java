@@ -17,23 +17,18 @@
  */
 package bot.sources.spotify.loaders;
 
+import bot.sources.spotify.SpotifyAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioItem;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
-import bot.sources.spotify.SpotifyAudioSourceManager;
-//import dao.exceptions.ChuuServiceException;
-import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import org.apache.hc.core5.http.ParseException;
 import org.jetbrains.annotations.Nullable;
 import se.michaelthelin.spotify.SpotifyApi;
-import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.specification.AlbumSimplified;
 import se.michaelthelin.spotify.model_objects.specification.Image;
 import se.michaelthelin.spotify.model_objects.specification.Track;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.regex.Matcher;

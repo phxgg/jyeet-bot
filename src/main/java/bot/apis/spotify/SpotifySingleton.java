@@ -2,16 +2,15 @@ package bot.apis.spotify;
 
 public class SpotifySingleton {
     private static Spotify instance;
-    private static String clientSecret;
     private static String clientId;
+    private static String clientSecret;
 
     private SpotifySingleton() {
     }
 
-    //Not pretty
-    public static void init(String _clientSecret, String _clientId) {
-        clientSecret = _clientSecret;
+    public static void Init(String _clientId, String _clientSecret) {
         clientId = _clientId;
+        clientSecret = _clientSecret;
     }
 
 

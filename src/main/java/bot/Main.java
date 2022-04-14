@@ -8,12 +8,10 @@ import javax.security.auth.login.LoginException;
 
 public class Main {
     public static void main(String args[]) {
-//        final String botToken = "ODkxNzU4NzU2MzE1MTY0Njgy.YVDBDw.MC03pWhSReU5jTqv87ZkFpY3sdg";
-
         try {
             // Setup JDA
             JDA jda = JDABuilder.createDefault(System.getProperty("botToken"))
-                    .setActivity(Activity.playing("Your mom's clit"))
+                    .setActivity(Activity.listening("ur mom \uD83C\uDFB6"))
                     .addEventListeners(new BotApplicationManager())
                     .build();
 

@@ -1,8 +1,7 @@
 package bot.apis.spotify;
 
-import bot.BotApplicationManager;
-import com.neovisionaries.i18n.CountryCode;
 import bot.entities.ScrobbledTrack;
+import com.neovisionaries.i18n.CountryCode;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hc.core5.http.ParseException;
 import org.slf4j.Logger;
@@ -31,12 +30,23 @@ public class Spotify {
 
     public Spotify(String clientSecret, String clientId) {
         SpotifyApi tempItem = new SpotifyApi.Builder()
-                .setClientId(clientId).setClientSecret(clientSecret).build();
-        this.clientCredentialsRequest = tempItem.clientCredentials().build();
+                .setClientId(clientId)
+                .setClientSecret(clientSecret)
+                .build();
 
+        this.clientCredentialsRequest = tempItem.clientCredentials().build();
         this.spotifyApi = tempItem;
 
-        clientCredentialsSync();
+        Timer timer = new Timer();
+        timer.schedule(new AccessTokenRefresh(), 0, 3500 * 1000); // refresh access token each 58 minutes
+
+//        clientCredentialsSync();
+    }
+
+    private class AccessTokenRefresh extends TimerTask {
+        public void run() {
+            clientCredentialsSync();
+        }
     }
 
     private void clientCredentialsSync() {
@@ -45,6 +55,7 @@ public class Spotify {
 
             // Set access token for further "spotifyApi" object usage
             spotifyApi.setAccessToken(clientCredentials.getAccessToken());
+
             this.time = LocalDateTime.now().plusSeconds(clientCredentials.getExpiresIn() - 140L);
 
             log.info(String.format("Spotify Expires in: %d", clientCredentials.getExpiresIn()));
@@ -52,7 +63,6 @@ public class Spotify {
             log.warn(e.getMessage());
         }
     }
-
 
     private void initRequest() {
         if (!this.time.isAfter(LocalDateTime.now())) {
@@ -75,7 +85,7 @@ public class Spotify {
         album = album.contains(":") ? "\"" + album + "\"" : album;
 
         SearchAlbumsRequest build = spotifyApi.searchAlbums("album:" + album + " artist:" + artist).
-                market(CountryCode.NZ)
+                market(CountryCode.GR)
                 .limit(25)
                 .offset(0)
                 .build();
@@ -107,7 +117,7 @@ public class Spotify {
         track = track.contains(":") ? "\"%s\"".formatted(track) : track;
 
         SearchTracksRequest build = spotifyApi.searchTracks("track:" + track + " artist:" + artist).
-                market(CountryCode.NZ)
+                market(CountryCode.GR)
                 .limit(1)
                 .offset(0)
                 .build();
@@ -149,7 +159,7 @@ public class Spotify {
             return tracks;
         }
         try {
-            return Arrays.stream(spotifyApi.getAlbum(id).market(CountryCode.NZ).build().execute().getTracks().getItems()).map(x -> {
+            return Arrays.stream(spotifyApi.getAlbum(id).market(CountryCode.GR).build().execute().getTracks().getItems()).map(x -> {
                 bot.entities.Track track = new bot.entities.Track(artist, x.getName(), 0, false, x.getDurationMs() / 1000);
                 track.setPosition(x.getTrackNumber() - 1);
                 track.setSpotifyId(x.getId());
@@ -263,7 +273,7 @@ public class Spotify {
         artist = artist.contains(":") ? "\"" + artist + "\"" : artist;
         SearchItemRequest tracksRequest =
                 spotifyApi.searchItem(" artist:" + artist, "artist").
-                        market(CountryCode.NZ)
+                        market(CountryCode.GR)
                         .limit(1)
                         .offset(0)
                         .build();

@@ -151,7 +151,7 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
 
         if (track != null) {
             Message message = boxMessage.get();
-            MessageEmbed box = TrackBoxBuilder.buildTrackBox(50, track, player.isPaused(), player.getVolume());
+            MessageEmbed box = TrackBoxBuilder.buildTrackBox(50, track, player.isPaused(), player.getVolume(), queue.size());
 
             if (message != null) {
                 message.editMessageEmbeds(box).queue();
