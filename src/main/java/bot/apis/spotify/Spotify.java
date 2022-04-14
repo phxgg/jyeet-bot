@@ -4,8 +4,6 @@ import bot.entities.ScrobbledTrack;
 import com.neovisionaries.i18n.CountryCode;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hc.core5.http.ParseException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.credentials.ClientCredentials;
@@ -22,8 +20,6 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 public class Spotify {
-    private static final Logger log = LoggerFactory.getLogger(Spotify.class);
-
     private final SpotifyApi spotifyApi;
     private final ClientCredentialsRequest clientCredentialsRequest;
     private LocalDateTime time;
@@ -58,9 +54,9 @@ public class Spotify {
 
             this.time = LocalDateTime.now().plusSeconds(clientCredentials.getExpiresIn() - 140L);
 
-            log.info(String.format("Spotify Expires in: %d", clientCredentials.getExpiresIn()));
+            System.out.println(String.format("Spotify Expires in: %d", clientCredentials.getExpiresIn()));
         } catch (IOException | SpotifyWebApiException | ParseException e) {
-            log.warn(e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -74,7 +70,7 @@ public class Spotify {
         try {
             return privateSearchAlbums(artist, album);
         } catch (ParseException | SpotifyWebApiException | IOException e) {
-            log.warn(String.format("Error getting tracklist %s | %s -> %s", artist, album, e.getMessage()));
+            System.out.println(String.format("Error getting tracklist %s | %s -> %s", artist, album, e.getMessage()));
             return Collections.emptyList();
         }
     }
@@ -105,7 +101,7 @@ public class Spotify {
             }
 
         } catch (IOException | SpotifyWebApiException | ParseException e) {
-            log.warn(e.getMessage());
+            e.printStackTrace();
         }
         return returned;
 
@@ -166,7 +162,7 @@ public class Spotify {
                 return track;
             }).toList();
         } catch (IOException | SpotifyWebApiException | ParseException e) {
-            log.warn(String.format("Error reading tracklist by id %s -> %s", id, e.getMessage()));
+            System.out.println(String.format("Error reading tracklist by id %s -> %s", id, e.getMessage()));
             return tracks;
         }
     }
@@ -187,7 +183,7 @@ public class Spotify {
                 AudioFeatures[] execute = build.execute();
                 audioFeatures.addAll(Arrays.stream(execute).filter(Objects::nonNull).toList());
             } catch (IOException | SpotifyWebApiException | ParseException e) {
-                log.warn(e.getMessage());
+                e.printStackTrace();
             }
         }
 
@@ -208,7 +204,7 @@ public class Spotify {
                 }
             }
         } catch (IOException | SpotifyWebApiException | ParseException e) {
-            log.warn(e.getMessage());
+            e.printStackTrace();
         }
         return getTracklistFromId(id, artist);
 
@@ -234,7 +230,7 @@ public class Spotify {
             }
             return returned;
         } catch (IOException | SpotifyWebApiException | ParseException e) {
-            log.warn(e.getMessage());
+            e.printStackTrace();
         }
         return returned;
     }
@@ -282,7 +278,7 @@ public class Spotify {
             SearchResult searchResult = tracksRequest.execute();
             return searchResult.getArtists().getItems();
         } catch (IOException | SpotifyWebApiException | ParseException e) {
-            log.warn(e.getMessage());
+            e.printStackTrace();
         }
         return null;
     }
