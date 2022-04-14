@@ -3,6 +3,14 @@
 Discord Music Bot re-coded in Java.<br>
 Original node.js version can be found [here](https://github.com/phxgg/yeet-bot).
 
+### Run
+
+Use java 16+
+
+```
+java -Dprefix=! -DbotToken=DISCORD_BOT_TOKEN -jar ~/jyeet-bot-1.0-SNAPSHOT-all.jar
+```
+
 ### TODO
 
 * Review the whole code and make it pretty.
