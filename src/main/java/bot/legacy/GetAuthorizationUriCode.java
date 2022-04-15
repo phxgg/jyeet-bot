@@ -1,4 +1,4 @@
-package bot;
+package bot.legacy;
 
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.SpotifyHttpManager;

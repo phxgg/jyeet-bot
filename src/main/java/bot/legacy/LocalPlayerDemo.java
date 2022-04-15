@@ -1,4 +1,4 @@
-package bot;
+package bot.legacy;
 
 import com.sedmelluq.discord.lavaplayer.format.AudioDataFormat;
 import com.sedmelluq.discord.lavaplayer.format.AudioPlayerInputStream;
