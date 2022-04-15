@@ -1,6 +1,6 @@
-package bot.apis.spotify;
+package bot.legacy.apis.spotify;
 
-import bot.entities.ScrobbledTrack;
+import bot.legacy.entities.ScrobbledTrack;
 import com.neovisionaries.i18n.CountryCode;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hc.core5.http.ParseException;
@@ -134,14 +134,14 @@ public class Spotify {
         }).filter(Objects::nonNull).toList();
     }
 
-    public Optional<bot.entities.Album> findAlbum(String artist, String song) {
+    public Optional<bot.legacy.entities.Album> findAlbum(String artist, String song) {
         try {
             Paging<Track> trackPaging = searchSong(artist, song);
             if (trackPaging.getItems().length == 0)
                 return Optional.empty();
             return Arrays.stream(trackPaging.getItems()).filter(t -> t.getAlbum() != null).findFirst().flatMap(z -> {
                 String image = Arrays.stream(z.getAlbum().getImages()).findFirst().map(Image::getUrl).orElse(null);
-                return Optional.of(new bot.entities.Album(-1, -1, z.getAlbum().getName(), image, null, null, z.getAlbum().getId()));
+                return Optional.of(new bot.legacy.entities.Album(-1, -1, z.getAlbum().getName(), image, null, null, z.getAlbum().getId()));
             });
         } catch (ParseException | SpotifyWebApiException | IOException e) {
             e.printStackTrace();
@@ -149,14 +149,14 @@ public class Spotify {
         }
     }
 
-    public List<bot.entities.Track> getTracklistFromId(String id, String artist) {
-        ArrayList<bot.entities.Track> tracks = new ArrayList<>();
+    public List<bot.legacy.entities.Track> getTracklistFromId(String id, String artist) {
+        ArrayList<bot.legacy.entities.Track> tracks = new ArrayList<>();
         if (id == null || id.isBlank()) {
             return tracks;
         }
         try {
             return Arrays.stream(spotifyApi.getAlbum(id).market(CountryCode.GR).build().execute().getTracks().getItems()).map(x -> {
-                bot.entities.Track track = new bot.entities.Track(artist, x.getName(), 0, false, x.getDurationMs() / 1000);
+                bot.legacy.entities.Track track = new bot.legacy.entities.Track(artist, x.getName(), 0, false, x.getDurationMs() / 1000);
                 track.setPosition(x.getTrackNumber() - 1);
                 track.setSpotifyId(x.getId());
                 return track;
@@ -193,7 +193,7 @@ public class Spotify {
 
     }
 
-    public List<bot.entities.Track> getAlbumTrackList(String artist, String album) {
+    public List<bot.legacy.entities.Track> getAlbumTrackList(String artist, String album) {
         String id = "";
         try {
             List<AlbumResult> albumResults = privateSearchAlbums(artist, album);

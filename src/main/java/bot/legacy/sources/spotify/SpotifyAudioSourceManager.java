@@ -15,7 +15,7 @@
  *
  From Octave bot https://github.com/Stardust-Discord/Octave/ Modified for integrating with JAVA and the current bot
  */
-package bot.sources.spotify;
+package bot.legacy.sources.spotify;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManager;
@@ -28,8 +28,8 @@ import com.sedmelluq.discord.lavaplayer.track.AudioItem;
 import com.sedmelluq.discord.lavaplayer.track.AudioReference;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
-import bot.apis.spotify.SpotifySingleton;
-import bot.sources.spotify.loaders.*;
+import bot.legacy.apis.spotify.SpotifySingleton;
+import bot.legacy.sources.spotify.loaders.*;
 import se.michaelthelin.spotify.SpotifyApi;
 
 import java.io.DataInput;

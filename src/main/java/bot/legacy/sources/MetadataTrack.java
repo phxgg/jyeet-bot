@@ -1,4 +1,4 @@
-package bot.sources;
+package bot.legacy.sources;
 
 public interface MetadataTrack {
     String getAlbum();

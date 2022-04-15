@@ -1,11 +1,11 @@
-package bot.sources.spotify.loaders;
+package bot.legacy.sources.spotify.loaders;
 
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
-import bot.sources.MetadataTrack;
-import bot.sources.spotify.SpotifyAudioSourceManager;
+import bot.legacy.sources.MetadataTrack;
+import bot.legacy.sources.spotify.SpotifyAudioSourceManager;
 
 public final class SpotifyAudioTrack extends YoutubeAudioTrack implements MetadataTrack {
     private final String album;

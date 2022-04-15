@@ -1,4 +1,4 @@
-package bot.apis.spotify;
+package bot.legacy.apis.spotify;
 
 public class SpotifyUtils {
     private static final String playlist = "https://open.spotify.com/playlist/%s";

@@ -1,6 +1,6 @@
-package bot.entities;
+package bot.legacy.entities;
 
-import bot.utils.LinkUtils;
+import bot.legacy.utils.LinkUtils;
 
 import java.util.Objects;
 

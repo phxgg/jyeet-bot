@@ -1,4 +1,4 @@
-package bot.entities;
+package bot.legacy.entities;
 
 import java.util.Objects;
 

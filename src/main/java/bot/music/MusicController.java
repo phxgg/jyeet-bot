@@ -353,22 +353,34 @@ public class MusicController implements BotController {
 
     @BotCommandHandler
     private void setoutputchannel(Message message) {
+        if (!isOwner(message.getAuthor()))
+            return;
+
         outputChannel.set((TextChannel) message.getChannel());
         messageDispatcher.sendDisposableMessage("Output channel set to **" + message.getChannel().getName() + "**");
     }
 
     @BotCommandHandler
     private void nodes(Message message, String addressList) {
+        if (!isOwner(message.getAuthor()))
+            return;
+
         manager.useRemoteNodes(addressList.split(" "));
     }
 
     @BotCommandHandler
     private void local(Message message) {
+        if (!isOwner(message.getAuthor()))
+            return;
+
         manager.useRemoteNodes();
     }
 
     @BotCommandHandler
     private void nodeinfo(Message message) {
+        if (!isOwner(message.getAuthor()))
+            return;
+
         for (RemoteNode node : manager.getRemoteNodeRegistry().getNodes()) {
             String report = buildReportForNode(node);
             message.getChannel().sendMessage(report).queue();
@@ -377,6 +389,9 @@ public class MusicController implements BotController {
 
     @BotCommandHandler
     private void provider(Message message) {
+        if (!isOwner(message.getAuthor()))
+            return;
+
         forPlayingTrack(track -> {
             RemoteNode node = manager.getRemoteNodeRegistry().getNodeUsedForTrack(track);
 
@@ -386,6 +401,13 @@ public class MusicController implements BotController {
                 message.getChannel().sendMessage("Not played by a remote node.").queue();
             }
         });
+    }
+
+    private boolean isOwner(User user) {
+        String stam_user_id = "407904130690973707";
+        if (!user.getId().equals(stam_user_id))
+            return false;
+        return true;
     }
 
     private String buildReportForNode(RemoteNode node) {

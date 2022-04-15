@@ -15,13 +15,13 @@
  *
  From Octave bot https://github.com/Stardust-Discord/Octave/ Modified for integrating with JAVA and the current bot
  */
-package bot.sources.spotify.loaders;
+package bot.legacy.sources.spotify.loaders;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.*;
-import bot.sources.spotify.SpotifyAudioSourceManager;
+import bot.legacy.sources.spotify.SpotifyAudioSourceManager;
 import org.apache.hc.core5.http.ParseException;
 import org.jetbrains.annotations.Nullable;
 import se.michaelthelin.spotify.SpotifyApi;

@@ -1,4 +1,4 @@
-package bot.apis.spotify;
+package bot.legacy.apis.spotify;
 
 public class SpotifySingleton {
     private static Spotify instance;

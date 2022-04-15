@@ -1,11 +1,10 @@
 package bot;
 
-import bot.apis.spotify.SpotifySingleton;
 import bot.controller.BotCommandMappingHandler;
 import bot.controller.BotController;
 import bot.controller.BotControllerManager;
 import bot.music.MusicController;
-import bot.sources.spotify.SpotifyAudioSourceManager;
+import com.github.topislavalinkplugins.topissourcemanagers.spotify.SpotifyConfig;
 import com.sedmelluq.discord.lavaplayer.player.AudioConfiguration;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
@@ -17,7 +16,6 @@ import com.sedmelluq.discord.lavaplayer.source.soundcloud.SoundCloudAudioSourceM
 import com.sedmelluq.discord.lavaplayer.source.twitch.TwitchStreamAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.vimeo.VimeoAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
-import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeHttpContextFilter;
 import com.sedmelluq.lava.common.tools.DaemonThreadFactory;
 import com.sedmelluq.lava.extensions.youtuberotator.YoutubeIpRotatorSetup;
 import com.sedmelluq.lava.extensions.youtuberotator.planner.RotatingNanoIpRoutePlanner;
@@ -36,8 +34,6 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -58,16 +54,22 @@ public class BotApplicationManager extends ListenerAdapter {
 
         controllerManager.registerController(new MusicController.Factory());
 
-        SpotifySingleton.Init("34040d4b2975409187928f90c596cca6", "c568993de30842e78c598306469aa613");
+//        SpotifySingleton.Init(System.getProperty("spotifyClientId"), System.getProperty("spotifyClientSecret"));
+
+        SpotifyConfig spotifyConfig = new SpotifyConfig();
+        spotifyConfig.setClientId(System.getProperty("spotifyClientId"));
+        spotifyConfig.setClientSecret(System.getProperty("spotifyClientSecret"));
+        spotifyConfig.setCountryCode("GR");
+
         YoutubeAudioSourceManager yasm = new YoutubeAudioSourceManager();
 
-//        if (ipv6Block != null && !ipv6Block.isEmpty()) {
-//            @SuppressWarnings("rawtypes") List<IpBlock> blocks = List.of(new Ipv6Block(ipv6Block));
-//            RotatingNanoIpRoutePlanner planner = new RotatingNanoIpRoutePlanner(blocks);
-//            new YoutubeIpRotatorSetup(planner)
-//                    .withRetryLimit(6)
-//                    .forSource(yasm).setup();
-//        }
+        if (ipv6Block != null && !ipv6Block.isEmpty()) {
+            @SuppressWarnings("rawtypes") List<IpBlock> blocks = List.of(new Ipv6Block(ipv6Block));
+            RotatingNanoIpRoutePlanner planner = new RotatingNanoIpRoutePlanner(blocks);
+            new YoutubeIpRotatorSetup(planner)
+                    .withRetryLimit(6)
+                    .forSource(yasm).setup();
+        }
 //        Optional<Properties> opt = readYoutubeConfig();
 //        if (opt.isPresent()) {
 //            Properties props = opt.get();
@@ -80,8 +82,10 @@ public class BotApplicationManager extends ListenerAdapter {
         playerManager = new DefaultAudioPlayerManager();
 //        playerManager.useRemoteNodes("localhost:8080");
         playerManager.getConfiguration().setResamplingQuality(AudioConfiguration.ResamplingQuality.LOW);
-//        playerManager.registerSourceManager(new YoutubeAudioSourceManager());
-        playerManager.registerSourceManager(new SpotifyAudioSourceManager(yasm));
+//        playerManager.registerSourceManager(new SpotifyAudioSourceManager(yasm));
+        playerManager.registerSourceManager(new com.github.topislavalinkplugins.topissourcemanagers.spotify.SpotifySourceManager(
+                null, spotifyConfig, playerManager
+        ));
         playerManager.registerSourceManager(yasm);
         playerManager.registerSourceManager(SoundCloudAudioSourceManager.createDefault());
         playerManager.registerSourceManager(new BandcampAudioSourceManager());
