@@ -78,7 +78,7 @@ public class BotApplicationManager extends ListenerAdapter {
 //        }
 
         playerManager = new DefaultAudioPlayerManager();
-//        playerManager.useRemoteNodes("localhost:8080");
+        playerManager.useRemoteNodes("localhost:8080");
         playerManager.getConfiguration().setResamplingQuality(AudioConfiguration.ResamplingQuality.LOW);
 //        playerManager.registerSourceManager(new YoutubeAudioSourceManager());
         playerManager.registerSourceManager(new SpotifyAudioSourceManager(yasm));
