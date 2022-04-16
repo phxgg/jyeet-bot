@@ -3,6 +3,7 @@ package bot.music;
 import bot.BotApplicationManager;
 import bot.BotGuildContext;
 import bot.MessageDispatcher;
+import bot.MessageType;
 import bot.controller.BotCommandHandler;
 import bot.controller.BotController;
 import bot.controller.BotControllerFactory;
@@ -48,10 +49,7 @@ public class MusicController implements BotController {
     private final Guild guild;
     private final EqualizerFactory equalizer;
 
-//    private final Spotify spotify;
-
     public MusicController(BotApplicationManager manager, BotGuildContext state, Guild guild) {
-//        this.spotify = manager.getSpotify();
         this.manager = manager.getPlayerManager();
         this.guild = guild;
         this.equalizer = new EqualizerFactory();
@@ -74,7 +72,86 @@ public class MusicController implements BotController {
         player.destroy();
 //        guild.getAudioManager().setSendingHandler(null);
         guild.getAudioManager().closeAudioConnection();
-        messageDispatcher.sendDisposableMessage("Player stopped.");
+        messageDispatcher.sendDisposableMessage(MessageType.Info, "Player stopped.");
+    }
+
+    /** ====================================
+     *  Start bot commands
+     *  ====================================
+     */
+
+    @BotCommandHandler
+    private void help(Message message) {
+        EmbedBuilder eb = new EmbedBuilder();
+
+        eb.setTitle("Yeet Bot");
+
+        eb.setColor(Color.CYAN);
+        eb.setDescription("**Commands**");
+
+        String prefix = System.getProperty("prefix");
+
+        // help
+        eb.addField(
+                String.format("`%shelp`",
+                        prefix),
+                "You're looking at it right now dumbass.",
+                false
+        );
+
+        // play, p
+        eb.addField(
+                String.format("`%splay <name_of_track/link/playlist>`",
+                        prefix),
+                String.format("Alternative: `%sp` - Start playing something.",
+                        prefix),
+                false);
+
+        // stop, dc, leave
+        eb.addField(
+                String.format("`%sstop`",
+                        prefix),
+                String.format("Alternative: `%sdc`, `%sleave` - Stop player and disconnect bot from channel.",
+                        prefix,
+                        prefix),
+                false
+        );
+
+        // playnow
+        eb.addField(
+                String.format("`%splaynow <name_of_track/link/playlist>`",
+                        prefix),
+                "Destroys current queue and plays whatever provided.",
+                false
+        );
+
+        // queue
+        eb.addField(
+                String.format("`%squeue`",
+                        prefix),
+                "Display current queue list.",
+                false
+        );
+
+        // skip, next, n
+        eb.addField(
+                String.format("`%sskip`",
+                        prefix),
+                String.format("Alternatives: `%snext`, `%sn` - Skip the current song.",
+                        prefix,
+                        prefix),
+                false
+        );
+
+        // volume
+        eb.addField(
+                String.format("`%svolume <0-100>`",
+                        prefix),
+                "Set the player volume.",
+                false
+        );
+
+        message.replyEmbeds(eb.build()).queue();
     }
 
     @BotCommandHandler
@@ -102,6 +179,14 @@ public class MusicController implements BotController {
     }
 
     @BotCommandHandler
+    private void playnext(Message message, String identifier) {
+        if (!canPerformAction(message, guild.getAudioManager()))
+            return;
+
+        addTrack(message, identifier, false, true);
+    }
+
+    @BotCommandHandler
     private void queue(Message message) {
         if (!canPerformAction(message, guild.getAudioManager()))
             return;
@@ -110,7 +195,7 @@ public class MusicController implements BotController {
 
         BlockingDeque<AudioTrack> _queue = scheduler.getQueue();
         if (_queue.isEmpty()) {
-            messageDispatcher.sendDisposableMessage("The queue is empty.");
+            messageDispatcher.sendDisposableMessage(MessageType.Info, "The queue is empty.");
             return;
         }
 
@@ -138,11 +223,17 @@ public class MusicController implements BotController {
 
     @BotCommandHandler
     private void hex(Message message, int pageCount) {
+        if (!isOwner(message.getAuthor()))
+            return;
+
         manager.source(YoutubeAudioSourceManager.class).setPlaylistPageCount(pageCount);
     }
 
     @BotCommandHandler
     private void serialize(Message message) throws IOException {
+        if (!isOwner(message.getAuthor()))
+            return;
+
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         MessageOutput outputStream = new MessageOutput(baos);
 
@@ -157,6 +248,9 @@ public class MusicController implements BotController {
 
     @BotCommandHandler
     private void deserialize(Message message, String content) throws IOException {
+        if (!isOwner(message.getAuthor()))
+            return;
+
         outputChannel.set((TextChannel) message.getChannel());
         connectToVoiceChannel(message, guild.getAudioManager());
 
@@ -176,6 +270,11 @@ public class MusicController implements BotController {
     private void volume(Message message, int volume) {
         if (!canPerformAction(message, guild.getAudioManager()))
             return;
+
+        if (volume > 100 || volume < 0) {
+            messageDispatcher.sendDisposableMessage(MessageType.Error, "Invalid volume.");
+            return;
+        }
 
         player.setVolume(volume);
     }
@@ -276,7 +375,7 @@ public class MusicController implements BotController {
         if (!canPerformAction(message, guild.getAudioManager()))
             return;
 
-        forPlayingTrack(track -> messageDispatcher.sendMessage("Position is " + track.getPosition()));
+        forPlayingTrack(track -> messageDispatcher.sendMessage(MessageType.Info, "Position is " + track.getPosition()));
     }
 
     @BotCommandHandler
@@ -288,7 +387,7 @@ public class MusicController implements BotController {
                 track.setMarker(
                         new TrackMarker(position,
                         state ->
-                                messageDispatcher.sendMessage("Trigger [" + text + "] cause [" + state.name() + "]"))));
+                                messageDispatcher.sendMessage(MessageType.Info, "Trigger [" + text + "] cause [" + state.name() + "]"))));
     }
 
     @BotCommandHandler
@@ -303,7 +402,7 @@ public class MusicController implements BotController {
     private void song(Message message) {
         AudioTrackInfo current = player.getPlayingTrack().getInfo();
 
-        messageDispatcher.sendMessage("Currently playing " + current.title + " by " + current.author);
+        messageDispatcher.sendMessage(MessageType.Info, "Currently playing **" + current.title + "** by **" + current.author + "**");
     }
 
     @BotCommandHandler
@@ -312,7 +411,7 @@ public class MusicController implements BotController {
             return;
 
         scheduler.clearQueue();
-        messageDispatcher.sendDisposableMessage("Cleared queue.");
+        messageDispatcher.sendDisposableMessage(MessageType.Success, "Cleared queue.");
     }
 
     @BotCommandHandler
@@ -321,7 +420,7 @@ public class MusicController implements BotController {
             return;
 
         scheduler.shuffleQueue();
-        messageDispatcher.sendDisposableMessage("Shuffled queue.");
+        messageDispatcher.sendDisposableMessage(MessageType.Success, "Shuffled queue.");
     }
 
     @BotCommandHandler
@@ -357,7 +456,7 @@ public class MusicController implements BotController {
             return;
 
         outputChannel.set((TextChannel) message.getChannel());
-        messageDispatcher.sendDisposableMessage("Output channel set to **" + message.getChannel().getName() + "**");
+        messageDispatcher.sendDisposableMessage(MessageType.Success, "Output channel set to **" + message.getChannel().getName() + "**");
     }
 
     @BotCommandHandler
@@ -403,11 +502,14 @@ public class MusicController implements BotController {
         });
     }
 
+    /** ====================================
+     *  End bot commands
+     *  ====================================
+     */
+
     private boolean isOwner(User user) {
         String stam_user_id = "407904130690973707";
-        if (!user.getId().equals(stam_user_id))
-            return false;
-        return true;
+        return user.getId().equals(stam_user_id);
     }
 
     private String buildReportForNode(RemoteNode node) {
@@ -473,7 +575,11 @@ public class MusicController implements BotController {
         return builder.toString();
     }
 
-    private void addTrack(final Message message, final String identifier, final boolean now, final boolean spotifyPlaylist) {
+    private void addTrack(
+            final Message message,
+            final String identifier,
+            final boolean playNow,
+            final boolean playNext) {
         outputChannel.set((TextChannel) message.getChannel());
 
         String searchQuery = identifier;
@@ -494,13 +600,12 @@ public class MusicController implements BotController {
                 if (!connectToVoiceChannel(message, guild.getAudioManager()))
                     return;
 
-//                String duration = String.format("%d:%02d", track.getDuration() / 60000, (track.getDuration() / 1000) % 60);
+                messageDispatcher.sendDisposableMessage(MessageType.Success, "Added to queue: **" + track.getInfo().title + "**");
 
-                if (!spotifyPlaylist)
-                    messageDispatcher.sendDisposableMessage("Added to queue: **" + track.getInfo().title + "**");
-
-                if (now) {
+                if (playNow) {
                     scheduler.playNow(track, true);
+                } else if (playNext) {
+                    scheduler.playNext(track);
                 } else {
                     scheduler.addToQueue(track);
                 }
@@ -511,7 +616,7 @@ public class MusicController implements BotController {
                 List<AudioTrack> tracks = playlist.getTracks();
 
                 if (!isSearchQuery)
-                    messageDispatcher.sendDisposableMessage("Loaded playlist: **" + playlist.getName() + "** (" + tracks.size() + ")");
+                    messageDispatcher.sendDisposableMessage(MessageType.Success, "Loaded playlist: **" + playlist.getName() + "** (" + tracks.size() + ")");
 
                 if (!connectToVoiceChannel(message, guild.getAudioManager()))
                     return;
@@ -521,14 +626,16 @@ public class MusicController implements BotController {
                     AudioTrack selected = playlist.getSelectedTrack();
 
                     if (selected != null) {
-                        messageDispatcher.sendDisposableMessage("Selected track from playlist: **" + selected.getInfo().title + "**");
+                        messageDispatcher.sendDisposableMessage(MessageType.Success, "Selected track from playlist: **" + selected.getInfo().title + "**");
                     } else {
                         selected = tracks.get(0);
-                        messageDispatcher.sendDisposableMessage("Added first track from playlist: **" + selected.getInfo().title + "**");
+                        messageDispatcher.sendDisposableMessage(MessageType.Success, "Added first track from playlist: **" + selected.getInfo().title + "**");
                     }
 
-                    if (now) {
+                    if (playNow) {
                         scheduler.playNow(selected, true);
+                    } else if (playNext) {
+                        scheduler.playNext(selected);
                     } else {
                         scheduler.addToQueue(selected);
                     }
@@ -543,10 +650,12 @@ public class MusicController implements BotController {
                     // Otherwise, only play the first result from playlist.
                     AudioTrack track = playlist.getTracks().get(0);
 
-                    messageDispatcher.sendDisposableMessage("Added to queue: **" + track.getInfo().title + "**");
+                    messageDispatcher.sendDisposableMessage(MessageType.Success, "Added to queue: **" + track.getInfo().title + "**");
 
-                    if (now) {
+                    if (playNow) {
                         scheduler.playNow(track, true);
+                    } else if (playNext) {
+                        scheduler.playNext(track);
                     } else {
                         scheduler.addToQueue(track);
                     }
@@ -555,12 +664,12 @@ public class MusicController implements BotController {
 
             @Override
             public void noMatches() {
-                messageDispatcher.sendDisposableMessage("Nothing found for " + identifier);
+                messageDispatcher.sendDisposableMessage(MessageType.Warning, "Nothing found for " + identifier);
             }
 
             @Override
             public void loadFailed(FriendlyException throwable) {
-                messageDispatcher.sendMessage("Failed with message: " + throwable.getMessage() + " (" + throwable.getClass().getSimpleName() + ")");
+                messageDispatcher.sendMessage(MessageType.Error, "Failed with message: " + throwable.getMessage() + " (" + throwable.getClass().getSimpleName() + ")");
             }
         });
     }
@@ -580,7 +689,7 @@ public class MusicController implements BotController {
 
         // Check permissions
         if (!message.getGuild().getSelfMember().hasPermission(message.getGuildChannel(), Permission.VOICE_CONNECT)) {
-            messageDispatcher.sendDisposableMessage("Yeet does not have permissions to join a voice channel.");
+            messageDispatcher.sendDisposableMessage(MessageType.Error, "Yeet does not have permissions to join a voice channel.");
             return false;
         }
 
@@ -590,7 +699,7 @@ public class MusicController implements BotController {
             if (!member.hasPermission(Permission.ADMINISTRATOR)) {
                 // Check if bot is connected to a different voice channel from the user.
                 if (audioManager.getConnectedChannel().getIdLong() != member.getVoiceState().getChannel().getIdLong()) {
-                    messageDispatcher.sendDisposableMessage("Yeet is playing in another voice channel.");
+                    messageDispatcher.sendDisposableMessage(MessageType.Error, "Yeet is playing in another voice channel.");
                     return false;
                 }
             }
@@ -610,7 +719,7 @@ public class MusicController implements BotController {
         // Check if user is connected to a voice channel.
         VoiceChannel memberVoiceChannel = (VoiceChannel) member.getVoiceState().getChannel();
         if (memberVoiceChannel == null) {
-            messageDispatcher.sendDisposableMessage("You are not connected to a voice channel.");
+            messageDispatcher.sendDisposableMessage(MessageType.Error, "You are not connected to a voice channel.");
             return false;
         }
 
@@ -629,7 +738,7 @@ public class MusicController implements BotController {
 
     private class GlobalDispatcher implements MessageDispatcher {
         @Override
-        public void sendMessage(MessageEmbed messageEmbed, Consumer<Message> success, Consumer<Throwable> failure) {
+        public void sendMessage(MessageType type, MessageEmbed messageEmbed, Consumer<Message> success, Consumer<Throwable> failure) {
             TextChannel channel = outputChannel.get();
 
             if (channel != null) {
@@ -638,11 +747,11 @@ public class MusicController implements BotController {
         }
 
         @Override
-        public void sendMessage(String message) {
+        public void sendMessage(MessageType type, String message) {
             TextChannel channel = outputChannel.get();
 
             EmbedBuilder eb = new EmbedBuilder();
-            eb.setColor(Color.CYAN);
+            eb.setColor(type.color);
             eb.setDescription(message);
 
             if (channel != null) {
@@ -651,11 +760,11 @@ public class MusicController implements BotController {
         }
 
         @Override
-        public void sendDisposableMessage(String message) {
+        public void sendDisposableMessage(MessageType type, String message) {
             TextChannel channel = outputChannel.get();
 
             EmbedBuilder eb = new EmbedBuilder();
-            eb.setColor(Color.CYAN);
+            eb.setColor(type.color);
             eb.setDescription(message);
 
             channel.sendMessageEmbeds(eb.build()).queue(m -> m.delete().queueAfter(MessageDispatcher.deleteSeconds, TimeUnit.SECONDS));

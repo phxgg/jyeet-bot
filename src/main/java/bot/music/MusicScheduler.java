@@ -1,6 +1,7 @@
 package bot.music;
 
 import bot.MessageDispatcher;
+import bot.MessageType;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
@@ -55,7 +56,7 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
         } else {
             player.stopTrack();
 
-            messageDispatcher.sendDisposableMessage("Queue finished.");
+            messageDispatcher.sendDisposableMessage(MessageType.Info, "Queue finished.");
         }
     }
 
@@ -90,6 +91,10 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
         startNextTrack(false);
     }
 
+    public void playNext(AudioTrack audioTrack) {
+        queue.addFirst(audioTrack);
+    }
+
     public void skip() {
         startNextTrack(false);
     }
@@ -103,7 +108,7 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
             }
         } else {
             player.stopTrack();
-            messageDispatcher.sendDisposableMessage("Queue finished.");
+            messageDispatcher.sendDisposableMessage(MessageType.Info, "Queue finished.");
             guild.getAudioManager().closeAudioConnection();
         }
     }
@@ -117,13 +122,13 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
         if (endReason.mayStartNext) {
             startNextTrack(true);
-            messageDispatcher.sendDisposableMessage(String.format("Track **%s** finished.", track.getInfo().title));
+            messageDispatcher.sendDisposableMessage(MessageType.Info, String.format("Track **%s** finished.", track.getInfo().title));
         }
     }
 
     @Override
     public void onTrackStuck(AudioPlayer player, AudioTrack track, long thresholdMs) {
-        messageDispatcher.sendDisposableMessage(String.format("Track **%s** got stuck, skipping.", track.getInfo().title));
+        messageDispatcher.sendDisposableMessage(MessageType.Warning, String.format("Track **%s** got stuck, skipping.", track.getInfo().title));
 
         startNextTrack(false);
     }
@@ -157,7 +162,7 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
                 message.editMessageEmbeds(box).queue();
             } else {
                 if (creatingBoxMessage.compareAndSet(false, true)) {
-                    messageDispatcher.sendMessage(box, created -> {
+                    messageDispatcher.sendMessage(MessageType.TrackBox, box, created -> {
                         boxMessage.set(created);
                         creatingBoxMessage.set(false);
                     }, error -> {

@@ -5,11 +5,11 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 
 public interface MessageDispatcher {
-    public static Integer deleteSeconds = 5;
+    Integer deleteSeconds = 5;
 
-    void sendMessage(MessageEmbed message, Consumer<Message> success, Consumer<Throwable> failure);
+    void sendMessage(MessageType type, MessageEmbed message, Consumer<Message> success, Consumer<Throwable> failure);
 
-    void sendMessage(String message);
+    void sendMessage(MessageType type, String message);
 
-    void sendDisposableMessage(String message);
+    void sendDisposableMessage(MessageType type, String message);
 }
