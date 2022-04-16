@@ -20,6 +20,7 @@ Run bot with the `-Dipv6Block=<IPV6_BLOCK>/64` parameter.
 * The bot has been tested very few times. It is expected that there will be bugs
 and unexpected results. Do some more testing...
 * ipv6block -> youtube ip rotator for rate limiting.
+* tolowercase commands
 * Fix message dispatcher. Only reply the channel we sent the first command.
 * <s>Use https://github.com/Topis-Lavalink-Plugins/Topis-Source-Managers for source managers.
     This will fix rate limiting issues for a not so big bot.</s>

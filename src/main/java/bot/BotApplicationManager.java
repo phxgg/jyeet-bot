@@ -152,6 +152,7 @@ public class BotApplicationManager extends ListenerAdapter {
 
         BotGuildContext guildContext = getContext(event.getGuild());
 
+        // TODO: lowercase event.getMessage() ??
         controllerManager.dispatchMessage(guildContext.controllers, System.getProperty("prefix"), event.getMessage(), new BotCommandMappingHandler() {
             @Override
             public void commandNotFound(Message message, String name) {
