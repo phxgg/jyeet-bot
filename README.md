@@ -22,7 +22,7 @@ Run bot with the `-Dipv6Block=<IPV6_BLOCK>/64` parameter.
 * <s>Implement the `!playnext` command.</s> **This has NOT been tested.**
 * IPv6 /64 block -> YouTube IP rotator for rate limiting.
 * Fix message dispatcher. Only reply the channel we sent the first command.
-* <s>toLowerCase commands</s>
+* toLowerCase commands
 * <s>Use https://github.com/Topis-Lavalink-Plugins/Topis-Source-Managers for source managers.
     This will fix rate limiting issues for a not so big bot.</s>
 * <s>Make bot leave channel after some time when queue is empty.

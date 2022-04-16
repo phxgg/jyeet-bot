@@ -73,7 +73,7 @@ public class BotControllerManager {
             BotCommandMappingHandler handler
     ) {
 
-        String content = message.getContentDisplay().trim().toLowerCase();
+        String content = message.getContentDisplay().trim();
         String[] separated = content.split("\\s+", 2);
 
         if (!separated[0].startsWith(prefix)) {

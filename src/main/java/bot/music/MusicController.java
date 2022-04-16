@@ -607,7 +607,7 @@ public class MusicController implements BotController {
                     scheduler.playNow(track, true);
                 } else if (playNext) {
                     scheduler.playNext(track);
-                }  else {
+                } else {
                     scheduler.addToQueue(track);
                 }
             }
@@ -637,7 +637,7 @@ public class MusicController implements BotController {
                         scheduler.playNow(selected, true);
                     } else if (playNext) {
                         scheduler.playNext(selected);
-                    }  else {
+                    } else {
                         scheduler.addToQueue(selected);
                     }
 
