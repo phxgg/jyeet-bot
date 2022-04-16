@@ -5,6 +5,7 @@ import bot.controller.BotController;
 import bot.controller.BotControllerManager;
 import bot.music.MusicController;
 import com.github.topislavalinkplugins.topissourcemanagers.spotify.SpotifyConfig;
+import com.github.topislavalinkplugins.topissourcemanagers.spotify.SpotifySourceManager;
 import com.sedmelluq.discord.lavaplayer.player.AudioConfiguration;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
@@ -54,8 +55,6 @@ public class BotApplicationManager extends ListenerAdapter {
 
         controllerManager.registerController(new MusicController.Factory());
 
-//        SpotifySingleton.Init(System.getProperty("spotifyClientId"), System.getProperty("spotifyClientSecret"));
-
         SpotifyConfig spotifyConfig = new SpotifyConfig();
         spotifyConfig.setClientId(System.getProperty("spotifyClientId"));
         spotifyConfig.setClientSecret(System.getProperty("spotifyClientSecret"));
@@ -83,7 +82,7 @@ public class BotApplicationManager extends ListenerAdapter {
 //        playerManager.useRemoteNodes("localhost:8080");
         playerManager.getConfiguration().setResamplingQuality(AudioConfiguration.ResamplingQuality.LOW);
 //        playerManager.registerSourceManager(new SpotifyAudioSourceManager(yasm));
-        playerManager.registerSourceManager(new com.github.topislavalinkplugins.topissourcemanagers.spotify.SpotifySourceManager(
+        playerManager.registerSourceManager(new SpotifySourceManager(
                 null, spotifyConfig, playerManager
         ));
         playerManager.registerSourceManager(yasm);
