@@ -19,16 +19,7 @@ Run bot with the `-Dipv6Block=<IPV6_BLOCK>/64` parameter.
 
 * Implement a database to save/load prefixes and other settings for each guild.
 * Implement the `!previous` command.
-* <s>Implement the `!playnext` command.</s> **This has NOT been tested.**
+* When queue has finished, keep bot in voice channel for 1 minute. Disconnect if no track has been added inbetween this minute.
 * IPv6 /64 block -> YouTube IP rotator for rate limiting.
 * Fix message dispatcher. Only reply the channel we sent the first command.
 * toLowerCase commands
-* <s>Use https://github.com/Topis-Lavalink-Plugins/Topis-Source-Managers for source managers.
-    This will fix rate limiting issues for a not so big bot.</s>
-* <s>Make bot leave channel after some time when queue is empty.
-  **EDIT:** Currently exists instantly when queue is empty.</s>
-* <s>Make bot leave channel when nobody is in the channel.
-  **EDIT:** This kinda works, but the `destroyPlayer()` function gets called twice.
-  Find what's wrong in the `onGuildVoiceLeave()` and `onGuildVoiceUpdate` events.</s>
-* <s>Delete trackbox when the track is finished.</s>
-* <s>Spotify refresh token to keep using the spotifyApi. **FIXED**</s>
