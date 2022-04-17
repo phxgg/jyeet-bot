@@ -3,6 +3,7 @@ package bot.music;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Emoji;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 
@@ -93,12 +94,13 @@ public class TrackBoxBuilder {
         return eb.build();
     }
 
-    public static List<Button> sendButtons() {
+    public static List<Button> sendButtons(String guildId) {
         List<Button> buttons = new ArrayList<>();
 
-        buttons.add(Button.primary("trackbox_previous", "Previous").withEmoji(Emoji.fromUnicode("U+23EE")));
-        buttons.add(Button.primary("trackbox_pause", "Pause").withEmoji(Emoji.fromUnicode("U+23EF")));
-        buttons.add(Button.primary("trackbox_next", "Next").withEmoji(Emoji.fromUnicode("U+23ED")));
+        // TODO: Button IDs should have a 'guild' prefix so we can know in which guild the button was clicked.
+        buttons.add(Button.primary(String.format("%s_trackbox_previous", guildId), "Previous").withEmoji(Emoji.fromUnicode("U+23EE")));
+        buttons.add(Button.primary(String.format("%s_trackbox_pause", guildId), "Pause").withEmoji(Emoji.fromUnicode("U+23EF")));
+        buttons.add(Button.primary(String.format("%s_trackbox_next", guildId), "Next").withEmoji(Emoji.fromUnicode("U+23ED")));
 
         return buttons;
     }

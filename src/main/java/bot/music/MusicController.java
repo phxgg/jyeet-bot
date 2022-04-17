@@ -781,6 +781,7 @@ public class MusicController implements BotController {
                 if (!isTrackbox)
                     channel.sendMessageEmbeds(messageEmbed).queue(success, failure);
                 else {
+                    // TODO: Fix this.
                     for (Object listener : channel.getJDA().getRegisteredListeners()) {
 //                        if (listener.getClass().getSimpleName().equals("TrackBoxButtonClick")) {
                         if (listener instanceof TrackBoxButtonClick) {
@@ -795,7 +796,7 @@ public class MusicController implements BotController {
 
                     System.out.println("Added new TrackBoxButtonClick listener for Guild: " + channel.getGuild().getName());
                     channel.getJDA().addEventListener(trackBoxButtonClick);
-                    channel.sendMessageEmbeds(messageEmbed).setActionRow(TrackBoxBuilder.sendButtons()).queue(success, failure);
+                    channel.sendMessageEmbeds(messageEmbed).setActionRow(TrackBoxBuilder.sendButtons(channel.getGuild().getId())).queue(success, failure);
                 }
             }
         }

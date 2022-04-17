@@ -31,22 +31,25 @@ public class TrackBoxButtonClick extends ListenerAdapter {
         Guild guild = event.getGuild();
         AudioManager audioManager = guild.getAudioManager();
 
-        switch (Objects.requireNonNull(event.getButton().getId())) {
-            case "trackbox_previous":
-                if (!MusicController.canPerformAction(scheduler.getMessageDispatcher(), message, audioManager))
-                    return;
-                event.getChannel().sendMessage("Back button clicked").queue();
-                break;
-            case "trackbox_pause":
-                if (!MusicController.canPerformAction(scheduler.getMessageDispatcher(), message, audioManager))
-                    return;
-                scheduler.getPlayer().setPaused(!scheduler.getPlayer().isPaused());
-                break;
-            case "trackbox_next":
-                if (!MusicController.canPerformAction(scheduler.getMessageDispatcher(), message, audioManager))
-                    return;
-                event.getChannel().sendMessage(String.format("%sskip", System.getProperty("prefix"))).queue();
-                break;
+        final String previous = scheduler.getGuild().getId() + "_trackbox_previous";
+        final String pause = scheduler.getGuild().getId() + "_trackbox_pause";
+        final String next = scheduler.getGuild().getId() + "_trackbox_next";
+
+        String buttonId = event.getButton().getId();
+
+        assert buttonId != null;
+        if (buttonId.equals(previous)) {
+            if (!MusicController.canPerformAction(scheduler.getMessageDispatcher(), message, audioManager))
+                return;
+            event.getChannel().sendMessage("Back button clicked").queue();
+        } else if (buttonId.equals(pause)) {
+            if (!MusicController.canPerformAction(scheduler.getMessageDispatcher(), message, audioManager))
+                return;
+            scheduler.getPlayer().setPaused(!scheduler.getPlayer().isPaused());
+        } else if (buttonId.equals(next)) {
+            if (!MusicController.canPerformAction(scheduler.getMessageDispatcher(), message, audioManager))
+                return;
+            event.getChannel().sendMessage(String.format("%sskip", System.getProperty("prefix"))).queue();
         }
     }
 }
