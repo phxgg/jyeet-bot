@@ -20,7 +20,7 @@ public class TrackBoxBuilder {
     }
 
     private static String buildDurationLine(int width, AudioTrack track, boolean isPaused, int volume) {
-        String cornerText = isPaused ? "⏸️" : "\uD83D\uDCFB";
+        String cornerText = isPaused ? "\u23F8" : "\uD83D\uDCFB";
 
         String duration = formatTiming(track.getDuration(), track.getDuration());
         String position = formatTiming(track.getPosition(), track.getDuration());
@@ -97,7 +97,7 @@ public class TrackBoxBuilder {
     public static List<Button> sendButtons(String guildId) {
         List<Button> buttons = new ArrayList<>();
 
-        // TODO: Button IDs should have a 'guild' prefix so we can know in which guild the button was clicked.
+        // Button IDs should have a 'guild' prefix so we can know in which guild the button was clicked.
         buttons.add(Button.primary(String.format("%s_trackbox_previous", guildId), "Previous").withEmoji(Emoji.fromUnicode("U+23EE")));
         buttons.add(Button.primary(String.format("%s_trackbox_pause", guildId), "Pause").withEmoji(Emoji.fromUnicode("U+23EF")));
         buttons.add(Button.primary(String.format("%s_trackbox_next", guildId), "Next").withEmoji(Emoji.fromUnicode("U+23ED")));

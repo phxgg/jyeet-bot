@@ -222,7 +222,7 @@ public class MusicController implements BotController {
         if (!canPerformAction(messageDispatcher, message, guild.getAudioManager()))
             return;
 
-        // TODO: Implement queue
+        // TODO: Make a better queue message embed?
 
         BlockingDeque<AudioTrack> _queue = scheduler.getQueue();
         if (_queue.isEmpty()) {
@@ -781,7 +781,7 @@ public class MusicController implements BotController {
                 if (!isTrackbox)
                     channel.sendMessageEmbeds(messageEmbed).queue(success, failure);
                 else {
-                    // TODO: Fix this.
+                    // TODO: Also remove listener when the player has stopped.
                     for (Object listener : channel.getJDA().getRegisteredListeners()) {
 //                        if (listener.getClass().getSimpleName().equals("TrackBoxButtonClick")) {
                         if (listener instanceof TrackBoxButtonClick) {

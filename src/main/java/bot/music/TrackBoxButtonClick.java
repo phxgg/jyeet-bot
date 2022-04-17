@@ -25,7 +25,8 @@ public class TrackBoxButtonClick extends ListenerAdapter {
 
     @Override
     public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
-        event.deferEdit().queue();
+        if (!event.isAcknowledged())
+            event.deferEdit().queue();
 
         Message message = event.getMessage();
         Guild guild = event.getGuild();
