@@ -16,11 +16,9 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.tools.io.MessageInput;
 import com.sedmelluq.discord.lavaplayer.tools.io.MessageOutput;
 import com.sedmelluq.discord.lavaplayer.track.*;
-import com.sun.jdi.event.Event;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.managers.AudioManager;
 import net.iharder.Base64;
 
@@ -48,7 +46,6 @@ public class MusicController implements BotController {
     private final MessageDispatcher messageDispatcher;
     private final Guild guild;
     private final EqualizerFactory equalizer;
-
     private final TrackBoxButtonClick trackBoxButtonClick;
 
     public MusicController(BotApplicationManager manager, BotGuildContext state, Guild guild) {
@@ -67,6 +64,10 @@ public class MusicController implements BotController {
         trackBoxButtonClick = new TrackBoxButtonClick(scheduler);
 
         player.addListener(scheduler);
+    }
+
+    public Guild getGuild() {
+        return guild;
     }
 
     public void destroyPlayer() {
@@ -144,6 +145,14 @@ public class MusicController implements BotController {
                 String.format("`%squeue`",
                         prefix),
                 "Display current queue list.",
+                false
+        );
+
+        // clearq
+        eb.addField(
+                String.format("`%sclearq`",
+                        prefix),
+                "Clears the queue.",
                 false
         );
 
@@ -404,7 +413,7 @@ public class MusicController implements BotController {
         if (!canPerformAction(ad))
             return;
 
-        forPlayingTrack(track -> message.getChannel().sendMessage("Duration is " + track.getDuration()).queue());
+        forPlayingTrack(track -> messageDispatcher.sendMessage(MessageType.Info, "Duration is " + track.getDuration()));
     }
 
     @BotCommandHandler
@@ -737,23 +746,26 @@ public class MusicController implements BotController {
     }
 
     public static boolean canPerformAction(ActionData actionData) {
-        if (actionData.getMember() == null)
+        if (actionData == null)
+            return false;
+
+        if (actionData.member() == null)
             return false;
 
         // Check permissions
 //        if (!message.getGuild().getSelfMember().hasPermission(message.getGuildChannel(), Permission.VOICE_CONNECT)) {
-        if (!actionData.getGuild().getSelfMember().hasPermission(actionData.getGuildChannel(), Permission.VOICE_CONNECT)) {
-            actionData.getMessageDispatcher().sendDisposableMessage(MessageType.Error, "Yeet does not have permissions to join a voice channel.");
+        if (!actionData.guild().getSelfMember().hasPermission(actionData.guildChannel(), Permission.VOICE_CONNECT)) {
+            actionData.messageDispatcher().sendDisposableMessage(MessageType.Error, "Yeet does not have permissions to join a voice channel.");
             return false;
         }
 
         // Check if bot is already connected to a voice channel.
-        if (actionData.getAudioManager().isConnected()) {
+        if (actionData.audioManager().isConnected()) {
             // Allow for admins to perform actions even if they are not connected to the same voice channel.
-            if (!actionData.getMember().hasPermission(Permission.ADMINISTRATOR)) {
+            if (!actionData.member().hasPermission(Permission.ADMINISTRATOR)) {
                 // Check if bot is connected to a different voice channel from the user.
-                if (actionData.getAudioManager().getConnectedChannel().getIdLong() != actionData.getMember().getVoiceState().getChannel().getIdLong()) {
-                    actionData.getMessageDispatcher().sendDisposableMessage(MessageType.Error, "Yeet is playing in another voice channel.");
+                if (actionData.audioManager().getConnectedChannel().getIdLong() != actionData.member().getVoiceState().getChannel().getIdLong()) {
+                    actionData.messageDispatcher().sendDisposableMessage(MessageType.Error, "Yeet is playing in another voice channel.");
                     return false;
                 }
             }
@@ -790,6 +802,20 @@ public class MusicController implements BotController {
         void execute(AudioTrack track);
     }
 
+    public static void removeTrackBoxButtonClickListener(Guild guild) {
+        for (Object listener : guild.getJDA().getRegisteredListeners()) {
+//                if (listener.getClass().getSimpleName().equals("TrackBoxButtonClick")) {
+            if (listener instanceof TrackBoxButtonClick) {
+                Guild listenerGuild = ((TrackBoxButtonClick) listener).getScheduler().getGuild();
+
+                if (listenerGuild.getIdLong() == guild.getIdLong()) {
+                    System.out.println("Removed listener: " + listener.getClass().getSimpleName());
+                    guild.getJDA().removeEventListener(listener);
+                }
+            }
+        }
+    }
+
     private class GlobalDispatcher implements MessageDispatcher {
         @Override
         public void sendMessage(
@@ -804,22 +830,13 @@ public class MusicController implements BotController {
                 if (!isTrackbox)
                     channel.sendMessageEmbeds(messageEmbed).queue(success, failure);
                 else {
-                    // TODO: Also remove listener when the player has stopped.
-                    for (Object listener : channel.getJDA().getRegisteredListeners()) {
-//                        if (listener.getClass().getSimpleName().equals("TrackBoxButtonClick")) {
-                        if (listener instanceof TrackBoxButtonClick) {
-                            Guild listenerGuild = ((TrackBoxButtonClick) listener).getScheduler().getGuild();
-
-                            if (listenerGuild.getIdLong() == channel.getGuild().getIdLong()) {
-                                System.out.println("Removed listener: " + listener.getClass().getSimpleName());
-                                channel.getJDA().removeEventListener(listener);
-                            }
-                        }
-                    }
+                    removeTrackBoxButtonClickListener(channel.getGuild());
 
                     System.out.println("Added new TrackBoxButtonClick listener for Guild: " + channel.getGuild().getName());
                     channel.getJDA().addEventListener(trackBoxButtonClick);
-                    channel.sendMessageEmbeds(messageEmbed).setActionRow(TrackBoxBuilder.sendButtons(channel.getGuild().getId())).queue(success, failure);
+                    channel.sendMessageEmbeds(messageEmbed).setActionRow(
+                            TrackBoxBuilder.sendButtons(channel.getGuild().getId())
+                    ).queue(success, failure);
                 }
             }
         }

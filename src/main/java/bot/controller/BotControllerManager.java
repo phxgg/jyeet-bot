@@ -62,6 +62,7 @@ public class BotControllerManager {
         instances.forEach((controllerClass, controller) -> {
             if (controller instanceof MusicController) {
                 ((MusicController) controller).destroyPlayer();
+                MusicController.removeTrackBoxButtonClickListener(((MusicController) controller).getGuild());
             }
         });
     }
@@ -166,19 +167,12 @@ public class BotControllerManager {
         return controllers;
     }
 
-    private static class Command {
-        private final String name;
-        private final String usage;
-        private final List<Class<?>> parameters;
-        private final Class<?> controllerClass;
-        private final Method commandMethod;
-
-        private Command(String name, String usage, List<Class<?>> parameters, Class<?> controllerClass, Method commandMethod) {
-            this.name = name;
-            this.usage = usage;
-            this.parameters = parameters;
-            this.controllerClass = controllerClass;
-            this.commandMethod = commandMethod;
-        }
+    private record Command(
+            String name,
+            String usage,
+            List<Class<?>> parameters,
+            Class<?> controllerClass,
+            Method commandMethod
+    ) {
     }
 }

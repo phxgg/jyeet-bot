@@ -189,18 +189,6 @@ public class BotApplicationManager extends ListenerAdapter {
 
     @Override
     public void onGuildVoiceUpdate(@NotNull GuildVoiceUpdateEvent event) {
-//        super.onGuildVoiceUpdate(event);
-
-//        BotGuildContext guildContext = getContext(event.getGuild());
-//
-//        Guild guild = event.getEntity().getGuild();
-//        if (isAlone(guild)) {
-//            controllerManager.destroyPlayer(guildContext.controllers);
-//        }
-    }
-
-    @Override
-    public void onGuildVoiceLeave(final GuildVoiceLeaveEvent event) {
         BotGuildContext guildContext = getContext(event.getGuild());
 
         // Get number of members in voice channel
@@ -212,11 +200,13 @@ public class BotApplicationManager extends ListenerAdapter {
             controllerManager.destroyPlayer(guildContext.controllers);
             return;
         }
+    }
+
+    @Override
+    public void onGuildVoiceLeave(@NotNull GuildVoiceLeaveEvent event) {
+        BotGuildContext guildContext = getContext(event.getGuild());
 
         // If the bot leaves a voice channel, destroy player.
-        // But before doing so, check if the left channel has 0 members.
-        // If it does, this means that the player has already been destroyed
-        // because the bot left the channel due to nobody being in it. (see above)
         if (event.getMember().getUser().equals(event.getJDA().getSelfUser())) {
             controllerManager.destroyPlayer(guildContext.controllers);
             return;

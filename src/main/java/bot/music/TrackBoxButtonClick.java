@@ -1,9 +1,13 @@
 package bot.music;
 
 import bot.ActionData;
+import bot.MessageType;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Objects;
 
 public class TrackBoxButtonClick extends ListenerAdapter {
     private final MusicScheduler scheduler;
@@ -21,23 +25,41 @@ public class TrackBoxButtonClick extends ListenerAdapter {
         if (!event.isAcknowledged())
             event.deferEdit().queue();
 
-        ActionData ad = new ActionData(scheduler.getMessageDispatcher(), event.getMember(), event.getGuild(), event.getGuildChannel(), event.getGuild().getAudioManager());
+        ActionData ad = null;
+
+        try {
+            ad = new ActionData(
+                    scheduler.getMessageDispatcher(),
+                    event.getMember(),
+                    event.getGuild(),
+                    event.getGuildChannel(),
+                    Objects.requireNonNull(event.getGuild()).getAudioManager()
+            );
+        } catch (NullPointerException e) {
+            System.out.println("[TrackBoxButtonClick] audioManager is null.");
+            e.printStackTrace();
+        }
+
         if (!MusicController.canPerformAction(ad))
             return;
 
         final String previous = scheduler.getGuild().getId() + "_trackbox_previous";
         final String pause = scheduler.getGuild().getId() + "_trackbox_pause";
         final String next = scheduler.getGuild().getId() + "_trackbox_next";
+        final String stop = scheduler.getGuild().getId() + "_trackbox_stop";
 
         String buttonId = event.getButton().getId();
 
+        // Cannot use 'switch' here because the 'case' requires a constant.
         assert buttonId != null;
         if (buttonId.equals(previous)) {
-            event.getChannel().sendMessage("Back button clicked").queue();
+            scheduler.getMessageDispatcher().sendDisposableMessage(MessageType.Warning, "Under construction.");
         } else if (buttonId.equals(pause)) {
             scheduler.getPlayer().setPaused(!scheduler.getPlayer().isPaused());
         } else if (buttonId.equals(next)) {
-            event.getChannel().sendMessage(String.format("%sskip", System.getProperty("prefix"))).queue();
+            scheduler.skip();
+        } else if (buttonId.equals(stop)) {
+            event.getGuild().getAudioManager().closeAudioConnection();
         }
     }
 }

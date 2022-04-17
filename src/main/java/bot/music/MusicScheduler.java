@@ -9,6 +9,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.exceptions.ContextException;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -162,6 +163,8 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
             Message oldMessage = boxMessage.getAndSet(null);
 
             if (oldMessage != null) {
+                // Will throw an exception if message has already been deleted by a user.
+                // Just ignore.
                 oldMessage.delete().queue();
             }
         }
