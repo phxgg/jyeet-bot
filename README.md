@@ -17,7 +17,33 @@ Run bot with the `-Dipv6Block=<IPV6_BLOCK>/64` parameter.
 
 ### TODO
 
-* **REVIEW CODE:** Add and remove TrackBoxButtonClick event listeners only when needed.
+* Fix this exception:
+```
+19:24:17.885 [JDA MainWS-ReadThread] ERROR net.dv8tion.jda.api.JDA - One of the EventListeners had an uncaught exception
+java.lang.NullPointerException: Cannot invoke "net.dv8tion.jda.api.entities.AudioChannel.getIdLong()" because the return value of "net.dv8tion.jda.api.entities.GuildVoiceState.getChannel()" is null
+	at bot.music.MusicController.canPerformAction(MusicController.java:755)
+	at bot.music.TrackBoxButtonClick.onButtonInteraction(TrackBoxButtonClick.java:25)
+	at net.dv8tion.jda.api.hooks.ListenerAdapter.onEvent(ListenerAdapter.java:359)
+	at net.dv8tion.jda.api.hooks.InterfacedEventManager.handle(InterfacedEventManager.java:96)
+	at net.dv8tion.jda.internal.hooks.EventManagerProxy.handleInternally(EventManagerProxy.java:88)
+	at net.dv8tion.jda.internal.hooks.EventManagerProxy.handle(EventManagerProxy.java:70)
+	at net.dv8tion.jda.internal.JDAImpl.handleEvent(JDAImpl.java:164)
+	at net.dv8tion.jda.internal.handle.InteractionCreateHandler.handleAction(InteractionCreateHandler.java:112)
+	at net.dv8tion.jda.internal.handle.InteractionCreateHandler.handleInternally(InteractionCreateHandler.java:69)
+	at net.dv8tion.jda.internal.handle.SocketHandler.handle(SocketHandler.java:36)
+	at net.dv8tion.jda.internal.requests.WebSocketClient.onDispatch(WebSocketClient.java:952)
+	at net.dv8tion.jda.internal.requests.WebSocketClient.onEvent(WebSocketClient.java:839)
+	at net.dv8tion.jda.internal.requests.WebSocketClient.handleEvent(WebSocketClient.java:817)
+	at net.dv8tion.jda.internal.requests.WebSocketClient.onBinaryMessage(WebSocketClient.java:991)
+	at com.neovisionaries.ws.client.ListenerManager.callOnBinaryMessage(ListenerManager.java:385)
+	at com.neovisionaries.ws.client.ReadingThread.callOnBinaryMessage(ReadingThread.java:276)
+	at com.neovisionaries.ws.client.ReadingThread.handleBinaryFrame(ReadingThread.java:996)
+	at com.neovisionaries.ws.client.ReadingThread.handleFrame(ReadingThread.java:755)
+	at com.neovisionaries.ws.client.ReadingThread.main(ReadingThread.java:108)
+	at com.neovisionaries.ws.client.ReadingThread.runMain(ReadingThread.java:64)
+	at com.neovisionaries.ws.client.WebSocketThread.run(WebSocketThread.java:45)
+```
+* **REVIEW CODE:** Add and remove TrackBoxButtonClick event listeners only when needed and generally review the code.
 * Implement a database to save/load prefixes and other settings for each guild.
 * Implement the `!previous` command.
 * When queue has finished, keep bot in voice channel for 1 minute. Disconnect if no track has been added inbetween this minute.
