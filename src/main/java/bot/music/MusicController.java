@@ -49,6 +49,8 @@ public class MusicController implements BotController {
     private final Guild guild;
     private final EqualizerFactory equalizer;
 
+    private final TrackBoxButtonClick trackBoxButtonClick;
+
     public MusicController(BotApplicationManager manager, BotGuildContext state, Guild guild) {
         this.manager = manager.getPlayerManager();
         this.guild = guild;
@@ -61,6 +63,8 @@ public class MusicController implements BotController {
 
         messageDispatcher = new GlobalDispatcher();
         scheduler = new MusicScheduler(guild, player, messageDispatcher, manager.getExecutorService());
+
+        trackBoxButtonClick = new TrackBoxButtonClick(scheduler);
 
         player.addListener(scheduler);
     }
@@ -117,6 +121,16 @@ public class MusicController implements BotController {
                 false
         );
 
+        // pause, resume
+        eb.addField(
+                String.format("`%spause`",
+                        prefix),
+                String.format("Pause current playing song. Use `%spause` or `%sresume` to unpause.",
+                        prefix,
+                        prefix),
+                false
+        );
+
         // playnow
         eb.addField(
                 String.format("`%splaynow <name_of_track/link/playlist>`",
@@ -151,12 +165,28 @@ public class MusicController implements BotController {
                 false
         );
 
+        // forward
+        eb.addField(
+                String.format("`%sforward <seconds>`",
+                        prefix),
+                "Forward track by given seconds.",
+                false
+        );
+
+        // backward
+        eb.addField(
+                String.format("`%sbackward <seconds>`",
+                        prefix),
+                "Backward track by given seconds.",
+                false
+        );
+
         message.replyEmbeds(eb.build()).queue();
     }
 
     @BotCommandHandler
     private void play(Message message, String identifier) {
-        if (!canPerformAction(message, guild.getAudioManager()))
+        if (!canPerformAction(messageDispatcher, message, guild.getAudioManager()))
             return;
 
         addTrack(message, identifier, false, false);
@@ -164,7 +194,7 @@ public class MusicController implements BotController {
 
     @BotCommandHandler
     private void p(Message message, String identifier) {
-        if (!canPerformAction(message, guild.getAudioManager()))
+        if (!canPerformAction(messageDispatcher, message, guild.getAudioManager()))
             return;
 
         addTrack(message, identifier, false, false);
@@ -172,7 +202,7 @@ public class MusicController implements BotController {
 
     @BotCommandHandler
     private void playnow(Message message, String identifier) {
-        if (!canPerformAction(message, guild.getAudioManager()))
+        if (!canPerformAction(messageDispatcher, message, guild.getAudioManager()))
             return;
 
         addTrack(message, identifier, true, false);
@@ -180,7 +210,7 @@ public class MusicController implements BotController {
 
     @BotCommandHandler
     private void playnext(Message message, String identifier) {
-        if (!canPerformAction(message, guild.getAudioManager()))
+        if (!canPerformAction(messageDispatcher, message, guild.getAudioManager()))
             return;
 
         addTrack(message, identifier, false, true);
@@ -189,7 +219,7 @@ public class MusicController implements BotController {
 
     @BotCommandHandler
     private void queue(Message message) {
-        if (!canPerformAction(message, guild.getAudioManager()))
+        if (!canPerformAction(messageDispatcher, message, guild.getAudioManager()))
             return;
 
         // TODO: Implement queue
@@ -269,7 +299,7 @@ public class MusicController implements BotController {
 
     @BotCommandHandler
     private void volume(Message message, int volume) {
-        if (!canPerformAction(message, guild.getAudioManager()))
+        if (!canPerformAction(messageDispatcher, message, guild.getAudioManager()))
             return;
 
         if (volume > 100 || volume < 0) {
@@ -282,7 +312,7 @@ public class MusicController implements BotController {
 
     @BotCommandHandler
     private void skip(Message message) {
-        if (!canPerformAction(message, guild.getAudioManager()))
+        if (!canPerformAction(messageDispatcher, message, guild.getAudioManager()))
             return;
 
         scheduler.skip();
@@ -290,7 +320,7 @@ public class MusicController implements BotController {
 
     @BotCommandHandler
     private void next(Message message) {
-        if (!canPerformAction(message, guild.getAudioManager()))
+        if (!canPerformAction(messageDispatcher, message, guild.getAudioManager()))
             return;
 
         scheduler.skip();
@@ -298,7 +328,7 @@ public class MusicController implements BotController {
 
     @BotCommandHandler
     private void n(Message message) {
-        if (!canPerformAction(message, guild.getAudioManager()))
+        if (!canPerformAction(messageDispatcher, message, guild.getAudioManager()))
             return;
 
         scheduler.skip();
@@ -309,7 +339,7 @@ public class MusicController implements BotController {
     private void previous(Message message) {
         return;
 
-//        if (!canPerformAction(message, guild.getAudioManager()))
+//        if (!canPerformAction(messageDispatcher, message, guild.getAudioManager()))
 //            return;
 //
 //        scheduler.playPrevious();
@@ -321,7 +351,7 @@ public class MusicController implements BotController {
      */
     @BotCommandHandler
     private void forward(Message message, int duration) {
-        if (!canPerformAction(message, guild.getAudioManager()))
+        if (!canPerformAction(messageDispatcher, message, guild.getAudioManager()))
             return;
 
         forPlayingTrack(track -> track.setPosition(track.getPosition() + duration * 1000L));
@@ -332,8 +362,8 @@ public class MusicController implements BotController {
      * @param duration The duration in seconds
      */
     @BotCommandHandler
-    private void back(Message message, int duration) {
-        if (!canPerformAction(message, guild.getAudioManager()))
+    private void backward(Message message, int duration) {
+        if (!canPerformAction(messageDispatcher, message, guild.getAudioManager()))
             return;
 
         forPlayingTrack(track -> track.setPosition(Math.max(0, track.getPosition() - duration * 1000L)));
@@ -341,7 +371,7 @@ public class MusicController implements BotController {
 
     @BotCommandHandler
     private void pause(Message message) {
-        if (!canPerformAction(message, guild.getAudioManager()))
+        if (!canPerformAction(messageDispatcher, message, guild.getAudioManager()))
             return;
 
         player.setPaused(!player.isPaused());
@@ -349,7 +379,7 @@ public class MusicController implements BotController {
 
     @BotCommandHandler
     private void resume(Message message) {
-        if (!canPerformAction(message, guild.getAudioManager()))
+        if (!canPerformAction(messageDispatcher, message, guild.getAudioManager()))
             return;
 
         player.setPaused(false);
@@ -357,7 +387,7 @@ public class MusicController implements BotController {
 
     @BotCommandHandler
     private void duration(Message message) {
-        if (!canPerformAction(message, guild.getAudioManager()))
+        if (!canPerformAction(messageDispatcher, message, guild.getAudioManager()))
             return;
 
         forPlayingTrack(track -> message.getChannel().sendMessage("Duration is " + track.getDuration()).queue());
@@ -365,7 +395,7 @@ public class MusicController implements BotController {
 
     @BotCommandHandler
     private void seek(Message message, long position) {
-        if (!canPerformAction(message, guild.getAudioManager()))
+        if (!canPerformAction(messageDispatcher, message, guild.getAudioManager()))
             return;
 
         forPlayingTrack(track -> track.setPosition(position));
@@ -373,7 +403,7 @@ public class MusicController implements BotController {
 
     @BotCommandHandler
     private void pos(Message message) {
-        if (!canPerformAction(message, guild.getAudioManager()))
+        if (!canPerformAction(messageDispatcher, message, guild.getAudioManager()))
             return;
 
         forPlayingTrack(track -> messageDispatcher.sendMessage(MessageType.Info, "Position is " + track.getPosition()));
@@ -381,7 +411,7 @@ public class MusicController implements BotController {
 
     @BotCommandHandler
     private void marker(final Message message, long position, final String text) {
-        if (!canPerformAction(message, guild.getAudioManager()))
+        if (!canPerformAction(messageDispatcher, message, guild.getAudioManager()))
             return;
 
         forPlayingTrack(track ->
@@ -393,7 +423,7 @@ public class MusicController implements BotController {
 
     @BotCommandHandler
     private void unmark(Message message) {
-        if (!canPerformAction(message, guild.getAudioManager()))
+        if (!canPerformAction(messageDispatcher, message, guild.getAudioManager()))
             return;
 
         forPlayingTrack(track -> track.setMarker(null));
@@ -408,7 +438,7 @@ public class MusicController implements BotController {
 
     @BotCommandHandler
     private void clearq(Message message) {
-        if (!canPerformAction(message, guild.getAudioManager()))
+        if (!canPerformAction(messageDispatcher, message, guild.getAudioManager()))
             return;
 
         scheduler.clearQueue();
@@ -417,7 +447,7 @@ public class MusicController implements BotController {
 
     @BotCommandHandler
     private void shuffle(Message message) {
-        if (!canPerformAction(message, guild.getAudioManager()))
+        if (!canPerformAction(messageDispatcher, message, guild.getAudioManager()))
             return;
 
         scheduler.shuffleQueue();
@@ -426,7 +456,7 @@ public class MusicController implements BotController {
 
     @BotCommandHandler
     private void stop(Message message) {
-        if (!canPerformAction(message, guild.getAudioManager()))
+        if (!canPerformAction(messageDispatcher, message, guild.getAudioManager()))
             return;
 
         // Instead of calling destroyPlayer(), we can just close the audio connection.
@@ -437,7 +467,7 @@ public class MusicController implements BotController {
 
     @BotCommandHandler
     private void dc(Message message) {
-        if (!canPerformAction(message, guild.getAudioManager()))
+        if (!canPerformAction(messageDispatcher, message, guild.getAudioManager()))
             return;
 
         guild.getAudioManager().closeAudioConnection();
@@ -445,7 +475,7 @@ public class MusicController implements BotController {
 
     @BotCommandHandler
     private void leave(Message message) {
-        if (!canPerformAction(message, guild.getAudioManager()))
+        if (!canPerformAction(messageDispatcher, message, guild.getAudioManager()))
             return;
 
         guild.getAudioManager().closeAudioConnection();
@@ -683,7 +713,7 @@ public class MusicController implements BotController {
         }
     }
 
-    private boolean canPerformAction(final Message message, AudioManager audioManager) {
+    public static boolean canPerformAction(MessageDispatcher messageDispatcher, final Message message, AudioManager audioManager) {
         Member member = message.getMember();
         if (member == null)
             return false;
@@ -739,11 +769,34 @@ public class MusicController implements BotController {
 
     private class GlobalDispatcher implements MessageDispatcher {
         @Override
-        public void sendMessage(MessageType type, MessageEmbed messageEmbed, Consumer<Message> success, Consumer<Throwable> failure) {
+        public void sendMessage(
+                MessageType type,
+                MessageEmbed messageEmbed,
+                Consumer<Message> success,
+                Consumer<Throwable> failure,
+                final boolean isTrackbox) {
             TextChannel channel = outputChannel.get();
 
             if (channel != null) {
-                channel.sendMessageEmbeds(messageEmbed).queue(success, failure);
+                if (!isTrackbox)
+                    channel.sendMessageEmbeds(messageEmbed).queue(success, failure);
+                else {
+                    for (Object listener : channel.getJDA().getRegisteredListeners()) {
+//                        if (listener.getClass().getSimpleName().equals("TrackBoxButtonClick")) {
+                        if (listener instanceof TrackBoxButtonClick) {
+                            Guild listenerGuild = ((TrackBoxButtonClick) listener).getScheduler().getGuild();
+
+                            if (listenerGuild.getIdLong() == channel.getGuild().getIdLong()) {
+                                System.out.println("Removed listener: " + listener.getClass().getSimpleName());
+                                channel.getJDA().removeEventListener(listener);
+                            }
+                        }
+                    }
+
+                    System.out.println("Added new TrackBoxButtonClick listener for Guild: " + channel.getGuild().getName());
+                    channel.getJDA().addEventListener(trackBoxButtonClick);
+                    channel.sendMessageEmbeds(messageEmbed).setActionRow(TrackBoxBuilder.sendButtons()).queue(success, failure);
+                }
             }
         }
 

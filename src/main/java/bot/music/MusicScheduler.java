@@ -41,6 +41,18 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
         executorService.scheduleAtFixedRate(this, 3000L, 15000L, TimeUnit.MILLISECONDS);
     }
 
+    public MessageDispatcher getMessageDispatcher() {
+        return messageDispatcher;
+    }
+
+    public AudioPlayer getPlayer() {
+        return player;
+    }
+
+    public Guild getGuild() {
+        return guild;
+    }
+
     public BlockingDeque<AudioTrack> getQueue() {
         return queue;
     }
@@ -167,7 +179,7 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
                         creatingBoxMessage.set(false);
                     }, error -> {
                         creatingBoxMessage.set(false);
-                    });
+                    }, true);
                 }
             }
         }

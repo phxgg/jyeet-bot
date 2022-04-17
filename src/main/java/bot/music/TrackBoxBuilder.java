@@ -2,9 +2,13 @@ package bot.music;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Emoji;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TrackBoxBuilder {
     private static final String PROGRESS_FILL = "\u25a0";
@@ -87,5 +91,15 @@ public class TrackBoxBuilder {
         eb.setFooter("Tracks in queue: " + queueSize);
 
         return eb.build();
+    }
+
+    public static List<Button> sendButtons() {
+        List<Button> buttons = new ArrayList<>();
+
+        buttons.add(Button.primary("trackbox_previous", "Previous").withEmoji(Emoji.fromUnicode("U+23EE")));
+        buttons.add(Button.primary("trackbox_pause", "Pause").withEmoji(Emoji.fromUnicode("U+23EF")));
+        buttons.add(Button.primary("trackbox_next", "Next").withEmoji(Emoji.fromUnicode("U+23ED")));
+
+        return buttons;
     }
 }
