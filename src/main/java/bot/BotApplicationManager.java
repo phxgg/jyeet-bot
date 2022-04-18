@@ -36,6 +36,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -139,7 +140,7 @@ public class BotApplicationManager extends ListenerAdapter {
     }
 
     @Override
-    public void onMessageReceived(final MessageReceivedEvent event) {
+    public void onMessageReceived(@Nonnull MessageReceivedEvent event) {
         Member member = event.getMember();
 
         if (!event.isFromType(ChannelType.TEXT) || member == null || member.getUser().isBot()) {
@@ -216,17 +217,23 @@ public class BotApplicationManager extends ListenerAdapter {
         if(guild.getAudioManager().getConnectedChannel() == null) return false;
         return guild.getAudioManager().getConnectedChannel().getMembers().stream()
                 .noneMatch(x ->
-                        !x.getVoiceState().isDeafened()
+                        (x.getVoiceState() != null)
+                                && !x.getVoiceState().isDeafened()
                                 && !x.getUser().isBot());
     }
 
     @Override
-    public void onGuildVoiceUpdate(@NotNull GuildVoiceUpdateEvent event) {
+    public void onGuildVoiceUpdate(@Nonnull GuildVoiceUpdateEvent event) {
         BotGuildContext guildContext = getContext(event.getGuild());
 
         // Get number of members in voice channel
         // If there's only one member in the channel, check if it's the bot.
         // If it is, disconnect the voice channel.
+
+        // Fix warnings
+        if (event.getChannelLeft() == null)
+            return;
+
         if (!event.getMember().getUser().equals(event.getJDA().getSelfUser())
                 && event.getChannelLeft().getMembers().size() == 1
                 && event.getChannelLeft().getMembers().contains(event.getGuild().getSelfMember())) {
@@ -236,7 +243,7 @@ public class BotApplicationManager extends ListenerAdapter {
     }
 
     @Override
-    public void onGuildVoiceLeave(@NotNull GuildVoiceLeaveEvent event) {
+    public void onGuildVoiceLeave(@Nonnull GuildVoiceLeaveEvent event) {
         BotGuildContext guildContext = getContext(event.getGuild());
 
         // If the bot leaves a voice channel, destroy player.
@@ -247,7 +254,7 @@ public class BotApplicationManager extends ListenerAdapter {
     }
 
     @Override
-    public void onGuildLeave(GuildLeaveEvent event) {
+    public void onGuildLeave(@Nonnull GuildLeaveEvent event) {
         // do stuff
     }
 }

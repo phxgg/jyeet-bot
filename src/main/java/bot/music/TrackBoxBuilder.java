@@ -3,7 +3,6 @@ package bot.music;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Emoji;
-import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 
@@ -19,7 +18,7 @@ public class TrackBoxBuilder {
         return boxify(width, track, isPaused, volume, queueSize);
     }
 
-    private static String buildDurationLine(int width, AudioTrack track, boolean isPaused, int volume) {
+    private static String buildDurationLine(int width, AudioTrack track, boolean isPaused) {
         String cornerText = isPaused ? "\u23F8" : "\uD83D\uDCFB";
 
         String duration = formatTiming(track.getDuration(), track.getDuration());
@@ -33,9 +32,7 @@ public class TrackBoxBuilder {
         StringBuilder builder = new StringBuilder();
         builder.append("`");
 
-        for (int i = 0; i < 3 - cornerText.length(); i++) {
-            builder.append(" ");
-        }
+        builder.append(" ".repeat(3 - cornerText.length()));
 
         builder.append(cornerText);
 
@@ -45,9 +42,7 @@ public class TrackBoxBuilder {
         }
         builder.append("]");
 
-        for (int i = 0; i < spacing + 1; i++) {
-            builder.append(" ");
-        }
+        builder.append(" ".repeat(Math.max(0, spacing + 1)));
 
         builder.append(position);
         builder.append(" of ");
@@ -81,7 +76,7 @@ public class TrackBoxBuilder {
 
         eb.setColor(Color.PINK);
         eb.setTitle(String.format(":dvd: Now playing: %s", track.getInfo().title));
-        eb.setDescription(buildDurationLine(width - 4, track, isPaused, volume));
+        eb.setDescription(buildDurationLine(width - 4, track, isPaused));
 
 //        eb.setThumbnail(track.getInfo().uri);
         eb.addField("Duration", duration, true);
@@ -97,7 +92,7 @@ public class TrackBoxBuilder {
     public static List<Button> sendButtons(String guildId) {
         List<Button> buttons = new ArrayList<>();
 
-        // Button IDs should have a 'guild' prefix so we can know in which guild the button was clicked.
+        // Button IDs should have a 'guild' prefix, so we can know in which guild the button was clicked.
         buttons.add(Button.secondary(String.format("%s_trackbox_previous", guildId), Emoji.fromUnicode("U+23EE")));
         buttons.add(Button.primary(String.format("%s_trackbox_pause", guildId), Emoji.fromUnicode("U+23EF")));
         buttons.add(Button.secondary(String.format("%s_trackbox_next", guildId), Emoji.fromUnicode("U+23ED")));

@@ -17,6 +17,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 
 public class BotControllerManager {
+    @SuppressWarnings("rawtypes")
     private final List<BotControllerFactory> controllerFactories;
     private final Map<String, Command> commands;
 
@@ -25,6 +26,7 @@ public class BotControllerManager {
         commands = new HashMap<>();
     }
 
+    @SuppressWarnings("rawtypes")
     public void registerController(BotControllerFactory factory) {
         controllerFactories.add(factory);
 
@@ -160,6 +162,7 @@ public class BotControllerManager {
         }
     }
 
+    @SuppressWarnings("rawtypes")
     public List<BotController> createControllers(BotApplicationManager applicationManager, BotGuildContext context, Guild guild) {
         List<BotController> controllers = new ArrayList<>();
         for (BotControllerFactory factory : controllerFactories) {
