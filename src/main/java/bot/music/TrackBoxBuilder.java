@@ -93,11 +93,11 @@ public class TrackBoxBuilder {
         List<Button> buttons = new ArrayList<>();
 
         // Button IDs should have a 'guild' prefix, so we can know in which guild the button was clicked.
-        buttons.add(Button.secondary(String.format("%s_trackbox_previous", guildId), Emoji.fromUnicode("U+23EE")).asDisabled());
-        buttons.add(Button.primary(String.format("%s_trackbox_pause", guildId), Emoji.fromUnicode("U+23EF")));
-        buttons.add(Button.secondary(String.format("%s_trackbox_next", guildId), Emoji.fromUnicode("U+23ED")));
-        buttons.add(Button.success(String.format("%s_trackbox_shuffle", guildId), Emoji.fromUnicode("U+1F500")));
-        buttons.add(Button.danger(String.format("%s_trackbox_stop", guildId), Emoji.fromUnicode("U+23F9")));
+        buttons.add(Button.secondary(String.format("%s_trackbox_previous", guildId), Emoji.fromMarkdown("<:previous:965604705298432020>")).asDisabled());
+        buttons.add(Button.secondary(String.format("%s_trackbox_pause", guildId), Emoji.fromMarkdown("<:pause_play:965604705252282410>")));
+        buttons.add(Button.secondary(String.format("%s_trackbox_next", guildId), Emoji.fromMarkdown("<:next:965604705139032074>")));
+        buttons.add(Button.secondary(String.format("%s_trackbox_shuffle", guildId), Emoji.fromMarkdown("<:shuffle:965607534318719056>")));
+        buttons.add(Button.secondary(String.format("%s_trackbox_stop", guildId), Emoji.fromMarkdown("<:stop:965604527619334154>")));
 
         return buttons;
     }
