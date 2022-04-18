@@ -75,7 +75,7 @@ public class TrackBoxBuilder {
         String duration = formatTiming(track.getDuration(), track.getDuration());
 
         eb.setColor(Color.PINK);
-        eb.setTitle(String.format(":dvd: Now playing: %s", track.getInfo().title));
+        eb.setTitle(String.format(":dvd: Now playing: %s - %s", track.getInfo().author, track.getInfo().title));
         eb.setDescription(buildDurationLine(width - 4, track, isPaused));
 
 //        eb.setThumbnail(track.getInfo().uri);
