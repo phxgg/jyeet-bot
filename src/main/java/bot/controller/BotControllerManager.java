@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import bot.music.MusicController;
+import bot.records.Command;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 
@@ -55,7 +56,7 @@ public class BotControllerManager {
         }
 
         Command command = new Command(commandName, usage, parameters, controllerClass, method);
-        commands.put(command.name, command);
+        commands.put(command.getName(), command);
     }
 
     public void destroyPlayer(Map<Class<? extends BotController>, BotController> instances) {
@@ -89,31 +90,31 @@ public class BotControllerManager {
             return;
         }
 
-        String[] inputArguments = separated.length == 1 ? new String[0] : separated[1].split("\\s+", command.parameters.size());
+        String[] inputArguments = separated.length == 1 ? new String[0] : separated[1].split("\\s+", command.getParameters().size());
 
-        if (inputArguments.length != command.parameters.size()) {
-            handler.commandWrongParameterCount(message, command.name, command.usage, inputArguments.length, command.parameters.size());
+        if (inputArguments.length != command.getParameters().size()) {
+            handler.commandWrongParameterCount(message, command.getName(), command.getUsage(), inputArguments.length, command.getParameters().size());
             return;
         }
 
-        Object[] arguments = new Object[command.parameters.size() + 1];
+        Object[] arguments = new Object[command.getParameters().size() + 1];
         arguments[0] = message;
 
-        for (int i = 0; i < command.parameters.size(); i++) {
-            Class<?> parameterClass = command.parameters.get(i);
+        for (int i = 0; i < command.getParameters().size(); i++) {
+            Class<?> parameterClass = command.getParameters().get(i);
 
             try {
                 arguments[i + 1] = parseArgument(parameterClass, inputArguments[i]);
             } catch (IllegalArgumentException ignored) {
-                handler.commandWrongParameterType(message, command.name, command.usage, i, inputArguments[i], parameterClass);
+                handler.commandWrongParameterType(message, command.getName(), command.getUsage(), i, inputArguments[i], parameterClass);
                 return;
             }
         }
 
         try {
-            command.commandMethod.invoke(instances.get(command.controllerClass), arguments);
+            command.getCommandMethod().invoke(instances.get(command.getControllerClass()), arguments);
         } catch (InvocationTargetException e) {
-            handler.commandException(message, command.name, e.getCause());
+            handler.commandException(message, command.getName(), e.getCause());
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
@@ -165,14 +166,5 @@ public class BotControllerManager {
             controllers.add(factory.create(applicationManager, context, guild));
         }
         return controllers;
-    }
-
-    private record Command(
-            String name,
-            String usage,
-            List<Class<?>> parameters,
-            Class<?> controllerClass,
-            Method commandMethod
-    ) {
     }
 }

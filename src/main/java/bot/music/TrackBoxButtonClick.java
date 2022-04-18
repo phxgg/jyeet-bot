@@ -1,8 +1,7 @@
 package bot.music;
 
-import bot.ActionData;
+import bot.records.ActionData;
 import bot.MessageType;
-import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
@@ -40,12 +39,13 @@ public class TrackBoxButtonClick extends ListenerAdapter {
             e.printStackTrace();
         }
 
-        if (!MusicController.canPerformAction(ad))
+        if (!MusicController.canPerformAction(ad, true))
             return;
 
         final String previous = scheduler.getGuild().getId() + "_trackbox_previous";
         final String pause = scheduler.getGuild().getId() + "_trackbox_pause";
         final String next = scheduler.getGuild().getId() + "_trackbox_next";
+        final String shuffle = scheduler.getGuild().getId() + "_trackbox_shuffle";
         final String stop = scheduler.getGuild().getId() + "_trackbox_stop";
 
         String buttonId = event.getButton().getId();
@@ -58,6 +58,8 @@ public class TrackBoxButtonClick extends ListenerAdapter {
             scheduler.getPlayer().setPaused(!scheduler.getPlayer().isPaused());
         } else if (buttonId.equals(next)) {
             scheduler.skip();
+        } else if (buttonId.equals(shuffle)) {
+            scheduler.shuffleQueue();
         } else if (buttonId.equals(stop)) {
             event.getGuild().getAudioManager().closeAudioConnection();
         }

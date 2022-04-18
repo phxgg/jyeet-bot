@@ -78,10 +78,17 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
     }
 
     public void shuffleQueue() {
+        if (!(queue.size() > 0)) {
+            messageDispatcher.sendDisposableMessage(MessageType.Warning, "Cannot shuffle an empty queue.");
+            return;
+        }
+
         List<AudioTrack> q = drainQueue();
         Collections.shuffle(q);
         queue.clear();
         queue.addAll(q);
+
+        messageDispatcher.sendDisposableMessage(MessageType.Success, "Shuffled queue.");
     }
 
     public void addToQueue(AudioTrack audioTrack) {
@@ -122,6 +129,9 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
         } else {
             player.stopTrack();
             messageDispatcher.sendDisposableMessage(MessageType.Info, "Queue finished.");
+
+            // Wait for 10 minutes before closing the connection.
+
             guild.getAudioManager().closeAudioConnection();
         }
     }

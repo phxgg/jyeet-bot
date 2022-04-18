@@ -101,6 +101,7 @@ public class TrackBoxBuilder {
         buttons.add(Button.secondary(String.format("%s_trackbox_previous", guildId), Emoji.fromUnicode("U+23EE")));
         buttons.add(Button.primary(String.format("%s_trackbox_pause", guildId), Emoji.fromUnicode("U+23EF")));
         buttons.add(Button.secondary(String.format("%s_trackbox_next", guildId), Emoji.fromUnicode("U+23ED")));
+        buttons.add(Button.success(String.format("%s_trackbox_shuffle", guildId), Emoji.fromUnicode("U+1F500")));
         buttons.add(Button.danger(String.format("%s_trackbox_stop", guildId), Emoji.fromUnicode("U+23F9")));
 
         return buttons;

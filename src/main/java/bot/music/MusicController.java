@@ -5,6 +5,7 @@ import bot.MessageType;
 import bot.controller.BotCommandHandler;
 import bot.controller.BotController;
 import bot.controller.BotControllerFactory;
+import bot.records.ActionData;
 import com.sedmelluq.discord.lavaplayer.filter.equalizer.EqualizerFactory;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
@@ -156,6 +157,14 @@ public class MusicController implements BotController {
                 false
         );
 
+        // shuffle
+        eb.addField(
+                String.format("`%sshuffle`",
+                        prefix),
+                "Shuffle the queue.",
+                false
+        );
+
         // skip, next, n
         eb.addField(
                 String.format("`%sskip`",
@@ -196,7 +205,7 @@ public class MusicController implements BotController {
     @BotCommandHandler
     private void play(Message message, String identifier) {
         ActionData ad = new ActionData(messageDispatcher, message.getMember(), message.getGuild(), message.getGuildChannel(), guild.getAudioManager());
-        if (!canPerformAction(ad))
+        if (!canPerformAction(ad, true))
             return;
 
         addTrack(message, identifier, false, false);
@@ -205,7 +214,7 @@ public class MusicController implements BotController {
     @BotCommandHandler
     private void p(Message message, String identifier) {
         ActionData ad = new ActionData(messageDispatcher, message.getMember(), message.getGuild(), message.getGuildChannel(), guild.getAudioManager());
-        if (!canPerformAction(ad))
+        if (!canPerformAction(ad, true))
             return;
 
         addTrack(message, identifier, false, false);
@@ -214,7 +223,7 @@ public class MusicController implements BotController {
     @BotCommandHandler
     private void playnow(Message message, String identifier) {
         ActionData ad = new ActionData(messageDispatcher, message.getMember(), message.getGuild(), message.getGuildChannel(), guild.getAudioManager());
-        if (!canPerformAction(ad))
+        if (!canPerformAction(ad, true))
             return;
 
         addTrack(message, identifier, true, false);
@@ -223,7 +232,7 @@ public class MusicController implements BotController {
     @BotCommandHandler
     private void playnext(Message message, String identifier) {
         ActionData ad = new ActionData(messageDispatcher, message.getMember(), message.getGuild(), message.getGuildChannel(), guild.getAudioManager());
-        if (!canPerformAction(ad))
+        if (!canPerformAction(ad, true))
             return;
 
         addTrack(message, identifier, false, true);
@@ -264,51 +273,6 @@ public class MusicController implements BotController {
         }
 
         message.getChannel().sendMessageEmbeds(eb.build()).queue();
-    }
-
-    @BotCommandHandler
-    private void hex(Message message, int pageCount) {
-        if (!isOwner(message.getAuthor()))
-            return;
-
-        manager.source(YoutubeAudioSourceManager.class).setPlaylistPageCount(pageCount);
-    }
-
-    @BotCommandHandler
-    private void serialize(Message message) throws IOException {
-        if (!isOwner(message.getAuthor()))
-            return;
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        MessageOutput outputStream = new MessageOutput(baos);
-
-        for (AudioTrack track : scheduler.drainQueue()) {
-            manager.encodeTrack(outputStream, track);
-        }
-
-        outputStream.finish();
-
-        message.getChannel().sendMessage(Base64.encodeBytes(baos.toByteArray())).queue();
-    }
-
-    @BotCommandHandler
-    private void deserialize(Message message, String content) throws IOException {
-        if (!isOwner(message.getAuthor()))
-            return;
-
-        outputChannel.set((TextChannel) message.getChannel());
-        connectToVoiceChannel(message, guild.getAudioManager());
-
-        byte[] bytes = Base64.decode(content);
-
-        MessageInput inputStream = new MessageInput(new ByteArrayInputStream(bytes));
-        DecodedTrackHolder holder;
-
-        while ((holder = manager.decodeTrack(inputStream)) != null) {
-            if (holder.decodedTrack != null) {
-                scheduler.addToQueue(holder.decodedTrack);
-            }
-        }
     }
 
     @BotCommandHandler
@@ -408,56 +372,14 @@ public class MusicController implements BotController {
     }
 
     @BotCommandHandler
-    private void duration(Message message) {
-        ActionData ad = new ActionData(messageDispatcher, message.getMember(), message.getGuild(), message.getGuildChannel(), guild.getAudioManager());
-        if (!canPerformAction(ad))
-            return;
-
-        forPlayingTrack(track -> messageDispatcher.sendMessage(MessageType.Info, "Duration is " + track.getDuration()));
-    }
-
-    @BotCommandHandler
-    private void seek(Message message, long position) {
-        ActionData ad = new ActionData(messageDispatcher, message.getMember(), message.getGuild(), message.getGuildChannel(), guild.getAudioManager());
-        if (!canPerformAction(ad))
-            return;
-
-        forPlayingTrack(track -> track.setPosition(position));
-    }
-
-    @BotCommandHandler
-    private void pos(Message message) {
-        ActionData ad = new ActionData(messageDispatcher, message.getMember(), message.getGuild(), message.getGuildChannel(), guild.getAudioManager());
-        if (!canPerformAction(ad))
-            return;
-
-        forPlayingTrack(track -> messageDispatcher.sendMessage(MessageType.Info, "Position is " + track.getPosition()));
-    }
-
-    @BotCommandHandler
-    private void marker(final Message message, long position, final String text) {
-        ActionData ad = new ActionData(messageDispatcher, message.getMember(), message.getGuild(), message.getGuildChannel(), guild.getAudioManager());
-        if (!canPerformAction(ad))
-            return;
-
-        forPlayingTrack(track ->
-                track.setMarker(
-                        new TrackMarker(position,
-                        state ->
-                                messageDispatcher.sendMessage(MessageType.Info, "Trigger [" + text + "] cause [" + state.name() + "]"))));
-    }
-
-    @BotCommandHandler
-    private void unmark(Message message) {
-        ActionData ad = new ActionData(messageDispatcher, message.getMember(), message.getGuild(), message.getGuildChannel(), guild.getAudioManager());
-        if (!canPerformAction(ad))
-            return;
-
-        forPlayingTrack(track -> track.setMarker(null));
-    }
-
-    @BotCommandHandler
     private void song(Message message) {
+        outputChannel.set((TextChannel) message.getChannel());
+
+        if (player.getPlayingTrack() == null) {
+            messageDispatcher.sendDisposableMessage(MessageType.Warning, "Nothing is playing.");
+            return;
+        }
+
         AudioTrackInfo current = player.getPlayingTrack().getInfo();
 
         messageDispatcher.sendMessage(MessageType.Info, "Currently playing **" + current.title + "** by **" + current.author + "**");
@@ -469,6 +391,7 @@ public class MusicController implements BotController {
         if (!canPerformAction(ad))
             return;
 
+        outputChannel.set((TextChannel) message.getChannel());
         scheduler.clearQueue();
         messageDispatcher.sendDisposableMessage(MessageType.Success, "Cleared queue.");
     }
@@ -479,8 +402,8 @@ public class MusicController implements BotController {
         if (!canPerformAction(ad))
             return;
 
+        outputChannel.set((TextChannel) message.getChannel());
         scheduler.shuffleQueue();
-        messageDispatcher.sendDisposableMessage(MessageType.Success, "Shuffled queue.");
     }
 
     @BotCommandHandler
@@ -520,6 +443,55 @@ public class MusicController implements BotController {
 
         outputChannel.set((TextChannel) message.getChannel());
         messageDispatcher.sendDisposableMessage(MessageType.Success, "Output channel set to **" + message.getChannel().getName() + "**");
+    }
+
+    @BotCommandHandler
+    private void duration(Message message) {
+        ActionData ad = new ActionData(messageDispatcher, message.getMember(), message.getGuild(), message.getGuildChannel(), guild.getAudioManager());
+        if (!canPerformAction(ad))
+            return;
+
+        forPlayingTrack(track -> messageDispatcher.sendMessage(MessageType.Info, "Duration is " + track.getDuration()));
+    }
+
+    @BotCommandHandler
+    private void seek(Message message, long position) {
+        ActionData ad = new ActionData(messageDispatcher, message.getMember(), message.getGuild(), message.getGuildChannel(), guild.getAudioManager());
+        if (!canPerformAction(ad))
+            return;
+
+        forPlayingTrack(track -> track.setPosition(position));
+    }
+
+    @BotCommandHandler
+    private void pos(Message message) {
+        ActionData ad = new ActionData(messageDispatcher, message.getMember(), message.getGuild(), message.getGuildChannel(), guild.getAudioManager());
+        if (!canPerformAction(ad))
+            return;
+
+        forPlayingTrack(track -> messageDispatcher.sendMessage(MessageType.Info, "Position is " + track.getPosition()));
+    }
+
+    @BotCommandHandler
+    private void marker(final Message message, long position, final String text) {
+        ActionData ad = new ActionData(messageDispatcher, message.getMember(), message.getGuild(), message.getGuildChannel(), guild.getAudioManager());
+        if (!canPerformAction(ad))
+            return;
+
+        forPlayingTrack(track ->
+                track.setMarker(
+                        new TrackMarker(position,
+                                state ->
+                                        messageDispatcher.sendMessage(MessageType.Info, "Trigger [" + text + "] cause [" + state.name() + "]"))));
+    }
+
+    @BotCommandHandler
+    private void unmark(Message message) {
+        ActionData ad = new ActionData(messageDispatcher, message.getMember(), message.getGuild(), message.getGuildChannel(), guild.getAudioManager());
+        if (!canPerformAction(ad))
+            return;
+
+        forPlayingTrack(track -> track.setMarker(null));
     }
 
     @BotCommandHandler
@@ -565,12 +537,57 @@ public class MusicController implements BotController {
         });
     }
 
+    @BotCommandHandler
+    private void hex(Message message, int pageCount) {
+        if (!isOwner(message.getAuthor()))
+            return;
+
+        manager.source(YoutubeAudioSourceManager.class).setPlaylistPageCount(pageCount);
+    }
+
+    @BotCommandHandler
+    private void serialize(Message message) throws IOException {
+        if (!isOwner(message.getAuthor()))
+            return;
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        MessageOutput outputStream = new MessageOutput(baos);
+
+        for (AudioTrack track : scheduler.drainQueue()) {
+            manager.encodeTrack(outputStream, track);
+        }
+
+        outputStream.finish();
+
+        message.getChannel().sendMessage(Base64.encodeBytes(baos.toByteArray())).queue();
+    }
+
+    @BotCommandHandler
+    private void deserialize(Message message, String content) throws IOException {
+        if (!isOwner(message.getAuthor()))
+            return;
+
+        outputChannel.set((TextChannel) message.getChannel());
+        connectToVoiceChannel(message, guild.getAudioManager());
+
+        byte[] bytes = Base64.decode(content);
+
+        MessageInput inputStream = new MessageInput(new ByteArrayInputStream(bytes));
+        DecodedTrackHolder holder;
+
+        while ((holder = manager.decodeTrack(inputStream)) != null) {
+            if (holder.decodedTrack != null) {
+                scheduler.addToQueue(holder.decodedTrack);
+            }
+        }
+    }
+
     /** ====================================
      *  End bot commands
      *  ====================================
      */
 
-    private boolean isOwner(User user) {
+    public static boolean isOwner(final User user) {
         String stam_user_id = "407904130690973707";
         return user.getId().equals(stam_user_id);
     }
@@ -746,26 +763,38 @@ public class MusicController implements BotController {
     }
 
     public static boolean canPerformAction(ActionData actionData) {
+        return canPerformAction(actionData, false);
+    }
+
+    public static boolean canPerformAction(ActionData actionData, final boolean mustBeInVC) {
         if (actionData == null)
             return false;
 
-        if (actionData.member() == null)
+        if (actionData.getMember() == null)
             return false;
 
         // Check permissions
-//        if (!message.getGuild().getSelfMember().hasPermission(message.getGuildChannel(), Permission.VOICE_CONNECT)) {
-        if (!actionData.guild().getSelfMember().hasPermission(actionData.guildChannel(), Permission.VOICE_CONNECT)) {
-            actionData.messageDispatcher().sendDisposableMessage(MessageType.Error, "Yeet does not have permissions to join a voice channel.");
+        if (!actionData.getGuild().getSelfMember().hasPermission(actionData.getGuildChannel(), Permission.VOICE_CONNECT)) {
+            actionData.getMessageDispatcher().sendDisposableMessage(MessageType.Error, "Yeet does not have permissions to join a voice channel.");
             return false;
         }
 
+        // Check if user is connected to a voice channel. Admins can bypass.
+        if (mustBeInVC && !actionData.getMember().hasPermission(Permission.ADMINISTRATOR)) {
+            VoiceChannel memberVoiceChannel = (VoiceChannel) actionData.getMember().getVoiceState().getChannel();
+            if (memberVoiceChannel == null) {
+                actionData.getMessageDispatcher().sendDisposableMessage(MessageType.Error, "You are not connected to a voice channel.");
+                return false;
+            }
+        }
+
         // Check if bot is already connected to a voice channel.
-        if (actionData.audioManager().isConnected()) {
-            // Allow for admins to perform actions even if they are not connected to the same voice channel.
-            if (!actionData.member().hasPermission(Permission.ADMINISTRATOR)) {
+        if (actionData.getAudioManager().isConnected()) {
+            // Admins can bypass.
+            if (!actionData.getMember().hasPermission(Permission.ADMINISTRATOR)) {
                 // Check if bot is connected to a different voice channel from the user.
-                if (actionData.audioManager().getConnectedChannel().getIdLong() != actionData.member().getVoiceState().getChannel().getIdLong()) {
-                    actionData.messageDispatcher().sendDisposableMessage(MessageType.Error, "Yeet is playing in another voice channel.");
+                if (actionData.getAudioManager().getConnectedChannel().getIdLong() != actionData.getMember().getVoiceState().getChannel().getIdLong()) {
+                    actionData.getMessageDispatcher().sendDisposableMessage(MessageType.Error, "Yeet is playing in another voice channel.");
                     return false;
                 }
             }
@@ -775,14 +804,14 @@ public class MusicController implements BotController {
     }
 
     private boolean connectToVoiceChannel(final Message message, AudioManager audioManager) {
-//        if (!voiceChannelChecksOK(message, audioManager))
-//            return;
-
         Member member = message.getMember();
         if (member == null)
             return false;
 
         // Check if user is connected to a voice channel.
+        // We're checking this again because this is specifically for the !play (and similar) commands.
+        // We're only going to play if the user is connected to a voice channel, there's no reason
+        // for admins to be able to bypass this, as done in canPerformAction().
         VoiceChannel memberVoiceChannel = (VoiceChannel) member.getVoiceState().getChannel();
         if (memberVoiceChannel == null) {
             messageDispatcher.sendDisposableMessage(MessageType.Error, "You are not connected to a voice channel.");
@@ -804,12 +833,11 @@ public class MusicController implements BotController {
 
     public static void removeTrackBoxButtonClickListener(Guild guild) {
         for (Object listener : guild.getJDA().getRegisteredListeners()) {
-//                if (listener.getClass().getSimpleName().equals("TrackBoxButtonClick")) {
             if (listener instanceof TrackBoxButtonClick) {
                 Guild listenerGuild = ((TrackBoxButtonClick) listener).getScheduler().getGuild();
 
                 if (listenerGuild.getIdLong() == guild.getIdLong()) {
-                    System.out.println("Removed listener: " + listener.getClass().getSimpleName());
+                    System.out.printf("[%s] Removed listener: %s%n", guild.getName(), listener.getClass().getSimpleName());
                     guild.getJDA().removeEventListener(listener);
                 }
             }
@@ -832,7 +860,7 @@ public class MusicController implements BotController {
                 else {
                     removeTrackBoxButtonClickListener(channel.getGuild());
 
-                    System.out.println("Added new TrackBoxButtonClick listener for Guild: " + channel.getGuild().getName());
+                    System.out.printf("[%s] Added new listener: TrackBoxButtonClick%n", channel.getGuild().getName());
                     channel.getJDA().addEventListener(trackBoxButtonClick);
                     channel.sendMessageEmbeds(messageEmbed).setActionRow(
                             TrackBoxBuilder.sendButtons(channel.getGuild().getId())
@@ -859,6 +887,7 @@ public class MusicController implements BotController {
             TextChannel channel = outputChannel.get();
 
             EmbedBuilder eb = new EmbedBuilder();
+//            eb.setTitle(type.toString());
             eb.setColor(type.color);
             eb.setDescription(message);
 

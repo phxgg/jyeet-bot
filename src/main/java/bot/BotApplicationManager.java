@@ -22,6 +22,7 @@ import com.sedmelluq.lava.extensions.youtuberotator.YoutubeIpRotatorSetup;
 import com.sedmelluq.lava.extensions.youtuberotator.planner.RotatingNanoIpRoutePlanner;
 import com.sedmelluq.lava.extensions.youtuberotator.tools.ip.IpBlock;
 import com.sedmelluq.lava.extensions.youtuberotator.tools.ip.Ipv6Block;
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.ChannelType;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -155,22 +156,54 @@ public class BotApplicationManager extends ListenerAdapter {
 
             @Override
             public void commandWrongParameterCount(Message message, String name, String usage, int given, int required) {
-                event.getTextChannel().sendMessage("Wrong argument count for command").queue();
+                EmbedBuilder eb = new EmbedBuilder();
+
+                eb.setTitle("Error");
+                eb.setColor(MessageType.Error.color);
+                eb.setDescription("Wrong argument count.");
+                eb.setFooter("Command: " + name);
+
+                event.getTextChannel().sendMessageEmbeds(eb.build()).queue();
             }
 
             @Override
             public void commandWrongParameterType(Message message, String name, String usage, int index, String value, Class<?> expectedType) {
-                event.getTextChannel().sendMessage("Wrong argument type for command").queue();
+                EmbedBuilder eb = new EmbedBuilder();
+
+                eb.setTitle("Error");
+                eb.setColor(MessageType.Error.color);
+                eb.setDescription("Wrong argument type.");
+                eb.setFooter("Command: " + name);
+
+                event.getTextChannel().sendMessageEmbeds(eb.build()).queue();
             }
 
             @Override
             public void commandRestricted(Message message, String name) {
-                event.getTextChannel().sendMessage("Command not permitted").queue();
+                EmbedBuilder eb = new EmbedBuilder();
+
+                eb.setTitle("Error");
+                eb.setColor(MessageType.Error.color);
+                eb.setDescription("Command not permitted.");
+                eb.setFooter("Command: " + name);
+
+                event.getTextChannel().sendMessageEmbeds(eb.build()).queue();
             }
 
             @Override
             public void commandException(Message message, String name, Throwable throwable) {
-                event.getTextChannel().sendMessage("Command threw an exception").queue();
+                EmbedBuilder eb = new EmbedBuilder();
+
+                eb.setTitle("Error");
+                eb.setColor(MessageType.Error.color);
+                eb.setDescription(
+                        String.format("Command threw an exception:\n`%s`\n```%s```",
+                                throwable.getClass().getSimpleName(),
+                                throwable.getMessage())
+                );
+                eb.setFooter("Command: " + name);
+
+                event.getTextChannel().sendMessageEmbeds(eb.build()).queue();
 
                 log.error("Command with content {} threw an exception.", message.getContentDisplay(), throwable);
             }

@@ -18,10 +18,10 @@ Run bot with the `-Dipv6Block=<IPV6_BLOCK>/64` parameter.
 ### TODO
 
 * **REVIEW CODE:** Add and remove TrackBoxButtonClick event listeners only when needed and generally review the code.
-* When queue has finished, keep bot in voice channel for 1 minute. Disconnect if no track has been added inbetween this minute.
-* Do voice channel checks (like if user is/isn't in a voice channel) before loading the track/playlist/etc..
+* When queue has finished, keep bot in voice channel for 10 minutes. Disconnect if no track has been added inbetween this 10 minutes.
 * Implement a database to save/load prefixes and other settings for each guild.
+* * Let admins set a specific channel for the bot to listen to commands. Also, only reply to that channel.
 * Implement the `!previous` command.
 * IPv6 /64 block -> YouTube IP rotator for rate limiting.
-* Fix message dispatcher. Only reply the channel we sent the first command.
+* Fix message dispatcher in general.
 * toLowerCase commands
