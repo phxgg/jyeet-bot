@@ -748,7 +748,7 @@ public class MusicController implements BotController {
                     }
 
                     if (playNow) {
-                        scheduler.playNow(selected, true);
+                        scheduler.playNow(selected, false);
                     } else if (playNext) {
                         scheduler.playNext(selected);
                     } else {
@@ -768,7 +768,7 @@ public class MusicController implements BotController {
                     messageDispatcher.sendDisposableMessage(MessageType.Success, "Added to queue: **" + track.getInfo().title + "**");
 
                     if (playNow) {
-                        scheduler.playNow(track, true);
+                        scheduler.playNow(track, false);
                     } else if (playNext) {
                         scheduler.playNext(track);
                     } else {
