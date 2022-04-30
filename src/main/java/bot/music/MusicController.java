@@ -718,7 +718,7 @@ public class MusicController implements BotController {
                 messageDispatcher.sendDisposableMessage(MessageType.Success, "Added to queue: **" + track.getInfo().title + "**");
 
                 if (playNow) {
-                    scheduler.playNow(track, true);
+                    scheduler.playNow(track, false);
                 } else if (playNext) {
                     scheduler.playNext(track);
                 } else {
