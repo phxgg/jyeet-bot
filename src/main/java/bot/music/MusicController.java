@@ -811,7 +811,7 @@ public class MusicController implements BotController {
 
         // Check permissions
         if (!actionData.getGuild().getSelfMember().hasPermission(actionData.getGuildChannel(), Permission.VOICE_CONNECT)) {
-            actionData.getMessageDispatcher().sendDisposableMessage(MessageType.Error, "Yeet does not have permissions to join a voice channel.");
+            actionData.getMessageDispatcher().sendDisposableMessage(MessageType.Error, "Yeet does not have permission to join a voice channel.");
             return false;
         }
 
