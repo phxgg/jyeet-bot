@@ -117,6 +117,9 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
     }
 
     private void startNextTrack(boolean noInterrupt) {
+        // TODO: Cancel waitingInVC if it's not null, and set it to null.
+        // TODO: Find a workaround for this, because it may lead to memory leaks if done uncarefully.
+
         AudioTrack next = queue.pollFirst();
 
         if (next != null) {
@@ -128,6 +131,13 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
             messageDispatcher.sendDisposableMessage(MessageType.Info, "Queue finished.");
 
             // Wait for 5 minutes before closing the connection.
+
+            // Review this code when canceling ScheduledFuture. It may lead to memory leaks.
+            // Read here: https://stackoverflow.com/a/14423578
+
+            // EDIT: This actually won't be a problem, since it's a tiny bit of memory that
+            // will stick around for 5 minutes after a queue has finished, then destroyed.
+
             if (waitingInVC != null) {
                 waitingInVC.cancel(false);
             }
