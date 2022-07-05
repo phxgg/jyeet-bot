@@ -69,6 +69,7 @@ public class MusicController implements BotController {
 
     public void destroyPlayer() {
         scheduler.clearQueue();
+        player.setPaused(false);
         player.setVolume(100);
         player.setFilterFactory(null);
         player.destroy();

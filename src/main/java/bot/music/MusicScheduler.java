@@ -13,10 +13,7 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -28,6 +25,7 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
     private final BlockingDeque<AudioTrack> queue;
     private final AtomicReference<Message> boxMessage;
     private final AtomicBoolean creatingBoxMessage;
+    private ScheduledFuture<?> waitingInVC;
 
     public MusicScheduler(Guild guild, AudioPlayer player, MessageDispatcher messageDispatcher, ScheduledExecutorService executorService) {
         this.guild = guild;
@@ -129,9 +127,19 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
             player.stopTrack();
             messageDispatcher.sendDisposableMessage(MessageType.Info, "Queue finished.");
 
-            // Wait for 10 minutes before closing the connection.
+            // Wait for 5 minutes before closing the connection.
+            if (waitingInVC != null) {
+                waitingInVC.cancel(false);
+            }
 
-            guild.getAudioManager().closeAudioConnection();
+            waitingInVC = executorService.schedule(() -> {
+                if (player.getPlayingTrack() == null) {
+                    guild.getAudioManager().closeAudioConnection();
+                    messageDispatcher.sendDisposableMessage(MessageType.Info, "I have been inactive for 5 minutes, I guess I'm leaving...");
+                }
+            }, 5, TimeUnit.MINUTES);
+
+//            guild.getAudioManager().closeAudioConnection();
         }
     }
 
