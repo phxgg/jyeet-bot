@@ -84,7 +84,7 @@ public class BotControllerManager {
             return;
         }
 
-        String commandName = separated[0].substring(prefix.length());
+        String commandName = separated[0].substring(prefix.length()).toLowerCase();
         Command command = commands.get(commandName);
 
         if (command == null) {

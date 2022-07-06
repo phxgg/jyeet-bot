@@ -87,10 +87,13 @@ public class MusicController implements BotController {
     private void help(Message message) {
         EmbedBuilder eb = new EmbedBuilder();
 
-        eb.setTitle("Yeet Bot");
+//        eb.setTitle("Yeeet Bot");
 
         eb.setColor(Color.CYAN);
         eb.setDescription("**Commands**");
+
+        eb.setAuthor("Yeeet Bot", "https://github.com/phxgg", "https://i.imgur.com/lIzJ56T.png");
+        eb.setFooter("Made by phxgg", null);
 
         String prefix = System.getProperty("prefix");
 
@@ -124,7 +127,7 @@ public class MusicController implements BotController {
         eb.addField(
                 String.format("`%spause`",
                         prefix),
-                String.format("Pause current playing song. Use `%spause` or `%sresume` to unpause.",
+                String.format("Pause current playing track. Use `%spause` or `%sresume` to unpause.",
                         prefix,
                         prefix),
                 false
@@ -135,6 +138,14 @@ public class MusicController implements BotController {
                 String.format("`%splaynow <name_of_track/link/playlist>`",
                         prefix),
                 "Destroys current queue and plays whatever provided.",
+                false
+        );
+
+        // playnext
+        eb.addField(
+                String.format("`%splaynext <name_of_track/link/playlist>`",
+                        prefix),
+                "Adds in queue whatever provided right after the current track.",
                 false
         );
 
