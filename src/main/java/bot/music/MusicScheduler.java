@@ -147,6 +147,10 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
                     guild.getAudioManager().closeAudioConnection();
                     messageDispatcher.sendDisposableMessage(MessageType.Info, "I have been inactive for 5 minutes, I guess I'm leaving...");
                 }
+//                TODO: uncomment this?
+//                else {
+//                    waitingInVC = null;
+//                }
             }, 5, TimeUnit.MINUTES);
 
 //            guild.getAudioManager().closeAudioConnection();
