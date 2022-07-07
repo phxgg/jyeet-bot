@@ -2,13 +2,21 @@ package bot.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Future;
 
 public class WebReq {
@@ -42,18 +50,19 @@ public class WebReq {
 //        }};
 
         var objectMapper = new ObjectMapper();
-        byte[] requestBody = null;
+        String requestBody = null;
         try {
-            requestBody = objectMapper.writeValueAsBytes(data);
+            requestBody = objectMapper.writeValueAsString(data);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
 
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
+                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
                 .uri(URI.create(API).resolve(url))
-                .header("x-key", headers.get("x-key"))
-                .POST(HttpRequest.BodyPublishers.ofByteArray(requestBody))
+                .setHeader("x-key", headers.get("x-key"))
+                .setHeader("Content-Type", "application/json")
                 .build();
 
         HttpResponse<String> response = null;

@@ -24,16 +24,18 @@ public class Main {
 
             Gson gson = new Gson();
 
-            HashMap<String, ?> d = new HashMap<>() {{
-                put("guildId", 123456711);
-                put("ownerId", 23444);
-                put("name", "Test Server");
-            }};
+            // Add server POST request
+//            HashMap<String, ?> d = new HashMap<>() {{
+//                put("guildId", 123456711);
+//                put("ownerId", 23444);
+//                put("name", "Test Server");
+//            }};
+//
+//            String p = WebReq.Post("/servers/create", d);
+//            Response i = gson.fromJson(p, Response.class);
+//            System.out.println(p);
 
-            String p = WebReq.Post("/servers/create", d);
-            Response i = gson.fromJson(p, Response.class);
-            System.out.println(p);
-
+            // Get all servers GET request
             String r = WebReq.Get("/servers/all");
             Response o = gson.fromJson(r, Response.class);
 
