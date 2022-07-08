@@ -9,7 +9,6 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 
 import javax.security.auth.login.LoginException;
-import java.util.HashMap;
 
 public class Main {
     public static void main(String[] args) {
@@ -24,20 +23,9 @@ public class Main {
 
             Gson gson = new Gson();
 
-            // Add server POST request
-//            HashMap<String, ?> d = new HashMap<>() {{
-//                put("guildId", 123456711);
-//                put("ownerId", 23444);
-//                put("name", "Test Server");
-//            }};
-//
-//            String p = WebReq.Post("/servers/create", d);
-//            Response i = gson.fromJson(p, Response.class);
-//            System.out.println(p);
-
             // Get all servers GET request
-            String r = WebReq.Get("/servers/all");
-            Response o = gson.fromJson(r, Response.class);
+            String rr = WebReq.Get("/servers/all");
+            Response o = gson.fromJson(rr, Response.class);
 
             Server[] servers = gson.fromJson(gson.toJson(o.getData()), Server[].class);
             for (Server server : servers) {

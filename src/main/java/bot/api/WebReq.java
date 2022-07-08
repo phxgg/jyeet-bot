@@ -2,22 +2,13 @@ package bot.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Future;
 
 public class WebReq {
     private static final String API = "http://localhost:1010";
@@ -42,13 +33,7 @@ public class WebReq {
         return response.body();
     }
 
-    // TODO: Fix request body, it seems like it's not being sent correctly
     public static String Post(String url, HashMap<String, ?> data) {
-//        var values = new HashMap<String, String>() {{
-//            put("name", "John Doe");
-//            put("occupation", "gardener");
-//        }};
-
         var objectMapper = new ObjectMapper();
         String requestBody = null;
         try {

@@ -1,11 +1,15 @@
 package bot;
 
+import bot.api.StatusCodes;
+import bot.api.WebReq;
 import bot.controller.BotCommandMappingHandler;
 import bot.controller.BotController;
 import bot.controller.BotControllerManager;
+import bot.dto.Response;
 import bot.music.MusicController;
 import com.github.topislavalinkplugins.topissourcemanagers.spotify.SpotifyConfig;
 import com.github.topislavalinkplugins.topissourcemanagers.spotify.SpotifySourceManager;
+import com.google.gson.Gson;
 import com.sedmelluq.discord.lavaplayer.player.AudioConfiguration;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
@@ -50,10 +54,12 @@ public class BotApplicationManager extends ListenerAdapter {
     private final BotControllerManager controllerManager;
     private final AudioPlayerManager playerManager;
     private final ScheduledExecutorService executorService;
+    private final Gson gson;
 
     private final String ipv6Block = System.getProperty("ipv6Block");
 
     public BotApplicationManager() {
+        gson = new Gson();
         guildContexts = new HashMap<>();
         controllerManager = new BotControllerManager();
 
@@ -257,11 +263,35 @@ public class BotApplicationManager extends ListenerAdapter {
 
     @Override
     public void onGuildLeave(@Nonnull GuildLeaveEvent event) {
-        // do stuff
+        HashMap<String, ?> data = new HashMap<>() {{
+            put("guildId", event.getGuild().getId());
+        }};
+
+        String post = WebReq.Post("/servers/delete", data);
+        Response r = gson.fromJson(post, Response.class);
+
+        if (r.getCode() == StatusCodes.OK.getCode()) {
+            log.info("Server {} deleted.", event.getGuild().getName());
+        } else {
+            log.error("Server {} could not be deleted.", event.getGuild().getName());
+        }
     }
 
     @Override
     public void onGuildJoin(@Nonnull GuildJoinEvent event) {
-        // do stuff
+        HashMap<String, ?> data = new HashMap<>() {{
+            put("guildId", event.getGuild().getId());
+            put("ownerId", event.getGuild().getOwnerId());
+            put("name", event.getGuild().getName());
+        }};
+
+        String post = WebReq.Post("/servers/create", data);
+        Response r = gson.fromJson(post, Response.class);
+
+        if (r.getCode() == StatusCodes.OK.getCode()) {
+            log.info("Server {} created.", event.getGuild().getName());
+        } else {
+            log.error("Server {} could not be created.", event.getGuild().getName());
+        }
     }
 }
