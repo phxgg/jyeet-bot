@@ -2,7 +2,7 @@ package bot.dto;
 
 public class Server {
     private String id;
-    private int guildId;
+    private String guildId;
     private String name;
     private String ownerId;
     private String createdAt;
@@ -12,7 +12,7 @@ public class Server {
         return id;
     }
 
-    public int getGuildId() {
+    public String getGuildId() {
         return guildId;
     }
 
