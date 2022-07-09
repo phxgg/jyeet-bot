@@ -220,6 +220,11 @@ public class MusicController implements BotController {
 
     @BotCommandHandler
     private void prefix(Message message, String newPrefix) {
+        if (!message.getGuild().getOwnerId().equals(message.getAuthor().getId())) {
+            messageDispatcher.sendDisposableMessage(MessageType.Warning, "You cannot change the prefix.");
+            return;
+        }
+
         outputChannel.set((TextChannel) message.getChannel());
 
         if (newPrefix.isEmpty() || newPrefix.length() > 2 || newPrefix.contains(" ") || newPrefix.contains("`")) {
