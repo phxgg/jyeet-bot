@@ -59,7 +59,7 @@ public class BotApplicationManager extends ListenerAdapter {
     private final BotControllerManager controllerManager;
     private final AudioPlayerManager playerManager;
     private final ScheduledExecutorService executorService; // Interface
-//    private final ScheduledThreadPoolExecutor executorService; // use for setRemoveOnCancelPolicy(true)
+    //    private final ScheduledThreadPoolExecutor executorService; // use for setRemoveOnCancelPolicy(true)
     private final Gson gson;
 
     private final String ipv6Block = System.getProperty("ipv6Block");
@@ -137,7 +137,7 @@ public class BotApplicationManager extends ListenerAdapter {
 
     private BotGuildContext createGuildState(long guildId, Guild guild) {
         HashMap<String, ?> data = new HashMap<>() {{
-           put("guildId", String.valueOf(guildId));
+            put("guildId", String.valueOf(guildId));
         }};
 
         String post = WebReq.Post("/servers/guild", data);
@@ -249,9 +249,8 @@ public class BotApplicationManager extends ListenerAdapter {
         });
     }
 
-    private boolean isAlone(Guild guild)
-    {
-        if(guild.getAudioManager().getConnectedChannel() == null) return false;
+    private boolean isAlone(Guild guild) {
+        if (guild.getAudioManager().getConnectedChannel() == null) return false;
         return guild.getAudioManager().getConnectedChannel().getMembers().stream()
                 .noneMatch(x ->
                         (x.getVoiceState() != null)
@@ -305,9 +304,9 @@ public class BotApplicationManager extends ListenerAdapter {
         Response r = gson.fromJson(post, Response.class);
 
         if (r.getCode() == StatusCodes.OK.getCode()) {
-            log.info("Server {} deleted.", event.getGuild().getName());
+            log.info("[{}] Server deleted.", event.getGuild().getName());
         } else {
-            log.error("Server {} could not be deleted.", event.getGuild().getName());
+            log.error("[{}] Server could not be deleted.", event.getGuild().getName());
         }
     }
 
@@ -324,16 +323,16 @@ public class BotApplicationManager extends ListenerAdapter {
         Response r = gson.fromJson(post, Response.class);
 
         if (r.getCode() == StatusCodes.OK.getCode()) {
-            log.info("Server {} created.", event.getGuild().getName());
+            log.info("[{}] Server created.", event.getGuild().getName());
         } else {
-            log.error("Server {} could not be created.", event.getGuild().getName());
+            log.error("[{}] Server could not be created.", event.getGuild().getName());
         }
     }
 
     @Override
     public void onGuildUpdateName(@NotNull GuildUpdateNameEvent event) {
         HashMap<String, ?> data = new HashMap<>() {{
-            put("guildId",event.getGuild().getId());
+            put("guildId", event.getGuild().getId());
             put("name", event.getGuild().getName());
         }};
 
@@ -341,16 +340,16 @@ public class BotApplicationManager extends ListenerAdapter {
         Response r = gson.fromJson(post, Response.class);
 
         if (r.getCode() == StatusCodes.OK.getCode()) {
-            log.info("Server {} updated name.", event.getGuild().getName());
+            log.info("[{}] Updated name.", event.getGuild().getName());
         } else {
-            log.error("Server {} could not update name.", event.getGuild().getName());
+            log.error("[{}] Could not update name.", event.getGuild().getName());
         }
     }
 
     @Override
     public void onGuildUpdateOwner(@NotNull GuildUpdateOwnerEvent event) {
         HashMap<String, ?> data = new HashMap<>() {{
-            put("guildId",event.getGuild().getId());
+            put("guildId", event.getGuild().getId());
             put("ownerId", event.getGuild().getOwnerId());
         }};
 
@@ -358,9 +357,9 @@ public class BotApplicationManager extends ListenerAdapter {
         Response r = gson.fromJson(post, Response.class);
 
         if (r.getCode() == StatusCodes.OK.getCode()) {
-            log.info("Server {} updated ownerId.", event.getGuild().getName());
+            log.info("[{}] Updated ownerId.", event.getGuild().getName());
         } else {
-            log.error("Server {} could not update ownerId.", event.getGuild().getName());
+            log.error("[{}] Could not update ownerId.", event.getGuild().getName());
         }
     }
 }
