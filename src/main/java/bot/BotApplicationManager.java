@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class BotApplicationManager extends ListenerAdapter {
     private static final Logger log = LoggerFactory.getLogger(BotApplicationManager.class);
@@ -57,7 +58,8 @@ public class BotApplicationManager extends ListenerAdapter {
     private final Map<Long, BotGuildContext> guildContexts;
     private final BotControllerManager controllerManager;
     private final AudioPlayerManager playerManager;
-    private final ScheduledExecutorService executorService;
+    private final ScheduledExecutorService executorService; // Interface
+//    private final ScheduledThreadPoolExecutor executorService; // use for setRemoveOnCancelPolicy(true)
     private final Gson gson;
 
     private final String ipv6Block = System.getProperty("ipv6Block");
@@ -109,6 +111,10 @@ public class BotApplicationManager extends ListenerAdapter {
         playerManager.registerSourceManager(new LocalAudioSourceManager());
 
         executorService = Executors.newScheduledThreadPool(1, new DaemonThreadFactory("bot"));
+
+        // Use this if you want to use setRemoveOnCancelPolicy
+//        executorService = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1, new DaemonThreadFactory("bot"));
+//        executorService.setRemoveOnCancelPolicy(true);
     }
 
 //    public static Optional<Properties> readYoutubeConfig() {
