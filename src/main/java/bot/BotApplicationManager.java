@@ -6,6 +6,7 @@ import bot.controller.BotCommandMappingHandler;
 import bot.controller.BotController;
 import bot.controller.BotControllerManager;
 import bot.dto.Response;
+import bot.dto.Server;
 import bot.music.MusicController;
 import com.github.topislavalinkplugins.topissourcemanagers.spotify.SpotifyConfig;
 import com.github.topislavalinkplugins.topissourcemanagers.spotify.SpotifySourceManager;
@@ -34,6 +35,7 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.api.events.guild.update.GuildUpdateNameEvent;
+import net.dv8tion.jda.api.events.guild.update.GuildUpdateOwnerEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -128,7 +130,23 @@ public class BotApplicationManager extends ListenerAdapter {
     }
 
     private BotGuildContext createGuildState(long guildId, Guild guild) {
-        BotGuildContext context = new BotGuildContext(guildId);
+        HashMap<String, ?> data = new HashMap<>() {{
+           put("guildId", String.valueOf(guildId));
+        }};
+
+        String post = WebReq.Post("/servers/guild", data);
+        Response r = gson.fromJson(post, Response.class);
+
+        String prefix = null;
+
+        if (r.getCode() == StatusCodes.OK.getCode()) {
+            Server server = gson.fromJson(gson.toJson(r.getData()), Server.class);
+            prefix = server.getPrefix();
+        } else {
+            prefix = System.getProperty("prefix");
+        }
+
+        BotGuildContext context = new BotGuildContext(guildId, prefix);
 
         for (BotController controller : controllerManager.createControllers(this, context, guild)) {
             context.controllers.put(controller.getClass(), controller);
@@ -159,7 +177,10 @@ public class BotApplicationManager extends ListenerAdapter {
 
         BotGuildContext guildContext = getContext(event.getGuild());
 
-        controllerManager.dispatchMessage(guildContext.controllers, System.getProperty("prefix"), event.getMessage(), new BotCommandMappingHandler() {
+//        String prefix = System.getProperty("prefix");
+        String prefix = guildContext.guildPrefix;
+
+        controllerManager.dispatchMessage(guildContext.controllers, prefix, event.getMessage(), new BotCommandMappingHandler() {
             @Override
             public void commandNotFound(Message message, String name) {
 
@@ -232,6 +253,11 @@ public class BotApplicationManager extends ListenerAdapter {
                                 && !x.getUser().isBot());
     }
 
+    /**
+     * ====================================
+     * EVENTS
+     * ====================================
+     */
     @Override
     public void onGuildVoiceUpdate(@Nonnull GuildVoiceUpdateEvent event) {
         BotGuildContext guildContext = getContext(event.getGuild());
@@ -269,7 +295,7 @@ public class BotApplicationManager extends ListenerAdapter {
             put("guildId", event.getGuild().getId());
         }};
 
-        String post = WebReq.Post("/servers/delete", data);
+        String post = WebReq.Post("/servers/deleteGuild", data);
         Response r = gson.fromJson(post, Response.class);
 
         if (r.getCode() == StatusCodes.OK.getCode()) {
@@ -285,6 +311,7 @@ public class BotApplicationManager extends ListenerAdapter {
             put("guildId", event.getGuild().getId());
             put("ownerId", event.getGuild().getOwnerId());
             put("name", event.getGuild().getName());
+            put("prefix", System.getProperty("prefix"));
         }};
 
         String post = WebReq.Post("/servers/create", data);
@@ -299,6 +326,35 @@ public class BotApplicationManager extends ListenerAdapter {
 
     @Override
     public void onGuildUpdateName(@NotNull GuildUpdateNameEvent event) {
-        // update guild name
+        HashMap<String, ?> data = new HashMap<>() {{
+            put("guildId",event.getGuild().getId());
+            put("name", event.getGuild().getName());
+        }};
+
+        String post = WebReq.Post("/servers/updateGuildName", data);
+        Response r = gson.fromJson(post, Response.class);
+
+        if (r.getCode() == StatusCodes.OK.getCode()) {
+            log.info("Server {} updated name.", event.getGuild().getName());
+        } else {
+            log.error("Server {} could not update name.", event.getGuild().getName());
+        }
+    }
+
+    @Override
+    public void onGuildUpdateOwner(@NotNull GuildUpdateOwnerEvent event) {
+        HashMap<String, ?> data = new HashMap<>() {{
+            put("guildId",event.getGuild().getId());
+            put("ownerId", event.getGuild().getOwnerId());
+        }};
+
+        String post = WebReq.Post("/servers/updateGuildOwner", data);
+        Response r = gson.fromJson(post, Response.class);
+
+        if (r.getCode() == StatusCodes.OK.getCode()) {
+            log.info("Server {} updated ownerId.", event.getGuild().getName());
+        } else {
+            log.error("Server {} could not update ownerId.", event.getGuild().getName());
+        }
     }
 }

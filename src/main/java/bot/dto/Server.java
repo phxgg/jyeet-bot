@@ -5,6 +5,7 @@ public class Server {
     private String guildId;
     private String name;
     private String ownerId;
+    private String prefix;
     private String createdAt;
     private String updatedAt;
 
@@ -22,6 +23,10 @@ public class Server {
 
     public String getOwnerId() {
         return ownerId;
+    }
+
+    public String getPrefix() {
+        return prefix;
     }
 
     public String getCreatedAt() {

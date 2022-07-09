@@ -6,6 +6,13 @@ public class Response {
     private String error;
     private Object data;
 
+    public Response(int code, String message, String error, Object data) {
+        this.code = code;
+        this.message = message;
+        this.error = error;
+        this.data = data;
+    }
+
     public int getCode() {
         return code;
     }

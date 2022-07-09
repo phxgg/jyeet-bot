@@ -1,5 +1,6 @@
 package bot;
 
+import bot.api.StatusCodes;
 import bot.api.WebReq;
 import bot.dto.Response;
 import bot.dto.Server;
@@ -24,12 +25,14 @@ public class Main {
             Gson gson = new Gson();
 
             // Get all servers GET request
-            String rr = WebReq.Get("/servers/all");
-            Response o = gson.fromJson(rr, Response.class);
+            String post = WebReq.Get("/servers/all");
+            Response r = gson.fromJson(post, Response.class);
 
-            Server[] servers = gson.fromJson(gson.toJson(o.getData()), Server[].class);
-            for (Server server : servers) {
-                System.out.println(server.getGuildId() + " " + server.getName());
+            if (r.getCode() == StatusCodes.OK.getCode()) {
+                Server[] servers = gson.fromJson(gson.toJson(r.getData()), Server[].class);
+                for (Server server : servers) {
+                    System.out.println(server.getGuildId() + " " + server.getName());
+                }
             }
 
             System.out.println("Logged in as " + jda.getSelfUser().getName() + "#" + jda.getSelfUser().getDiscriminator());

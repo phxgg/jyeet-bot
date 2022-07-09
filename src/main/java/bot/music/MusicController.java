@@ -4,10 +4,14 @@ import bot.BotApplicationManager;
 import bot.BotGuildContext;
 import bot.MessageDispatcher;
 import bot.MessageType;
+import bot.api.StatusCodes;
+import bot.api.WebReq;
 import bot.controller.BotCommandHandler;
 import bot.controller.BotController;
 import bot.controller.BotControllerFactory;
+import bot.dto.Response;
 import bot.records.ActionData;
+import com.google.gson.Gson;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
@@ -30,6 +34,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingDeque;
@@ -38,6 +43,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 public class MusicController implements BotController {
+    private final BotGuildContext state;
     private final AudioPlayerManager manager;
     private final AudioPlayer player;
     private final AtomicReference<TextChannel> outputChannel;
@@ -47,6 +53,7 @@ public class MusicController implements BotController {
     private final TrackBoxButtonClick trackBoxButtonClick;
 
     public MusicController(BotApplicationManager manager, BotGuildContext state, Guild guild) {
+        this.state = state;
         this.manager = manager.getPlayerManager();
         this.guild = guild;
 
@@ -95,7 +102,8 @@ public class MusicController implements BotController {
         eb.setAuthor("Yeeet Bot", "https://github.com/phxgg", "https://i.imgur.com/lIzJ56T.png");
         eb.setFooter("Made by phxgg", null);
 
-        String prefix = System.getProperty("prefix");
+//        String prefix = System.getProperty("prefix");
+        String prefix = state.guildPrefix;
 
         // help
         eb.addField(
@@ -208,6 +216,36 @@ public class MusicController implements BotController {
         );
 
         message.replyEmbeds(eb.build()).queue();
+    }
+
+    @BotCommandHandler
+    private void prefix(Message message, String newPrefix) {
+        outputChannel.set((TextChannel) message.getChannel());
+
+        if (newPrefix.isEmpty() || newPrefix.length() > 2 || newPrefix.contains(" ") || newPrefix.contains("`")) {
+            messageDispatcher.sendMessage(MessageType.Error,
+                    "Prefix must be 1 or 2 characters long and cannot contain spaces or the character `.");
+            return;
+        }
+
+        Gson gson = new Gson();
+
+        HashMap<String, ?> data = new HashMap<>() {{
+            put("guildId", message.getGuild().getId());
+            put("prefix", newPrefix);
+        }};
+
+        String post = WebReq.Post("/servers/updateGuildPrefix", data);
+        Response r = gson.fromJson(post, Response.class);
+
+        if (r.getCode() == StatusCodes.OK.getCode()) {
+            messageDispatcher.sendDisposableMessage(MessageType.Success, String.format("Prefix updated to `%s`.", newPrefix));
+            state.guildPrefix = newPrefix;
+//            System.out.printf("[%s] Prefix updated to %s%n", message.getGuild().getName(), newPrefix);
+        } else {
+            messageDispatcher.sendDisposableMessage(MessageType.Error, "Failed to update prefix.");
+//            System.out.printf("[%s] Failed to update prefix.%n", message.getGuild().getName());
+        }
     }
 
     @BotCommandHandler

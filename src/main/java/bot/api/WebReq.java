@@ -1,7 +1,9 @@
 package bot.api;
 
+import bot.dto.Response;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.net.URI;
@@ -27,7 +29,8 @@ public class WebReq {
         try {
             response = client.send(request, HttpResponse.BodyHandlers.ofString());
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e);
+            return new Gson().toJson(new Response(404, "Not Found - Could not make a connection.", e.getMessage(), null));
+//            throw new RuntimeException(e);
         }
 
         return response.body();
@@ -54,7 +57,8 @@ public class WebReq {
         try {
             response = client.send(request, HttpResponse.BodyHandlers.ofString());
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e);
+            return new Gson().toJson(new Response(404, "Not Found - Could not make a connection.", e.getMessage(), null));
+//            throw new RuntimeException(e);
         }
 
         return response.body();
