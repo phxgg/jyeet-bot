@@ -13,7 +13,7 @@ import java.net.http.HttpResponse;
 import java.util.HashMap;
 
 public class WebReq {
-    private static final String API = "http://localhost:1010";
+    private static final String API = System.getProperty("apiUrl");
     private static final HashMap<String, String> headers = new HashMap<>() {{
         put("x-key", System.getProperty("apiKey"));
     }};
