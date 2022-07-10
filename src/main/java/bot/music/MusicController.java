@@ -495,23 +495,7 @@ public class MusicController implements BotController {
         if (!canPerformAction(ad))
             return;
 
-        scheduler.clearQueue();
-        player.stopTrack();
-
-        if (scheduler.getWaitingInVC() != null) {
-            scheduler.getWaitingInVC().cancel(true);
-        }
-
-        scheduler.setWaitingInVC(
-                scheduler.getExecutorService().schedule(() -> {
-                    if (player.getPlayingTrack() == null) {
-                        guild.getAudioManager().closeAudioConnection();
-                        messageDispatcher.sendDisposableMessage(MessageType.Info, "I have been inactive for 5 minutes, I guess I'm leaving...");
-                    }
-                }, 1, TimeUnit.MINUTES)
-        );
-
-        messageDispatcher.sendDisposableMessage(MessageType.Info, "Player stopped.");
+        scheduler.stopPlayer();
     }
 
     @BotCommandHandler
@@ -525,7 +509,6 @@ public class MusicController implements BotController {
         // Instead of calling destroyPlayer(), we can just close the audio connection.
         // That's because when the connection is closed, the onGuildVoiceLeave event is triggered,
         // which will call destroyPlayer() for us.
-        guild.getAudioManager().closeAudioConnection();
         guild.getAudioManager().closeAudioConnection();
     }
 
@@ -889,7 +872,7 @@ public class MusicController implements BotController {
 
         // Check permissions
         if (!actionData.getGuild().getSelfMember().hasPermission(actionData.getGuildChannel(), Permission.VOICE_CONNECT)) {
-            actionData.getMessageDispatcher().sendDisposableMessage(MessageType.Error, "Yeet does not have permission to join a voice channel.");
+            actionData.getMessageDispatcher().sendDisposableMessage(MessageType.Error, "YEEET does not have permission to join a voice channel.");
             return false;
         }
 
@@ -918,7 +901,7 @@ public class MusicController implements BotController {
                     return false;
 
                 if (actionData.getAudioManager().getConnectedChannel().getIdLong() != actionData.getMember().getVoiceState().getChannel().getIdLong()) {
-                    actionData.getMessageDispatcher().sendDisposableMessage(MessageType.Error, "Yeet is playing in another voice channel.");
+                    actionData.getMessageDispatcher().sendDisposableMessage(MessageType.Error, "YEEET is playing in another voice channel.");
                     return false;
                 }
             }
@@ -991,8 +974,7 @@ public class MusicController implements BotController {
 
                     System.out.printf("[%s] Added new listener: TrackBoxButtonClick%n", channel.getGuild().getName());
                     channel.getJDA().addEventListener(trackBoxButtonClick);
-                    channel.sendMessageEmbeds(messageEmbed).setActionRow(
-                            TrackBoxBuilder.sendButtons(channel.getGuild().getId())
+                    channel.sendMessageEmbeds(messageEmbed).setActionRow(TrackBoxBuilder.sendButtons(channel.getGuild().getId())
                     ).queue(success, failure);
                 }
             }

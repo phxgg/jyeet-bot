@@ -128,6 +128,36 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
         startNextTrack(false);
     }
 
+    public void stopPlayer() {
+        clearQueue();
+        player.stopTrack();
+
+        waitInVC();
+
+        messageDispatcher.sendDisposableMessage(MessageType.Warning, "Player stopped.");
+    }
+
+    private void waitInVC() {
+        // Wait for 5 minutes before closing the connection.
+
+        // Review this code when canceling ScheduledFuture. It may lead to memory leaks.
+        // Read here: https://stackoverflow.com/a/14423578
+
+        // EDIT: This actually won't be a problem, since it's a tiny bit of memory that
+        // will stick around for 5 minutes after a queue has finished, then destroyed.
+
+        if (waitingInVC != null) {
+            waitingInVC.cancel(true);
+        }
+
+        waitingInVC = executorService.schedule(() -> {
+            if (player.getPlayingTrack() == null) {
+                guild.getAudioManager().closeAudioConnection();
+                messageDispatcher.sendDisposableMessage(MessageType.Warning, "I have been inactive for 5 minutes, I guess I'm leaving...");
+            }
+        }, 1, TimeUnit.MINUTES);
+    }
+
     private void startNextTrack(boolean noInterrupt) {
         AudioTrack next = queue.pollFirst();
 
@@ -135,6 +165,7 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
             if (!player.startTrack(next, noInterrupt)) {
                 queue.addFirst(next);
             } else {
+                // If a new track has started playing, reset waitingInVC.
                 if (waitingInVC != null) {
                     waitingInVC.cancel(true);
                     waitingInVC = null;
@@ -144,24 +175,7 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
             player.stopTrack();
             messageDispatcher.sendDisposableMessage(MessageType.Info, "Queue finished.");
 
-            // Wait for 5 minutes before closing the connection.
-
-            // Review this code when canceling ScheduledFuture. It may lead to memory leaks.
-            // Read here: https://stackoverflow.com/a/14423578
-
-            // EDIT: This actually won't be a problem, since it's a tiny bit of memory that
-            // will stick around for 5 minutes after a queue has finished, then destroyed.
-
-            if (waitingInVC != null) {
-                waitingInVC.cancel(true);
-            }
-
-            waitingInVC = executorService.schedule(() -> {
-                if (player.getPlayingTrack() == null) {
-                    guild.getAudioManager().closeAudioConnection();
-                    messageDispatcher.sendDisposableMessage(MessageType.Info, "I have been inactive for 5 minutes, I guess I'm leaving...");
-                }
-            }, 5, TimeUnit.MINUTES);
+            waitInVC();
 
 //            guild.getAudioManager().closeAudioConnection();
         }

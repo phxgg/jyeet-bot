@@ -61,7 +61,8 @@ public class TrackBoxButtonClick extends ListenerAdapter {
         } else if (buttonId.equals(shuffle)) {
             scheduler.shuffleQueue();
         } else if (buttonId.equals(stop)) {
-            event.getGuild().getAudioManager().closeAudioConnection();
+            scheduler.stopPlayer();
+//            event.getGuild().getAudioManager().closeAudioConnection();
         }
     }
 }
