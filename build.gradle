@@ -43,6 +43,20 @@ task fatJar(type: Jar) {
     duplicatesStrategy DuplicatesStrategy.EXCLUDE
 }
 
+task fatJarDev(type: Jar) {
+    manifest {
+        attributes 'Main-Class': 'bot.Main'
+    }
+    archiveClassifier = 'dev'
+    configurations.implementation.setCanBeResolved(true)
+    from {
+        configurations.implementation.collect { it.isDirectory() ? it : zipTree(it) }
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    with jar
+    duplicatesStrategy DuplicatesStrategy.EXCLUDE
+}
+
 test {
     useJUnitPlatform()
 }
