@@ -38,6 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -75,6 +76,11 @@ public class MusicController implements BotController {
     }
 
     public void destroyPlayer() {
+        if (scheduler.getWaitingInVC() != null) {
+            scheduler.getWaitingInVC().cancel(true);
+            scheduler.setWaitingInVC(null);
+        }
+
         scheduler.clearQueue();
         player.setPaused(false);
         player.setVolume(100);
@@ -82,7 +88,7 @@ public class MusicController implements BotController {
         player.destroy();
 //        guild.getAudioManager().setSendingHandler(null);
         guild.getAudioManager().closeAudioConnection();
-        messageDispatcher.sendDisposableMessage(MessageType.Info, "Player stopped.");
+        messageDispatcher.sendDisposableMessage(MessageType.Info, "Disconnected.");
     }
 
     /** ====================================
@@ -489,10 +495,23 @@ public class MusicController implements BotController {
         if (!canPerformAction(ad))
             return;
 
-        // Instead of calling destroyPlayer(), we can just close the audio connection.
-        // That's because when the connection is closed, the onGuildVoiceLeave event is triggered,
-        // which will call destroyPlayer() for us.
-        guild.getAudioManager().closeAudioConnection();
+        scheduler.clearQueue();
+        player.stopTrack();
+
+        if (scheduler.getWaitingInVC() != null) {
+            scheduler.getWaitingInVC().cancel(true);
+        }
+
+        scheduler.setWaitingInVC(
+                scheduler.getExecutorService().schedule(() -> {
+                    if (player.getPlayingTrack() == null) {
+                        guild.getAudioManager().closeAudioConnection();
+                        messageDispatcher.sendDisposableMessage(MessageType.Info, "I have been inactive for 5 minutes, I guess I'm leaving...");
+                    }
+                }, 1, TimeUnit.MINUTES)
+        );
+
+        messageDispatcher.sendDisposableMessage(MessageType.Info, "Player stopped.");
     }
 
     @BotCommandHandler
@@ -503,6 +522,10 @@ public class MusicController implements BotController {
         if (!canPerformAction(ad))
             return;
 
+        // Instead of calling destroyPlayer(), we can just close the audio connection.
+        // That's because when the connection is closed, the onGuildVoiceLeave event is triggered,
+        // which will call destroyPlayer() for us.
+        guild.getAudioManager().closeAudioConnection();
         guild.getAudioManager().closeAudioConnection();
     }
 

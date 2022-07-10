@@ -55,6 +55,18 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
         return queue;
     }
 
+    public ScheduledFuture<?> getWaitingInVC() {
+        return waitingInVC;
+    }
+
+    public void setWaitingInVC(ScheduledFuture<?> waitingInVC) {
+        this.waitingInVC = waitingInVC;
+    }
+
+    public ScheduledExecutorService getExecutorService() {
+        return executorService;
+    }
+
     // TODO: Implement this
     public void playPrevious() {
         AudioTrack previous = queue.pollFirst(); // pollFirst() returns the head element of the list
