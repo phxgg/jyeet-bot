@@ -24,11 +24,6 @@ public class Main {
 
             jda.awaitReady();
 
-//            jda.updateCommands().addCommands(
-//                    Commands.slash("echo", "Replies the same message back to you")
-//                            .addOption(OptionType.STRING, "message", "The message to repeat.")
-//            ).queue();
-
             Gson gson = new Gson();
 
             // Get all servers GET request

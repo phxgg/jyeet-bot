@@ -365,15 +365,4 @@ public class BotApplicationManager extends ListenerAdapter {
             log.error("[{}] Could not update ownerId.", event.getGuild().getName());
         }
     }
-
-//    @Override
-//    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
-//        event.deferReply().queue();
-//
-//        if (event.getName().equals("echo")) {
-//            String message = event.getInteraction().getOption("message").getAsString();
-//
-//            event.getHook().sendMessage(message).queue();
-//        }
-//    }
 }
