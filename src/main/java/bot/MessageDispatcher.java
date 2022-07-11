@@ -12,4 +12,8 @@ public interface MessageDispatcher {
     void sendMessage(MessageType type, String message);
 
     void sendDisposableMessage(MessageType type, String message);
+
+    void reply(Message msg, MessageType type, String message);
+
+    void replyDisposable(Message msg, MessageType type, String message);
 }

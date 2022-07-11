@@ -29,9 +29,7 @@ public class TrackBoxButtonClick extends ListenerAdapter {
         try {
             ad = new ActionData(
                     scheduler.getMessageDispatcher(),
-                    event.getMember(),
-                    event.getGuild(),
-                    event.getGuildChannel(),
+                    event.getMessage(),
                     Objects.requireNonNull(event.getGuild()).getAudioManager()
             );
         } catch (NullPointerException e) {
