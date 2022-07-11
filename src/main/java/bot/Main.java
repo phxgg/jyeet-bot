@@ -16,7 +16,7 @@ public class Main {
         try {
             // Setup JDA
             JDA jda = JDABuilder.createDefault(System.getProperty("botToken"))
-                    .setActivity(Activity.listening("ur mom \uD83C\uDFB6"))
+                    .setActivity(Activity.listening("music \uD83C\uDFB6"))
                     .addEventListeners(new BotApplicationManager())
                     .build();
 
