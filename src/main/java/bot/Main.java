@@ -8,6 +8,8 @@ import com.google.gson.Gson;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.Commands;
 
 import javax.security.auth.login.LoginException;
 
@@ -21,6 +23,11 @@ public class Main {
                     .build();
 
             jda.awaitReady();
+
+//            jda.updateCommands().addCommands(
+//                    Commands.slash("echo", "Replies the same message back to you")
+//                            .addOption(OptionType.STRING, "message", "The message to repeat.")
+//            ).queue();
 
             Gson gson = new Gson();
 

@@ -38,8 +38,11 @@ import net.dv8tion.jda.api.events.guild.update.GuildUpdateNameEvent;
 import net.dv8tion.jda.api.events.guild.update.GuildUpdateOwnerEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -173,6 +176,20 @@ public class BotApplicationManager extends ListenerAdapter {
         return context;
     }
 
+    private boolean isAlone(Guild guild) {
+        if (guild.getAudioManager().getConnectedChannel() == null) return false;
+        return guild.getAudioManager().getConnectedChannel().getMembers().stream()
+                .noneMatch(x ->
+                        (x.getVoiceState() != null)
+                                && !x.getVoiceState().isDeafened()
+                                && !x.getUser().isBot());
+    }
+
+    /**
+     * ====================================
+     * EVENTS
+     * ====================================
+     */
     @Override
     public void onMessageReceived(@Nonnull MessageReceivedEvent event) {
         Member member = event.getMember();
@@ -249,20 +266,6 @@ public class BotApplicationManager extends ListenerAdapter {
         });
     }
 
-    private boolean isAlone(Guild guild) {
-        if (guild.getAudioManager().getConnectedChannel() == null) return false;
-        return guild.getAudioManager().getConnectedChannel().getMembers().stream()
-                .noneMatch(x ->
-                        (x.getVoiceState() != null)
-                                && !x.getVoiceState().isDeafened()
-                                && !x.getUser().isBot());
-    }
-
-    /**
-     * ====================================
-     * EVENTS
-     * ====================================
-     */
     @Override
     public void onGuildVoiceUpdate(@Nonnull GuildVoiceUpdateEvent event) {
         BotGuildContext guildContext = getContext(event.getGuild());
@@ -362,4 +365,15 @@ public class BotApplicationManager extends ListenerAdapter {
             log.error("[{}] Could not update ownerId.", event.getGuild().getName());
         }
     }
+
+//    @Override
+//    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
+//        event.deferReply().queue();
+//
+//        if (event.getName().equals("echo")) {
+//            String message = event.getInteraction().getOption("message").getAsString();
+//
+//            event.getHook().sendMessage(message).queue();
+//        }
+//    }
 }
