@@ -2,9 +2,9 @@ package bot;
 
 import bot.api.StatusCodes;
 import bot.api.WebReq;
-import bot.controller.BotCommandMappingHandler;
 import bot.controller.BotController;
 import bot.controller.BotControllerManager;
+import bot.controller.BotSlashCommandMappingHandler;
 import bot.dto.Response;
 import bot.dto.Server;
 import bot.music.MusicController;
@@ -28,10 +28,8 @@ import com.sedmelluq.lava.extensions.youtuberotator.planner.RotatingNanoIpRouteP
 import com.sedmelluq.lava.extensions.youtuberotator.tools.ip.IpBlock;
 import com.sedmelluq.lava.extensions.youtuberotator.tools.ip.Ipv6Block;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.ChannelType;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.api.events.guild.update.GuildUpdateNameEvent;
@@ -39,10 +37,7 @@ import net.dv8tion.jda.api.events.guild.update.GuildUpdateOwnerEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +48,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class BotApplicationManager extends ListenerAdapter {
     private static final Logger log = LoggerFactory.getLogger(BotApplicationManager.class);
@@ -62,7 +56,7 @@ public class BotApplicationManager extends ListenerAdapter {
     private final BotControllerManager controllerManager;
     private final AudioPlayerManager playerManager;
     private final ScheduledExecutorService executorService; // Interface
-    //    private final ScheduledThreadPoolExecutor executorService; // use for setRemoveOnCancelPolicy(true)
+//    private final ScheduledThreadPoolExecutor executorService; // use for setRemoveOnCancelPolicy(true)
     private final Gson gson;
 
     private final String ipv6Block = System.getProperty("ipv6Block");
@@ -146,7 +140,7 @@ public class BotApplicationManager extends ListenerAdapter {
         String post = WebReq.Post("/servers/guild", data);
         Response r = gson.fromJson(post, Response.class);
 
-        String prefix = null;
+        String prefix;
 
         if (r.getCode() == StatusCodes.OK.getCode()) {
             Server server = gson.fromJson(gson.toJson(r.getData()), Server.class);
@@ -176,41 +170,41 @@ public class BotApplicationManager extends ListenerAdapter {
         return context;
     }
 
-    private boolean isAlone(Guild guild) {
-        if (guild.getAudioManager().getConnectedChannel() == null) return false;
-        return guild.getAudioManager().getConnectedChannel().getMembers().stream()
-                .noneMatch(x ->
-                        (x.getVoiceState() != null)
-                                && !x.getVoiceState().isDeafened()
-                                && !x.getUser().isBot());
-    }
-
     /**
      * ====================================
      * EVENTS
      * ====================================
      */
+
     @Override
-    public void onMessageReceived(@Nonnull MessageReceivedEvent event) {
+    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
+        event.deferReply().queue();
+
         Member member = event.getMember();
 
-        if (!event.isFromType(ChannelType.TEXT) || member == null || member.getUser().isBot()) {
+        if (event.getGuild() == null || member == null || member.getUser().isBot()) {
+            EmbedBuilder eb = new EmbedBuilder();
+
+            eb.setTitle("Error");
+            eb.setColor(MessageType.Error.color);
+            eb.setDescription("You can't use commands in DMs.");
+
+            event.getHook().sendMessageEmbeds(eb.build()).queue();
             return;
         }
 
         BotGuildContext guildContext = getContext(event.getGuild());
 
-//        String prefix = System.getProperty("prefix");
         String prefix = guildContext.guildPrefix;
 
-        controllerManager.dispatchMessage(guildContext.controllers, prefix, event.getMessage(), new BotCommandMappingHandler() {
+        controllerManager.dispatchSlashCommand(guildContext.controllers, event, new BotSlashCommandMappingHandler() {
             @Override
-            public void commandNotFound(Message message, String name) {
+            public void commandNotFound(String name) {
 
             }
 
             @Override
-            public void commandWrongParameterCount(Message message, String name, String usage, int given, int required) {
+            public void commandWrongParameterCount(String name, String usage, int given, int required) {
                 EmbedBuilder eb = new EmbedBuilder();
 
                 eb.setTitle("Error");
@@ -218,11 +212,12 @@ public class BotApplicationManager extends ListenerAdapter {
                 eb.setDescription("Wrong argument count.");
                 eb.setFooter("Command: " + name);
 
-                event.getTextChannel().sendMessageEmbeds(eb.build()).queue();
+//                event.getTextChannel().sendMessageEmbeds(eb.build()).queue();
+                event.getMessageChannel().sendMessageEmbeds(eb.build()).queue();
             }
 
             @Override
-            public void commandWrongParameterType(Message message, String name, String usage, int index, String value, Class<?> expectedType) {
+            public void commandWrongParameterType(String name, String usage, int index, String value, Class<?> expectedType) {
                 EmbedBuilder eb = new EmbedBuilder();
 
                 eb.setTitle("Error");
@@ -230,11 +225,11 @@ public class BotApplicationManager extends ListenerAdapter {
                 eb.setDescription("Wrong argument type.");
                 eb.setFooter("Command: " + name);
 
-                event.getTextChannel().sendMessageEmbeds(eb.build()).queue();
+                event.getMessageChannel().sendMessageEmbeds(eb.build()).queue();
             }
 
             @Override
-            public void commandRestricted(Message message, String name) {
+            public void commandRestricted(String name) {
                 EmbedBuilder eb = new EmbedBuilder();
 
                 eb.setTitle("Error");
@@ -242,11 +237,11 @@ public class BotApplicationManager extends ListenerAdapter {
                 eb.setDescription("Command not permitted.");
                 eb.setFooter("Command: " + name);
 
-                event.getTextChannel().sendMessageEmbeds(eb.build()).queue();
+                event.getMessageChannel().sendMessageEmbeds(eb.build()).queue();
             }
 
             @Override
-            public void commandException(Message message, String name, Throwable throwable) {
+            public void commandException(String name, Throwable throwable) {
                 EmbedBuilder eb = new EmbedBuilder();
 
                 eb.setTitle("Error");
@@ -258,12 +253,13 @@ public class BotApplicationManager extends ListenerAdapter {
                 );
                 eb.setFooter("Command: " + name);
 
-                event.getTextChannel().sendMessageEmbeds(eb.build()).queue();
+                event.getMessageChannel().sendMessageEmbeds(eb.build()).queue();
 
-                log.error("Command with content {} threw an exception.", message.getContentDisplay(), throwable);
+//                log.error("Command with content {} threw an exception.", message.getContentDisplay(), throwable);
             }
-
         });
+
+        event.getHook().deleteOriginal().queue();
     }
 
     @Override
@@ -282,6 +278,13 @@ public class BotApplicationManager extends ListenerAdapter {
                 && event.getChannelLeft().getMembers().size() == 1
                 && event.getChannelLeft().getMembers().contains(event.getGuild().getSelfMember())) {
             controllerManager.destroyPlayer(guildContext.controllers);
+
+            /* TODO:
+                Wait in VC alone for some time before disconnecting,
+                but let the bot be able to start playing in a new channel if asked to while being alone in a VC.
+                Look into: controllerManager.waitInVC(guildContext.controllers);
+            */
+
             return;
         }
     }
@@ -299,6 +302,7 @@ public class BotApplicationManager extends ListenerAdapter {
 
     @Override
     public void onGuildLeave(@Nonnull GuildLeaveEvent event) {
+        // Delete guild from database
         HashMap<String, ?> data = new HashMap<>() {{
             put("guildId", event.getGuild().getId());
         }};
@@ -315,6 +319,7 @@ public class BotApplicationManager extends ListenerAdapter {
 
     @Override
     public void onGuildJoin(@Nonnull GuildJoinEvent event) {
+        // Add guild in database
         HashMap<String, ?> data = new HashMap<>() {{
             put("guildId", event.getGuild().getId());
             put("ownerId", event.getGuild().getOwnerId());
@@ -334,6 +339,7 @@ public class BotApplicationManager extends ListenerAdapter {
 
     @Override
     public void onGuildUpdateName(@NotNull GuildUpdateNameEvent event) {
+        // Update guild name in database
         HashMap<String, ?> data = new HashMap<>() {{
             put("guildId", event.getGuild().getId());
             put("name", event.getGuild().getName());
@@ -351,6 +357,7 @@ public class BotApplicationManager extends ListenerAdapter {
 
     @Override
     public void onGuildUpdateOwner(@NotNull GuildUpdateOwnerEvent event) {
+        // Update guild owner in database
         HashMap<String, ?> data = new HashMap<>() {{
             put("guildId", event.getGuild().getId());
             put("ownerId", event.getGuild().getOwnerId());

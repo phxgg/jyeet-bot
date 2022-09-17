@@ -1,7 +1,7 @@
 package bot.music;
 
-import bot.records.ActionData;
 import bot.MessageType;
+import bot.records.ActionData;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
@@ -29,7 +29,7 @@ public class TrackBoxButtonClick extends ListenerAdapter {
         try {
             ad = new ActionData(
                     scheduler.getMessageDispatcher(),
-                    event.getMessage(),
+                    event,
                     Objects.requireNonNull(event.getGuild()).getAudioManager()
             );
         } catch (NullPointerException e) {
@@ -51,7 +51,7 @@ public class TrackBoxButtonClick extends ListenerAdapter {
         // Cannot use 'switch' here because the 'case' requires a constant.
         assert buttonId != null;
         if (buttonId.equals(previous)) {
-            scheduler.getMessageDispatcher().replyDisposable(ad.getMessage(), MessageType.Warning, "Under construction.");
+            scheduler.getMessageDispatcher().replyDisposable(ad.getEvent().getMessageChannel(), MessageType.Warning, "Under construction.");
         } else if (buttonId.equals(pause)) {
             scheduler.getPlayer().setPaused(!scheduler.getPlayer().isPaused());
         } else if (buttonId.equals(next)) {

@@ -1,20 +1,20 @@
 package bot.records;
 
 import bot.MessageDispatcher;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent;
 import net.dv8tion.jda.api.managers.AudioManager;
 
 public class ActionData {
     private final MessageDispatcher messageDispatcher;
-    private final Message message;
+    private final GenericInteractionCreateEvent event;
     private final AudioManager audioManager;
 
     public ActionData(
             MessageDispatcher messageDispatcher,
-            Message message,
+            GenericInteractionCreateEvent event,
             AudioManager audioManager) {
         this.messageDispatcher = messageDispatcher;
-        this.message = message;
+        this.event = event;
         this.audioManager = audioManager;
     }
 
@@ -22,8 +22,8 @@ public class ActionData {
         return messageDispatcher;
     }
 
-    public Message getMessage() {
-        return message;
+    public GenericInteractionCreateEvent getEvent() {
+        return event;
     }
 
     public AudioManager getAudioManager() {

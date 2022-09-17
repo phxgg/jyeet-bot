@@ -67,7 +67,7 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
         return executorService;
     }
 
-    // TODO: Implement this
+    // TODO: Implement 'previous' command functionality
     public void playPrevious() {
         AudioTrack previous = queue.pollFirst(); // pollFirst() returns the head element of the list
 
@@ -80,6 +80,11 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
 
             messageDispatcher.sendDisposableMessage(MessageType.Info, "Queue finished.");
         }
+    }
+
+    // TODO: Implement 'loop' command functionality
+    public void loop() {
+        return;
     }
 
     public void clearQueue() {
@@ -137,7 +142,7 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
         messageDispatcher.sendDisposableMessage(MessageType.Warning, "Player stopped.");
     }
 
-    private void waitInVC() {
+    public void waitInVC() {
         // Wait for 5 minutes before closing the connection.
 
         // Review this code when canceling ScheduledFuture. It may lead to memory leaks.

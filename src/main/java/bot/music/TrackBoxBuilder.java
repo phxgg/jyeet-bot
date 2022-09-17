@@ -2,8 +2,9 @@ package bot.music;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.Emoji;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.emoji.CustomEmoji;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 
 import java.awt.*;
@@ -93,11 +94,11 @@ public class TrackBoxBuilder {
         List<Button> buttons = new ArrayList<>();
 
         // Button IDs should have a 'guild' prefix, so we can know in which guild the button was clicked.
-        buttons.add(Button.secondary(String.format("%s_trackbox_previous", guildId), Emoji.fromMarkdown("<:previous:965604705298432020>")).asDisabled());
-        buttons.add(Button.secondary(String.format("%s_trackbox_pause", guildId), Emoji.fromMarkdown("<:pause_play:965604705252282410>")));
-        buttons.add(Button.secondary(String.format("%s_trackbox_next", guildId), Emoji.fromMarkdown("<:next:965604705139032074>")));
-        buttons.add(Button.secondary(String.format("%s_trackbox_shuffle", guildId), Emoji.fromMarkdown("<:shuffle:965607534318719056>")));
-        buttons.add(Button.secondary(String.format("%s_trackbox_stop", guildId), Emoji.fromMarkdown("<:stop:965604527619334154>")));
+        buttons.add(Button.secondary(String.format("%s_trackbox_previous", guildId), Emoji.fromCustom("previous", Long.parseLong("965604705298432020"), false)).asDisabled());
+        buttons.add(Button.secondary(String.format("%s_trackbox_pause", guildId), Emoji.fromCustom("pause_play", Long.parseLong("965604705252282410"), false)));
+        buttons.add(Button.secondary(String.format("%s_trackbox_next", guildId), Emoji.fromCustom("next", Long.parseLong("965604705139032074"), false)));
+        buttons.add(Button.secondary(String.format("%s_trackbox_shuffle", guildId), Emoji.fromCustom("shuffle", Long.parseLong("965607534318719056"), false)));
+        buttons.add(Button.secondary(String.format("%s_trackbox_stop", guildId), Emoji.fromCustom("stop", Long.parseLong("965604527619334154"), false)));
 
         return buttons;
     }

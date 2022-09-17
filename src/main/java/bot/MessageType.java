@@ -11,7 +11,7 @@ public enum MessageType {
 
     public final Color color;
 
-    private MessageType(Color color) {
+    MessageType(Color color) {
         this.color = color;
     }
 }

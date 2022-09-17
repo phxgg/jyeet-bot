@@ -15,6 +15,9 @@ import bot.music.MusicController;
 import bot.records.Command;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.Interaction;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 
 public class BotControllerManager {
     @SuppressWarnings("rawtypes")
@@ -46,7 +49,7 @@ public class BotControllerManager {
         String usage = annotation.usage().isEmpty() ? null : annotation.usage();
 
         Parameter[] methodParameters = method.getParameters();
-        if (methodParameters.length == 0 || !methodParameters[0].getType().isAssignableFrom(Message.class)) {
+        if (methodParameters.length == 0 || !methodParameters[0].getType().isAssignableFrom(SlashCommandInteractionEvent.class)) {
             return;
         }
 
@@ -70,6 +73,15 @@ public class BotControllerManager {
         });
     }
 
+    public void waitInVC(Map<Class<? extends BotController>, BotController> instances) {
+        instances.forEach((controllerClass, controller) -> {
+            if (controller instanceof MusicController) {
+                ((MusicController) controller).getScheduler().waitInVC();
+            }
+        });
+    }
+
+    /*
     public void dispatchMessage(
             Map<Class<? extends BotController>, BotController> instances,
             String prefix,
@@ -117,6 +129,45 @@ public class BotControllerManager {
             command.getCommandMethod().invoke(instances.get(command.getControllerClass()), arguments);
         } catch (InvocationTargetException e) {
             handler.commandException(message, command.getName(), e.getCause());
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    */
+
+    public void dispatchSlashCommand(
+            Map<Class<? extends BotController>, BotController> instances,
+            SlashCommandInteractionEvent event,
+            BotSlashCommandMappingHandler handler
+    ) {
+        String commandName = event.getName();
+
+        Command command = commands.get(commandName);
+
+        if (command == null) {
+            handler.commandNotFound(commandName);
+            System.out.println("command == null");
+            return;
+        }
+
+        Object[] arguments = new Object[command.getParameters().size() + 1];
+        arguments[0] = event;
+
+        for (int i = 0; i < event.getOptions().size(); i++) {
+            Class<?> parameterClass = command.getParameters().get(i);
+
+            try {
+                arguments[i + 1] = parseArgument(parameterClass, event.getOptions().get(i).getAsString());
+            } catch (IllegalArgumentException ignored) {
+                handler.commandWrongParameterType(command.getName(), command.getUsage(), i, event.getOptions().get(i).getAsString(), parameterClass);
+                return;
+            }
+        }
+
+        try {
+            command.getCommandMethod().invoke(instances.get(command.getControllerClass()), arguments);
+        } catch (InvocationTargetException e) {
+            handler.commandException(command.getName(), e.getCause());
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }

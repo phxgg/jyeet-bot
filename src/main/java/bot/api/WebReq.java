@@ -25,15 +25,7 @@ public class WebReq {
                 .setHeader("x-key", headers.get("x-key"))
                 .build();
 
-        HttpResponse<String> response = null;
-        try {
-            response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        } catch (IOException | InterruptedException e) {
-            return new Gson().toJson(new Response(404, "Not Found - Could not make a connection.", e.getMessage(), null));
-//            throw new RuntimeException(e);
-        }
-
-        return response.body();
+        return getResponse(client, request);
     }
 
     public static String Post(String url, HashMap<String, ?> data) {
@@ -53,6 +45,10 @@ public class WebReq {
                 .setHeader("Content-Type", "application/json")
                 .build();
 
+        return getResponse(client, request);
+    }
+
+    private static String getResponse(HttpClient client, HttpRequest request) {
         HttpResponse<String> response = null;
         try {
             response = client.send(request, HttpResponse.BodyHandlers.ofString());

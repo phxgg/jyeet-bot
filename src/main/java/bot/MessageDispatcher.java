@@ -3,6 +3,7 @@ package bot;
 import java.util.function.Consumer;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 
 public interface MessageDispatcher {
     Integer deleteSeconds = 5;
@@ -13,7 +14,7 @@ public interface MessageDispatcher {
 
     void sendDisposableMessage(MessageType type, String message);
 
-    void reply(Message msg, MessageType type, String message);
+    void reply(MessageChannel channel, MessageType type, String message);
 
-    void replyDisposable(Message msg, MessageType type, String message);
+    void replyDisposable(MessageChannel channel, MessageType type, String message);
 }
