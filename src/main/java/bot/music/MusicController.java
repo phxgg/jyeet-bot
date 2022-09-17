@@ -117,7 +117,7 @@ public class MusicController implements BotController {
         eb.setFooter("Made by phxgg", null);
 
 //        String prefix = System.getProperty("prefix");
-        String prefix = state.guildPrefix;
+        String prefix = "/"; // state.guildPrefix
 
         // help
         eb.addField(
