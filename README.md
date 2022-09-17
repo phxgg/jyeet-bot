@@ -11,7 +11,7 @@ Run the `fatJar` task.
 
 ### Run
 
-Use java 16+
+Use java 18+
 
 ```
 java -Xms256m -Xmx512m -DspotifyClientId=<SPOTIFY_CLIENT_ID> -DspotifyClientSecret=<SPOTIFY_CLIENT_SECRET> -Dprefix=! -DbotToken=<DISCORD_BOT_TOKEN> -jar ~/jyeet-bot-1.0-SNAPSHOT-all.jar
