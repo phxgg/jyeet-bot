@@ -41,6 +41,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -517,8 +518,12 @@ public class MusicController implements BotController {
 
     @BotCommandHandler
     private void setoutputchannel(SlashCommandInteractionEvent event) {
-        if (!isOwner(event.getUser()))
+        if (!Objects.requireNonNull(event.getMember()).hasPermission(Permission.ADMINISTRATOR)) {
             return;
+        }
+
+//        if (!isOwner(event.getUser()))
+//            return;
 
         outputChannel.set((TextChannel) event.getMessageChannel());
         messageDispatcher.sendDisposableMessage(MessageType.Success, "Output channel set to **" + event.getChannel().getName() + "**");

@@ -7,7 +7,9 @@ import bot.dto.Server;
 import com.google.gson.Gson;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
@@ -33,36 +35,62 @@ public class Main {
             // Setup commands
             jda.updateCommands().addCommands(
 //                    Commands.slash("playlocal", "play local track"),
-                    Commands.slash("help", "Shows the help embed box."),
+                    Commands.slash("help", "Shows the help embed box.")
+                            .setGuildOnly(true),
                     Commands.slash("play", "Starts playing something.")
-                            .addOptions(new OptionData(OptionType.STRING, "query", "Could be a song, playlist or album name or link. YouTube & Spotify.")
-                                    .setRequired(true)),
-                    Commands.slash("stop", "Stop player."),
-                    Commands.slash("pause", "Pause current playing track. Use again to unpause."),
-                    Commands.slash("resume", "Resume player."),
-                    Commands.slash("dc", "Disconnect player. Alternative: /leave"),
-                    Commands.slash("leave", "Disconnect player. Alternative: /dc"),
+                            .setGuildOnly(true)
+                            .addOptions(
+                                    new OptionData(OptionType.STRING, "query", "Could be a song, playlist or album name or link. YouTube & Spotify.")
+                                            .setRequired(true)),
+                    Commands.slash("stop", "Stop player.")
+                            .setGuildOnly(true),
+                    Commands.slash("pause", "Pause current playing track. Use again to unpause.")
+                            .setGuildOnly(true),
+                    Commands.slash("resume", "Resume player.")
+                            .setGuildOnly(true),
+                    Commands.slash("shuffle", "Shuffles the queue.")
+                            .setGuildOnly(true),
+                    Commands.slash("skip", "Skips the current song.")
+                            .setGuildOnly(true),
+                    Commands.slash("dc", "Disconnect player. Alternative: /leave")
+                            .setGuildOnly(true),
+                    Commands.slash("leave", "Disconnect player. Alternative: /dc")
+                            .setGuildOnly(true),
                     Commands.slash("playnow", "Destroys current queue and plays whatever provided.")
-                            .addOptions(new OptionData(OptionType.STRING, "query", "Could be a song, playlist or album name or link. YouTube & Spotify.")
-                                    .setRequired(true)),
+                            .setGuildOnly(true)
+                            .addOptions(
+                                    new OptionData(OptionType.STRING, "query", "Could be a song, playlist or album name or link. YouTube & Spotify.")
+                                            .setRequired(true)),
                     Commands.slash("playnext", "Adds in queue whatever provided right after the current track.")
-                            .addOptions(new OptionData(OptionType.STRING, "query", "Could be a song, playlist or album name or link. YouTube & Spotify.")
-                                    .setRequired(true)),
-                    Commands.slash("queue", "Display current queue list."),
-                    Commands.slash("clearq", "Clears the queue."),
-                    Commands.slash("shuffle", "Shuffles the queue."),
-                    Commands.slash("skip", "Skips the current song."),
+                            .setGuildOnly(true)
+                            .addOptions(
+                                    new OptionData(OptionType.STRING, "query", "Could be a song, playlist or album name or link. YouTube & Spotify.")
+                                            .setRequired(true)),
+                    Commands.slash("song", "Shows current playing track.")
+                            .setGuildOnly(true),
+                    Commands.slash("queue", "Display current queue list.")
+                            .setGuildOnly(true),
+                    Commands.slash("clearq", "Clears the queue.")
+                            .setGuildOnly(true),
                     Commands.slash("volume", "Set the volume player.")
-                            .addOptions(new OptionData(OptionType.INTEGER, "value", "0-100")
-                                    .setRequired(true)
-                                    .setRequiredRange(0, 100)),
+                            .setGuildOnly(true)
+                            .addOptions(
+                                    new OptionData(OptionType.INTEGER, "value", "0-100")
+                                            .setRequired(true)
+                                            .setRequiredRange(0, 100)),
                     Commands.slash("forward", "Forward track by given seconds.")
-                            .addOptions(new OptionData(OptionType.INTEGER, "seconds", "Number of seconds you want to forward.")
-                                    .setRequired(true)),
+                            .setGuildOnly(true)
+                            .addOptions(
+                                    new OptionData(OptionType.INTEGER, "seconds", "Number of seconds you want to forward.")
+                                            .setRequired(true)),
                     Commands.slash("backward", "Backward track by given seconds.")
-                            .addOptions(new OptionData(OptionType.INTEGER, "seconds", "Number of seconds you want to forward.")
-                                    .setRequired(true)),
+                            .setGuildOnly(true)
+                            .addOptions(
+                                    new OptionData(OptionType.INTEGER, "seconds", "Number of seconds you want to forward.")
+                                            .setRequired(true)),
                     Commands.slash("setoutputchannel", "[ADMIN] Set output channel to current message channel.")
+                            .setGuildOnly(true)
+                            .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
             ).queue();
 
             Gson gson = new Gson();
