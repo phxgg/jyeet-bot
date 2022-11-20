@@ -8,8 +8,8 @@ import bot.controller.BotSlashCommandMappingHandler;
 import bot.dto.Response;
 import bot.dto.Server;
 import bot.music.MusicController;
-import com.github.topislavalinkplugins.topissourcemanagers.spotify.SpotifyConfig;
-import com.github.topislavalinkplugins.topissourcemanagers.spotify.SpotifySourceManager;
+import bot.music.SpotifyConfig;
+import com.github.topisenpai.lavasrc.spotify.SpotifySourceManager;
 import com.google.gson.Gson;
 import com.sedmelluq.discord.lavaplayer.player.AudioConfiguration;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
@@ -96,7 +96,11 @@ public class BotApplicationManager extends ListenerAdapter {
         playerManager.getConfiguration().setResamplingQuality(AudioConfiguration.ResamplingQuality.LOW);
 //        playerManager.registerSourceManager(new SpotifyAudioSourceManager(yasm));
         playerManager.registerSourceManager(new SpotifySourceManager(
-                null, spotifyConfig, playerManager
+                null,
+                spotifyConfig.getClientId(),
+                spotifyConfig.getClientSecret(),
+                spotifyConfig.getCountryCode(),
+                playerManager
         ));
         playerManager.registerSourceManager(yasm);
         playerManager.registerSourceManager(SoundCloudAudioSourceManager.createDefault());
