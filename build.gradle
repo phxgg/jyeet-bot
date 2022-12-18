@@ -28,7 +28,7 @@ dependencies {
 //    implementation 'com.github.Topis-Lavalink-Plugins:Topis-Source-Managers:3.1.6'
     implementation 'com.github.TopiSenpai.LavaSrc:lavasrc:3.1.7'
     implementation 'com.google.code.gson:gson:2.10'
-    runtimeOnly 'ch.qos.logback:logback-classic:1.4.4'
+    runtimeOnly 'ch.qos.logback:logback-classic:1.4.5'
 }
 
 task fatJar(type: Jar) {
