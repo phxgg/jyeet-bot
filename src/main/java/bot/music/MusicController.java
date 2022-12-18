@@ -128,20 +128,26 @@ public class MusicController implements BotController {
                 false
         );
 
-        // play, p
+        // play
         eb.addField(
                 String.format("`%splay <name_of_track/link/playlist>`",
                         prefix),
-                String.format("Alternative: `%sp` - Start playing something.",
-                        prefix),
+                "Start playing something.",
                 false);
 
-        // stop, dc, leave
+        // stop
         eb.addField(
                 String.format("`%sstop`",
                         prefix),
-                String.format("Alternative: `%sdc`, `%sleave` - Stop player and disconnect bot from channel.",
-                        prefix,
+                "Stop the player and clear queue.",
+                false
+        );
+
+        // dc, leave
+        eb.addField(
+                String.format("%sdc",
+                        prefix),
+                String.format("Alternative: %sleave - Stop the player and disconnect bot from voice call.",
                         prefix),
                 false
         );
@@ -160,7 +166,7 @@ public class MusicController implements BotController {
         eb.addField(
                 String.format("`%splaynow <name_of_track/link/playlist>`",
                         prefix),
-                "Destroys current queue and plays whatever provided.",
+                "Destroys current queue and plays the provided track.",
                 false
         );
 
@@ -168,7 +174,7 @@ public class MusicController implements BotController {
         eb.addField(
                 String.format("`%splaynext <name_of_track/link/playlist>`",
                         prefix),
-                "Adds in queue whatever provided right after the current track.",
+                "Adds in queue the provided track right after the current track.",
                 false
         );
 
@@ -180,9 +186,9 @@ public class MusicController implements BotController {
                 false
         );
 
-        // clearq
+        // clearqueue
         eb.addField(
-                String.format("`%sclearq`",
+                String.format("`%sclearqueue`",
                         prefix),
                 "Clears the queue.",
                 false
@@ -196,13 +202,11 @@ public class MusicController implements BotController {
                 false
         );
 
-        // skip, next, n
+        // skip
         eb.addField(
                 String.format("`%sskip`",
                         prefix),
-                String.format("Alternatives: `%snext`, `%sn` - Skip the current song.",
-                        prefix,
-                        prefix),
+                "Skip the current track.",
                 false
         );
 
@@ -289,15 +293,6 @@ public class MusicController implements BotController {
     }
 
     @BotCommandHandler
-    private void p(SlashCommandInteractionEvent event, String identifier) {
-        ActionData ad = new ActionData(messageDispatcher, event, guild.getAudioManager());
-        if (!canPerformAction(ad, true))
-            return;
-
-        addTrack(event, identifier, false, false);
-    }
-
-    @BotCommandHandler
     private void playnow(SlashCommandInteractionEvent event, String identifier) {
         ActionData ad = new ActionData(messageDispatcher, event, guild.getAudioManager());
         if (!canPerformAction(ad, true))
@@ -367,24 +362,6 @@ public class MusicController implements BotController {
 
     @BotCommandHandler
     private void skip(SlashCommandInteractionEvent event) {
-        ActionData ad = new ActionData(messageDispatcher, event, guild.getAudioManager());
-        if (!canPerformAction(ad))
-            return;
-
-        scheduler.skip();
-    }
-
-    @BotCommandHandler
-    private void next(SlashCommandInteractionEvent event) {
-        ActionData ad = new ActionData(messageDispatcher, event, guild.getAudioManager());
-        if (!canPerformAction(ad))
-            return;
-
-        scheduler.skip();
-    }
-
-    @BotCommandHandler
-    private void n(SlashCommandInteractionEvent event) {
         ActionData ad = new ActionData(messageDispatcher, event, guild.getAudioManager());
         if (!canPerformAction(ad))
             return;
@@ -466,7 +443,7 @@ public class MusicController implements BotController {
     }
 
     @BotCommandHandler
-    private void clearq(SlashCommandInteractionEvent event) {
+    private void clearqueue(SlashCommandInteractionEvent event) {
         ActionData ad = new ActionData(messageDispatcher, event, guild.getAudioManager());
         if (!canPerformAction(ad))
             return;

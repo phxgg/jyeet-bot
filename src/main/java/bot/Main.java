@@ -23,8 +23,9 @@ public class Main {
                     .enableIntents(
                             GatewayIntent.GUILD_VOICE_STATES,
                             GatewayIntent.GUILD_MESSAGES,
-                            GatewayIntent.GUILD_MESSAGE_REACTIONS
-//                            GatewayIntent.MESSAGE_CONTENT
+                            GatewayIntent.GUILD_MESSAGE_REACTIONS,
+                            GatewayIntent.GUILD_MEMBERS,
+                            GatewayIntent.MESSAGE_CONTENT
                     )
                     .setActivity(Activity.listening("music \uD83C\uDFB6"))
                     .addEventListeners(new BotApplicationManager())
@@ -70,7 +71,7 @@ public class Main {
                             .setGuildOnly(true),
                     Commands.slash("queue", "Display current queue list.")
                             .setGuildOnly(true),
-                    Commands.slash("clearq", "Clears the queue.")
+                    Commands.slash("clearqueue", "Clears the queue.")
                             .setGuildOnly(true),
                     Commands.slash("volume", "Set the volume player.")
                             .setGuildOnly(true)
