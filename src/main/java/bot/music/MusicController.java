@@ -145,9 +145,9 @@ public class MusicController implements BotController {
 
         // dc, leave
         eb.addField(
-                String.format("%sdc",
+                String.format("`%sdc`",
                         prefix),
-                String.format("Alternative: %sleave - Stop the player and disconnect bot from voice call.",
+                String.format("Alternative: `%sleave` - Stop the player and disconnect bot from voice call.",
                         prefix),
                 false
         );
