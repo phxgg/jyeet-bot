@@ -1,6 +1,8 @@
-package bot;
+package bot.records;
 
 import java.util.function.Consumer;
+
+import bot.records.MessageType;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;

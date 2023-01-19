@@ -1,6 +1,6 @@
 package bot.music;
 
-import bot.MessageType;
+import bot.records.MessageType;
 import bot.records.ActionData;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;

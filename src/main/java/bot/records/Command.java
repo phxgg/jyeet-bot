@@ -5,6 +5,7 @@ import java.util.List;
 
 public class Command {
     private final String name;
+    private final String description;
     private final String usage;
     private final List<Class<?>> parameters;
     private final Class<?> controllerClass;
@@ -12,12 +13,14 @@ public class Command {
 
     public Command(
             String name,
+            String description,
             String usage,
             List<Class<?>> parameters,
             Class<?> controllerClass,
             Method commandMethod
     ) {
         this.name = name;
+        this.description = description;
         this.usage = usage;
         this.parameters = parameters;
         this.controllerClass = controllerClass;
@@ -26,6 +29,10 @@ public class Command {
 
     public String getName() {
         return name;
+    }
+
+    public String getDescription() {
+        return description;
     }
 
     public String getUsage() {

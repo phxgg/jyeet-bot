@@ -1,7 +1,7 @@
 package bot.music;
 
-import bot.MessageDispatcher;
-import bot.MessageType;
+import bot.records.MessageDispatcher;
+import bot.records.MessageType;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;

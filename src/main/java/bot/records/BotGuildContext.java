@@ -1,4 +1,4 @@
-package bot;
+package bot.records;
 
 import bot.controller.BotController;
 

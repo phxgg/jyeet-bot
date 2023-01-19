@@ -9,5 +9,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface BotCommandHandler {
     String name() default "";
+    String description() default "";
     String usage() default "";
 }

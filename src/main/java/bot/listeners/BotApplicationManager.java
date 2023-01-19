@@ -1,5 +1,7 @@
-package bot;
+package bot.listeners;
 
+import bot.records.BotGuildContext;
+import bot.records.MessageType;
 import bot.api.StatusCodes;
 import bot.api.WebReq;
 import bot.controller.BotController;
@@ -56,7 +58,6 @@ public class BotApplicationManager extends ListenerAdapter {
     private final BotControllerManager controllerManager;
     private final AudioPlayerManager playerManager;
     private final ScheduledExecutorService executorService; // Interface
-//    private final ScheduledThreadPoolExecutor executorService; // use for setRemoveOnCancelPolicy(true)
     private final Gson gson;
 
     private final String ipv6Block = System.getProperty("ipv6Block");
@@ -174,12 +175,6 @@ public class BotApplicationManager extends ListenerAdapter {
         return context;
     }
 
-    /**
-     * ====================================
-     * EVENTS
-     * ====================================
-     */
-
     @Override
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
         event.deferReply().queue();
@@ -208,7 +203,7 @@ public class BotApplicationManager extends ListenerAdapter {
             }
 
             @Override
-            public void commandWrongParameterCount(String name, String usage, int given, int required) {
+            public void commandWrongParameterCount(String name, String description, String usage, int given, int required) {
                 EmbedBuilder eb = new EmbedBuilder();
 
                 eb.setTitle("Error");
@@ -221,7 +216,7 @@ public class BotApplicationManager extends ListenerAdapter {
             }
 
             @Override
-            public void commandWrongParameterType(String name, String usage, int index, String value, Class<?> expectedType) {
+            public void commandWrongParameterType(String name, String description, String usage, int index, String value, Class<?> expectedType) {
                 EmbedBuilder eb = new EmbedBuilder();
 
                 eb.setTitle("Error");

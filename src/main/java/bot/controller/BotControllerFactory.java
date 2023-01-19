@@ -1,7 +1,7 @@
 package bot.controller;
 
-import bot.BotApplicationManager;
-import bot.BotGuildContext;
+import bot.listeners.BotApplicationManager;
+import bot.records.BotGuildContext;
 import net.dv8tion.jda.api.entities.Guild;
 
 public interface BotControllerFactory<T extends BotController> {

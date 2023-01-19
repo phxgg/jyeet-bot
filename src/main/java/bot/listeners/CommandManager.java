@@ -1,0 +1,78 @@
+package bot.listeners;
+
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.events.ReadyEvent;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import org.jetbrains.annotations.NotNull;
+
+public class CommandManager extends ListenerAdapter {
+    @Override
+    public void onReady(@NotNull ReadyEvent event) {
+        JDA jda = event.getJDA();
+
+        jda.updateCommands().addCommands(
+//                    Commands.slash("playlocal", "play local track"),
+                Commands.slash("help", "Shows the help embed box.")
+                        .setGuildOnly(true),
+                Commands.slash("play", "Starts playing something.")
+                        .setGuildOnly(true)
+                        .addOptions(
+                                new OptionData(OptionType.STRING, "query", "Could be a song, playlist or album name or link. YouTube & Spotify.")
+                                        .setRequired(true)),
+                Commands.slash("stop", "Stop player.")
+                        .setGuildOnly(true),
+                Commands.slash("pause", "Pause current playing track. Use again to unpause.")
+                        .setGuildOnly(true),
+                Commands.slash("resume", "Resume player.")
+                        .setGuildOnly(true),
+                Commands.slash("shuffle", "Shuffles the queue.")
+                        .setGuildOnly(true),
+                Commands.slash("skip", "Skips the current song.")
+                        .setGuildOnly(true),
+                Commands.slash("disconnect", "Disconnect player.")
+                        .setGuildOnly(true),
+                Commands.slash("playnow", "Destroys current queue and plays whatever provided.")
+                        .setGuildOnly(true)
+                        .addOptions(
+                                new OptionData(OptionType.STRING, "query", "Could be a song, playlist or album name or link. YouTube & Spotify.")
+                                        .setRequired(true)),
+                Commands.slash("playnext", "Adds in queue whatever provided right after the current track.")
+                        .setGuildOnly(true)
+                        .addOptions(
+                                new OptionData(OptionType.STRING, "query", "Could be a song, playlist or album name or link. YouTube & Spotify.")
+                                        .setRequired(true)),
+                Commands.slash("song", "Shows current playing track.")
+                        .setGuildOnly(true),
+                Commands.slash("queue", "Display current queue list.")
+                        .setGuildOnly(true),
+                Commands.slash("clearqueue", "Clears the queue.")
+                        .setGuildOnly(true),
+                Commands.slash("volume", "Set the volume player.")
+                        .setGuildOnly(true)
+                        .addOptions(
+                                new OptionData(OptionType.INTEGER, "value", "0-100")
+                                        .setRequired(true)
+                                        .setRequiredRange(0, 100)),
+                Commands.slash("forward", "Forward track by given seconds.")
+                        .setGuildOnly(true)
+                        .addOptions(
+                                new OptionData(OptionType.INTEGER, "seconds", "Number of seconds you want to forward.")
+                                        .setRequired(true)),
+                Commands.slash("backward", "Backward track by given seconds.")
+                        .setGuildOnly(true)
+                        .addOptions(
+                                new OptionData(OptionType.INTEGER, "seconds", "Number of seconds you want to forward.")
+                                        .setRequired(true)),
+                Commands.slash("setoutputchannel", "[ADMIN] Set output channel to current message channel.")
+                        .setGuildOnly(true)
+                        .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
+        ).queue();
+
+        System.out.println("Logged in as " + jda.getSelfUser().getName() + "#" + jda.getSelfUser().getDiscriminator());
+    }
+}

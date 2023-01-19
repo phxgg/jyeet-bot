@@ -1,7 +1,11 @@
 package bot.controller;
 
-import bot.BotApplicationManager;
-import bot.BotGuildContext;
+import bot.listeners.BotApplicationManager;
+import bot.records.BotGuildContext;
+import bot.music.MusicController;
+import bot.records.Command;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -10,14 +14,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import bot.music.MusicController;
-import bot.records.Command;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.interactions.Interaction;
-import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 
 public class BotControllerManager {
     @SuppressWarnings("rawtypes")
@@ -46,6 +42,7 @@ public class BotControllerManager {
 
     private void registerControllerMethod(Class<?> controllerClass, Method method, BotCommandHandler annotation) {
         String commandName = annotation.name().isEmpty() ? method.getName().toLowerCase() : annotation.name();
+        String description = annotation.description().isEmpty() ? "No description provided." : annotation.description();
         String usage = annotation.usage().isEmpty() ? null : annotation.usage();
 
         Parameter[] methodParameters = method.getParameters();
@@ -60,7 +57,7 @@ public class BotControllerManager {
             parameters.add(methodParameters[i].getType());
         }
 
-        Command command = new Command(commandName, usage, parameters, controllerClass, method);
+        Command command = new Command(commandName, description, usage, parameters, controllerClass, method);
         commands.put(command.getName(), command);
     }
 
@@ -81,60 +78,6 @@ public class BotControllerManager {
         });
     }
 
-    /*
-    public void dispatchMessage(
-            Map<Class<? extends BotController>, BotController> instances,
-            String prefix,
-            Message message,
-            BotCommandMappingHandler handler
-    ) {
-
-        String content = message.getContentDisplay().trim();
-        String[] separated = content.split("\\s+", 2);
-
-        if (!separated[0].startsWith(prefix)) {
-            return;
-        }
-
-        String commandName = separated[0].substring(prefix.length()).toLowerCase();
-        Command command = commands.get(commandName);
-
-        if (command == null) {
-            handler.commandNotFound(message, commandName);
-            return;
-        }
-
-        String[] inputArguments = separated.length == 1 ? new String[0] : separated[1].split("\\s+", command.getParameters().size());
-
-        if (inputArguments.length != command.getParameters().size()) {
-            handler.commandWrongParameterCount(message, command.getName(), command.getUsage(), inputArguments.length, command.getParameters().size());
-            return;
-        }
-
-        Object[] arguments = new Object[command.getParameters().size() + 1];
-        arguments[0] = message;
-
-        for (int i = 0; i < command.getParameters().size(); i++) {
-            Class<?> parameterClass = command.getParameters().get(i);
-
-            try {
-                arguments[i + 1] = parseArgument(parameterClass, inputArguments[i]);
-            } catch (IllegalArgumentException ignored) {
-                handler.commandWrongParameterType(message, command.getName(), command.getUsage(), i, inputArguments[i], parameterClass);
-                return;
-            }
-        }
-
-        try {
-            command.getCommandMethod().invoke(instances.get(command.getControllerClass()), arguments);
-        } catch (InvocationTargetException e) {
-            handler.commandException(message, command.getName(), e.getCause());
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
-    }
-    */
-
     public void dispatchSlashCommand(
             Map<Class<? extends BotController>, BotController> instances,
             SlashCommandInteractionEvent event,
@@ -146,7 +89,6 @@ public class BotControllerManager {
 
         if (command == null) {
             handler.commandNotFound(commandName);
-            System.out.println("command == null");
             return;
         }
 
@@ -159,7 +101,14 @@ public class BotControllerManager {
             try {
                 arguments[i + 1] = parseArgument(parameterClass, event.getOptions().get(i).getAsString());
             } catch (IllegalArgumentException ignored) {
-                handler.commandWrongParameterType(command.getName(), command.getUsage(), i, event.getOptions().get(i).getAsString(), parameterClass);
+                handler.commandWrongParameterType(
+                        command.getName(),
+                        command.getDescription(),
+                        command.getUsage(),
+                        i,
+                        event.getOptions().get(i).getAsString(),
+                        parameterClass
+                );
                 return;
             }
         }
