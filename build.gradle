@@ -2,7 +2,7 @@ plugins {
     id 'java'
 }
 
-group 'org.example'
+group 'org.phxgg'
 version '1.0-SNAPSHOT'
 
 repositories {
@@ -61,5 +61,5 @@ task fatJarDev(type: Jar) {
 test {
     useJUnitPlatform()
 }
-sourceCompatibility = JavaVersion.VERSION_18
-targetCompatibility = JavaVersion.VERSION_18
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17

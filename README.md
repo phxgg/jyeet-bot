@@ -13,7 +13,7 @@ Run the `fatJar` task.
 
 You will need a [Spotify Developer App](https://developer.spotify.com/dashboard) to run the bot.
 
-Use java 18+
+Use **Java 17**
 
 ```bash
 $ java -Xms256m -Xmx512m -DspotifyClientId=<SPOTIFY_CLIENT_ID> -DspotifyClientSecret=<SPOTIFY_CLIENT_SECRET> -Dprefix=! -DbotToken=<DISCORD_BOT_TOKEN> -jar ~/jyeet-bot-1.0-SNAPSHOT-all.jar
