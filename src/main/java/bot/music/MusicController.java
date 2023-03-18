@@ -664,6 +664,7 @@ public class MusicController implements BotController {
         return true;
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     private boolean connectToVoiceChannel(final SlashCommandInteractionEvent event, AudioManager audioManager) {
         Member member = event.getMember();
         if (member == null)
