@@ -36,7 +36,6 @@ import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.api.events.guild.update.GuildUpdateNameEvent;
 import net.dv8tion.jda.api.events.guild.update.GuildUpdateOwnerEvent;
-import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -44,7 +43,6 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -262,7 +260,7 @@ public class BotApplicationManager extends ListenerAdapter {
     }
 
     @Override
-    public void onGuildVoiceUpdate(@Nonnull GuildVoiceUpdateEvent event) {
+    public void onGuildVoiceUpdate(@NotNull GuildVoiceUpdateEvent event) {
         BotGuildContext guildContext = getContext(event.getGuild());
 
         // Get number of members in voice channel
@@ -272,6 +270,12 @@ public class BotApplicationManager extends ListenerAdapter {
         // Fix warnings
         if (event.getChannelLeft() == null)
             return;
+
+        // If the bot leaves a voice channel, destroy player.
+        if (event.getMember().getUser().equals(event.getJDA().getSelfUser())) {
+            controllerManager.destroyPlayer(guildContext.controllers);
+            return;
+        }
 
         if (!event.getMember().getUser().equals(event.getJDA().getSelfUser())
                 && event.getChannelLeft().getMembers().size() == 1
@@ -289,18 +293,7 @@ public class BotApplicationManager extends ListenerAdapter {
     }
 
     @Override
-    public void onGuildVoiceLeave(@Nonnull GuildVoiceLeaveEvent event) {
-        BotGuildContext guildContext = getContext(event.getGuild());
-
-        // If the bot leaves a voice channel, destroy player.
-        if (event.getMember().getUser().equals(event.getJDA().getSelfUser())) {
-            controllerManager.destroyPlayer(guildContext.controllers);
-            return;
-        }
-    }
-
-    @Override
-    public void onGuildLeave(@Nonnull GuildLeaveEvent event) {
+    public void onGuildLeave(@NotNull GuildLeaveEvent event) {
         // Delete guild from database
         HashMap<String, ?> data = new HashMap<>() {{
             put("guildId", event.getGuild().getId());
@@ -317,7 +310,7 @@ public class BotApplicationManager extends ListenerAdapter {
     }
 
     @Override
-    public void onGuildJoin(@Nonnull GuildJoinEvent event) {
+    public void onGuildJoin(@NotNull GuildJoinEvent event) {
         // Add guild in database
         HashMap<String, ?> data = new HashMap<>() {{
             put("guildId", event.getGuild().getId());

@@ -2,7 +2,7 @@ package bot.listeners;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.events.ReadyEvent;
+import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class CommandManager extends ListenerAdapter {
     @Override
-    public void onReady(@NotNull ReadyEvent event) {
+    public void onGuildReady(@NotNull GuildReadyEvent event) {
         JDA jda = event.getJDA();
 
         jda.updateCommands().addCommands(
