@@ -2,6 +2,7 @@ package bot.music;
 
 import bot.records.MessageDispatcher;
 import bot.records.MessageType;
+import bot.records.InteractionResponse;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
@@ -91,10 +92,12 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
         queue.clear();
     }
 
-    public void shuffleQueue() {
+    public InteractionResponse shuffleQueue() {
         if (!(queue.size() > 0)) {
-            messageDispatcher.sendDisposableMessage(MessageType.Warning, "Cannot shuffle an empty queue.");
-            return;
+            return new InteractionResponse()
+                    .setSuccess(false)
+                    .setMessageType(MessageType.Warning)
+                    .setMessage("Cannot shuffle an empty queue.");
         }
 
         List<AudioTrack> q = drainQueue();
@@ -102,7 +105,10 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
         queue.clear();
         queue.addAll(q);
 
-        messageDispatcher.sendDisposableMessage(MessageType.Success, "Shuffled queue.");
+        return new InteractionResponse()
+                .setSuccess(true)
+                .setMessageType(MessageType.Success)
+                .setMessage("Shuffled queue.");
     }
 
     public void addToQueue(AudioTrack audioTrack) {
@@ -133,13 +139,17 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
         startNextTrack(false);
     }
 
-    public void stopPlayer() {
+    public InteractionResponse stopPlayer() {
         clearQueue();
         player.stopTrack();
+        updateTrackBox(false);
 
         waitInVC();
 
-        messageDispatcher.sendDisposableMessage(MessageType.Warning, "Player stopped.");
+        return new InteractionResponse()
+                .setSuccess(true)
+                .setMessageType(MessageType.Warning)
+                .setMessage("Player stopped.");
     }
 
     public void waitInVC() {

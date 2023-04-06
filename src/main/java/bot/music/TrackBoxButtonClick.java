@@ -2,6 +2,8 @@ package bot.music;
 
 import bot.records.MessageType;
 import bot.records.ActionData;
+import bot.records.InteractionResponse;
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
@@ -30,6 +32,7 @@ public class TrackBoxButtonClick extends ListenerAdapter {
             ad = new ActionData(
                     scheduler.getMessageDispatcher(),
                     event,
+                    event.getHook(),
                     Objects.requireNonNull(event.getGuild()).getAudioManager()
             );
         } catch (NullPointerException e) {
@@ -51,15 +54,28 @@ public class TrackBoxButtonClick extends ListenerAdapter {
         // Cannot use 'switch' here because the 'case' requires a constant.
         assert buttonId != null;
         if (buttonId.equals(previous)) {
-            scheduler.getMessageDispatcher().replyDisposable(ad.getEvent().getMessageChannel(), MessageType.Warning, "Under construction.");
+            event.getHook()
+                    .setEphemeral(true)
+                    .sendMessageEmbeds(
+                            ad.getMessageDispatcher().createEmbedMessage(
+                                    MessageType.Warning, "<@" + event.getInteraction().getUser().getId() + "> " + "Under construction")
+                                    .build()
+                    )
+                    .queue();
         } else if (buttonId.equals(pause)) {
             scheduler.getPlayer().setPaused(!scheduler.getPlayer().isPaused());
         } else if (buttonId.equals(next)) {
             scheduler.skip();
         } else if (buttonId.equals(shuffle)) {
-            scheduler.shuffleQueue();
+            InteractionResponse response = scheduler.shuffleQueue();
+            response.setNewMessage(true);
+            response.setMessage("<@" + event.getInteraction().getUser().getId() + "> " + response.getMessage());
+            MusicController.handleInteractionResponse(event.getHook(), response);
         } else if (buttonId.equals(stop)) {
-            scheduler.stopPlayer();
+            InteractionResponse response = scheduler.stopPlayer();
+            response.setNewMessage(true);
+            response.setMessage("<@" + event.getInteraction().getUser().getId() + "> " + response.getMessage());
+            MusicController.handleInteractionResponse(event.getHook(), response);
 //            event.getGuild().getAudioManager().closeAudioConnection();
         }
     }
