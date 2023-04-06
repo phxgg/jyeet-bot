@@ -209,8 +209,8 @@ public class BotApplicationManager extends ListenerAdapter {
                 eb.setDescription("Wrong argument count.");
                 eb.setFooter("Command: " + name);
 
-//                event.getTextChannel().sendMessageEmbeds(eb.build()).queue();
-                event.getMessageChannel().sendMessageEmbeds(eb.build()).queue();
+//                event.getMessageChannel().sendMessageEmbeds(eb.build()).queue();
+                event.getHook().setEphemeral(true).editOriginalEmbeds(eb.build()).queue();
             }
 
             @Override
@@ -222,7 +222,7 @@ public class BotApplicationManager extends ListenerAdapter {
                 eb.setDescription("Wrong argument type.");
                 eb.setFooter("Command: " + name);
 
-                event.getMessageChannel().sendMessageEmbeds(eb.build()).queue();
+                event.getHook().setEphemeral(true).editOriginalEmbeds(eb.build()).queue();
             }
 
             @Override
@@ -234,7 +234,7 @@ public class BotApplicationManager extends ListenerAdapter {
                 eb.setDescription("Command not permitted.");
                 eb.setFooter("Command: " + name);
 
-                event.getMessageChannel().sendMessageEmbeds(eb.build()).queue();
+                event.getHook().setEphemeral(true).editOriginalEmbeds(eb.build()).queue();
             }
 
             @Override
@@ -250,13 +250,13 @@ public class BotApplicationManager extends ListenerAdapter {
                 );
                 eb.setFooter("Command: " + name);
 
-                event.getMessageChannel().sendMessageEmbeds(eb.build()).queue();
+                event.getHook().setEphemeral(true).editOriginalEmbeds(eb.build()).queue();
 
 //                log.error("Command with content {} threw an exception.", message.getContentDisplay(), throwable);
             }
         });
 
-        event.getHook().deleteOriginal().queue();
+//        event.getHook().deleteOriginal().queue();
     }
 
     @Override

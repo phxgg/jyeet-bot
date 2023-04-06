@@ -231,7 +231,8 @@ public class MusicController implements BotController {
                 false
         );
 
-        event.getMessageChannel().sendMessageEmbeds(eb.build()).queue();
+        event.getHook().editOriginalEmbeds(eb.build()).queue();
+//        event.getMessageChannel().sendMessageEmbeds(eb.build()).queue();
     }
 
     @BotCommandHandler(name = "prefix", description = "Set the prefix for this guild.", usage = "/prefix <new_prefix>")
@@ -240,13 +241,33 @@ public class MusicController implements BotController {
             return;
 
         if (!event.getGuild().getOwnerId().equals(event.getUser().getId())) {
-            messageDispatcher.replyDisposable(event.getMessageChannel(), MessageType.Warning, "You cannot change the prefix.");
+            event
+                    .getHook()
+                    .setEphemeral(true)
+                    .editOriginalEmbeds(
+                            new EmbedBuilder()
+                                    .setColor(MessageType.Warning.color)
+                                    .setDescription("You cannot change the prefix.")
+                                    .build()
+                    )
+                    .queue();
+//            messageDispatcher.replyDisposable(event.getMessageChannel(), MessageType.Warning, "You cannot change the prefix.");
             return;
         }
 
         if (newPrefix.isEmpty() || newPrefix.length() > 2 || newPrefix.contains(" ") || newPrefix.contains("`")) {
-            messageDispatcher.replyDisposable(event.getMessageChannel(), MessageType.Error,
-                    "Prefix must be 1 or 2 characters long and cannot contain spaces or the character `.");
+            event
+                    .getHook()
+                    .setEphemeral(true)
+                    .editOriginalEmbeds(
+                            new EmbedBuilder()
+                                    .setColor(MessageType.Error.color)
+                                    .setDescription("Prefix must be 1 or 2 characters long and cannot contain spaces or the character `.")
+                                    .build()
+                    )
+                    .queue();
+//            messageDispatcher.replyDisposable(event.getMessageChannel(), MessageType.Error,
+//                    "Prefix must be 1 or 2 characters long and cannot contain spaces or the character `.");
             return;
         }
 
@@ -262,9 +283,28 @@ public class MusicController implements BotController {
 
         if (r.getCode() == StatusCodes.OK.getCode()) {
             state.guildPrefix = newPrefix;
-            messageDispatcher.replyDisposable(event.getMessageChannel(), MessageType.Success, String.format("Prefix updated to `%s`.", newPrefix));
+            event
+                    .getHook()
+                    .setEphemeral(true)
+                    .editOriginalEmbeds(
+                            new EmbedBuilder()
+                                    .setColor(MessageType.Success.color)
+                                    .setDescription(String.format("Prefix updated to `%s`.", newPrefix))
+                                    .build()
+                    )
+                    .queue();
         } else {
-            messageDispatcher.replyDisposable(event.getMessageChannel(), MessageType.Error, "Failed to update prefix.");
+//            messageDispatcher.replyDisposable(event.getMessageChannel(), MessageType.Error, "Failed to update prefix.");
+            event
+                    .getHook()
+                    .setEphemeral(true)
+                    .editOriginalEmbeds(
+                            new EmbedBuilder()
+                                    .setColor(MessageType.Error.color)
+                                    .setDescription("Failed to update prefix.")
+                                    .build()
+                    )
+                    .queue();
         }
     }
 
@@ -305,7 +345,16 @@ public class MusicController implements BotController {
 
         BlockingDeque<AudioTrack> _queue = scheduler.getQueue();
         if (_queue.isEmpty()) {
-            messageDispatcher.replyDisposable(event.getMessageChannel(), MessageType.Info, "The queue is empty.");
+            event
+                    .getHook()
+                    .setEphemeral(true)
+                    .editOriginalEmbeds(
+                            new EmbedBuilder()
+                                    .setColor(MessageType.Info.color)
+                                    .setDescription("The queue is empty.")
+                                    .build()
+                    )
+                    .queue();
             return;
         }
 
@@ -328,7 +377,10 @@ public class MusicController implements BotController {
             eb.setFooter(String.format("and %d more...", _queue.size()-i), null);
         }
 
-        event.getMessageChannel().sendMessageEmbeds(eb.build()).queue();
+        event
+                .getHook()
+                .editOriginalEmbeds(eb.build())
+                .queue();
     }
 
     @BotCommandHandler(name = "volume", description = "Set the player volume.", usage = "/volume <0-100>")
@@ -338,11 +390,30 @@ public class MusicController implements BotController {
             return;
 
         if (volume > 100 || volume < 0) {
-            messageDispatcher.replyDisposable(event.getMessageChannel(), MessageType.Error, "Invalid volume.");
+            event
+                    .getHook()
+                    .setEphemeral(true)
+                    .editOriginalEmbeds(
+                            new EmbedBuilder()
+                                    .setColor(MessageType.Error.color)
+                                    .setDescription("Invalid volume.")
+                                    .build()
+                    )
+                    .queue();
+//            messageDispatcher.replyDisposable(event.getMessageChannel(), MessageType.Error, "Invalid volume.");
             return;
         }
 
         player.setVolume(volume);
+        event
+                .getHook()
+                .editOriginalEmbeds(
+                        new EmbedBuilder()
+                                .setColor(MessageType.Info.color)
+                                .setDescription(String.format("Volume set to %d.", volume))
+                                .build()
+                )
+                .queue();
     }
 
     @BotCommandHandler(name = "skip", description = "Skip current track.", usage = "/skip")
@@ -418,13 +489,32 @@ public class MusicController implements BotController {
     @BotCommandHandler(name = "song", description = "Display current playing track.", usage = "/song")
     private void commandSong(SlashCommandInteractionEvent event) {
         if (player.getPlayingTrack() == null) {
-            messageDispatcher.replyDisposable(event.getMessageChannel(), MessageType.Warning, "Nothing is playing.");
+            event
+                    .getHook()
+                    .setEphemeral(true)
+                    .editOriginalEmbeds(
+                            new EmbedBuilder()
+                                    .setColor(MessageType.Warning.color)
+                                    .setDescription("Nothing is playing.")
+                                    .build()
+                    )
+                    .queue();
+//            messageDispatcher.replyDisposable(event.getMessageChannel(), MessageType.Warning, "Nothing is playing.");
             return;
         }
 
         AudioTrackInfo current = player.getPlayingTrack().getInfo();
 
-        messageDispatcher.sendMessage(MessageType.Info, "Currently playing **" + current.title + "** by **" + current.author + "**");
+        event
+                .getHook()
+                .editOriginalEmbeds(
+                        new EmbedBuilder()
+                                .setColor(MessageType.Info.color)
+                                .setDescription(String.format("Currently playing **%s** by **%s**", current.title, current.author))
+                                .build()
+                )
+                .queue();
+//        messageDispatcher.sendMessage(MessageType.Info, "Currently playing **" + current.title + "** by **" + current.author + "**");
     }
 
     @BotCommandHandler(name = "clearqueue", description = "Clear the queue.", usage = "/clearqueue")
@@ -434,7 +524,16 @@ public class MusicController implements BotController {
             return;
 
         scheduler.clearQueue();
-        messageDispatcher.sendDisposableMessage(MessageType.Success, "Cleared queue.");
+
+        event
+                .getHook()
+                .editOriginalEmbeds(
+                        new EmbedBuilder()
+                                .setColor(MessageType.Success.color)
+                                .setDescription("Cleared queue.")
+                                .build()
+                )
+                .queue();
     }
 
     @BotCommandHandler(name = "shuffle", description = "Shuffle the queue.", usage = "/shuffle")
@@ -477,7 +576,17 @@ public class MusicController implements BotController {
 //            return;
 
         outputChannel.set((TextChannel) event.getMessageChannel());
-        messageDispatcher.sendDisposableMessage(MessageType.Success, "Output channel set to **" + event.getChannel().getName() + "**");
+
+        event
+                .getHook()
+                .setEphemeral(true)
+                .editOriginalEmbeds(
+                        new EmbedBuilder()
+                                .setColor(MessageType.Success.color)
+                                .setDescription("Output channel set to **" + event.getChannel().getName() + "**")
+                                .build()
+                )
+                .queue();
     }
 
     @BotCommandHandler(name = "duration", description = "Display the duration of the current playing track.", usage = "/duration")
@@ -521,7 +630,15 @@ public class MusicController implements BotController {
                 if (!connectToVoiceChannel(event, guild.getAudioManager()))
                     return;
 
-                messageDispatcher.sendDisposableMessage(MessageType.Success, "Added to queue: **" + track.getInfo().title + "**");
+                event
+                        .getHook()
+                        .editOriginalEmbeds(
+                                new EmbedBuilder()
+                                        .setColor(MessageType.Success.color)
+                                        .setDescription("Added to queue: **" + track.getInfo().title + "**")
+                                        .build()
+                        )
+                        .queue();
 
                 if (playNow) {
                     scheduler.playNow(track, false);
@@ -537,7 +654,15 @@ public class MusicController implements BotController {
                 List<AudioTrack> tracks = playlist.getTracks();
 
                 if (!isSearchQuery)
-                    messageDispatcher.sendDisposableMessage(MessageType.Success, "Loaded playlist: **" + playlist.getName() + "** (" + tracks.size() + ")");
+                    event
+                            .getHook()
+                            .editOriginalEmbeds(
+                                    new EmbedBuilder()
+                                            .setColor(MessageType.Success.color)
+                                            .setDescription(String.format("Loaded playlist: **%s** (Tracks: %s)", playlist.getName(), tracks.size()))
+                                            .build()
+                            )
+                            .queue();
 
                 if (!connectToVoiceChannel(event, guild.getAudioManager()))
                     return;
@@ -546,11 +671,15 @@ public class MusicController implements BotController {
                 if (!isSearchQuery) {
                     AudioTrack selected = playlist.getSelectedTrack();
 
-                    if (selected != null) {
+                    /*if (selected != null) {
                         messageDispatcher.sendDisposableMessage(MessageType.Success, "Selected track from playlist: **" + selected.getInfo().title + "**");
                     } else {
                         selected = tracks.get(0);
                         messageDispatcher.sendDisposableMessage(MessageType.Success, "Added first track from playlist: **" + selected.getInfo().title + "**");
+                    }*/
+
+                    if (selected == null) {
+                        selected = tracks.get(0);
                     }
 
                     if (playNow) {
@@ -571,7 +700,15 @@ public class MusicController implements BotController {
                     // Otherwise, only play the first result from playlist.
                     AudioTrack track = playlist.getTracks().get(0);
 
-                    messageDispatcher.sendDisposableMessage(MessageType.Success, "Added to queue: **" + track.getInfo().title + "**");
+                    event
+                            .getHook()
+                            .editOriginalEmbeds(
+                                    new EmbedBuilder()
+                                            .setColor(MessageType.Success.color)
+                                            .setDescription("Added to queue: **" + track.getInfo().title + "**")
+                                            .build()
+                            )
+                            .queue();
 
                     if (playNow) {
                         scheduler.playNow(track, false);
@@ -585,12 +722,28 @@ public class MusicController implements BotController {
 
             @Override
             public void noMatches() {
-                messageDispatcher.sendDisposableMessage(MessageType.Warning, "Nothing found for " + identifier);
+                event
+                        .getHook()
+                        .editOriginalEmbeds(
+                                new EmbedBuilder()
+                                        .setColor(MessageType.Error.color)
+                                        .setDescription("Nothing found for " + identifier)
+                                        .build()
+                        )
+                        .queue();
             }
 
             @Override
             public void loadFailed(FriendlyException throwable) {
-                messageDispatcher.sendMessage(MessageType.Error, "Failed with message: " + throwable.getMessage() + " (" + throwable.getClass().getSimpleName() + ")");
+                event
+                        .getHook()
+                        .editOriginalEmbeds(
+                                new EmbedBuilder()
+                                        .setColor(MessageType.Error.color)
+                                        .setDescription("Failed with message: " + throwable.getMessage() + " (" + throwable.getClass().getSimpleName() + ")")
+                                        .build()
+                        )
+                        .queue();
             }
         });
     }
