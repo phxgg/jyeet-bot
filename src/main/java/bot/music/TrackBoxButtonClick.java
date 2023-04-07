@@ -54,14 +54,13 @@ public class TrackBoxButtonClick extends ListenerAdapter {
         // Cannot use 'switch' here because the 'case' requires a constant.
         assert buttonId != null;
         if (buttonId.equals(previous)) {
-            event.getHook()
+            InteractionResponse response = new InteractionResponse()
+                    .setSuccess(false)
                     .setEphemeral(true)
-                    .sendMessageEmbeds(
-                            MessageDispatcher.createEmbedMessage(
-                                    MessageType.Warning, "<@" + event.getInteraction().getUser().getId() + "> " + "Under construction")
-                                    .build()
-                    )
-                    .queue();
+                    .setNewMessage(true)
+                    .setMessageType(MessageType.Warning)
+                    .setMessage("<@" + event.getInteraction().getUser().getId() + ">" + "Under construction");
+            InteractionResponse.handle(event.getHook(), response);
         } else if (buttonId.equals(pause)) {
             scheduler.getPlayer().setPaused(!scheduler.getPlayer().isPaused());
         } else if (buttonId.equals(next)) {

@@ -225,8 +225,10 @@ public class MusicController implements IBotController {
 
     @BotCommandHandler(name = "prefix", description = "Set the prefix for this guild.", usage = "/prefix <new_prefix>")
     private void commandPrefix(SlashCommandInteractionEvent event, String newPrefix) {
-        if (event.getGuild() == null)
+        if (event.getGuild() == null) {
+            event.getHook().deleteOriginal().queue();
             return;
+        }
 
         if (!event.getGuild().getOwnerId().equals(event.getUser().getId())) {
             InteractionResponse response = new InteractionResponse()
@@ -239,13 +241,12 @@ public class MusicController implements IBotController {
         }
 
         if (newPrefix.isEmpty() || newPrefix.length() > 2 || newPrefix.contains(" ") || newPrefix.contains("`")) {
-            event
-                    .getHook()
+            InteractionResponse response = new InteractionResponse()
                     .setEphemeral(true)
-                    .editOriginalEmbeds(
-                            MessageDispatcher.createEmbedMessage(MessageType.Error, "Prefix must be 1 or 2 characters long and cannot contain spaces or the character `.").build()
-                    )
-                    .queue();
+                    .setSuccess(false)
+                    .setMessageType(MessageType.Error)
+                    .setMessage("Prefix must be 1 or 2 characters long and cannot contain spaces or the character `.");
+            InteractionResponse.handle(event.getHook(), response);
 //            messageDispatcher.replyDisposable(event.getMessageChannel(), MessageType.Error,
 //                    "Prefix must be 1 or 2 characters long and cannot contain spaces or the character `.");
             return;
@@ -263,22 +264,20 @@ public class MusicController implements IBotController {
 
         if (r.getCode() == StatusCodes.OK.getCode()) {
             state.guildPrefix = newPrefix;
-            event
-                    .getHook()
+            InteractionResponse response = new InteractionResponse()
                     .setEphemeral(true)
-                    .editOriginalEmbeds(
-                            MessageDispatcher.createEmbedMessage(MessageType.Success, String.format("Prefix updated to `%s`.", newPrefix)).build()
-                    )
-                    .queue();
+                    .setSuccess(true)
+                    .setMessageType(MessageType.Success)
+                    .setMessage(String.format("Prefix updated to `%s`.", newPrefix));
+            InteractionResponse.handle(event.getHook(), response);
         } else {
 //            messageDispatcher.replyDisposable(event.getMessageChannel(), MessageType.Error, "Failed to update prefix.");
-            event
-                    .getHook()
+            InteractionResponse response = new InteractionResponse()
                     .setEphemeral(true)
-                    .editOriginalEmbeds(
-                            MessageDispatcher.createEmbedMessage(MessageType.Error, "Failed to update prefix.").build()
-                    )
-                    .queue();
+                    .setSuccess(false)
+                    .setMessageType(MessageType.Error)
+                    .setMessage("Failed to update prefix.");
+            InteractionResponse.handle(event.getHook(), response);
         }
     }
 
@@ -319,10 +318,10 @@ public class MusicController implements IBotController {
 
         BlockingDeque<AudioTrack> _queue = scheduler.getQueue();
         if (_queue.isEmpty()) {
-            InteractionResponse response = new InteractionResponse();
-            response.setSuccess(false);
-            response.setMessageType(MessageType.Info);
-            response.setMessage("The queue is empty.");
+            InteractionResponse response = new InteractionResponse()
+                    .setSuccess(false)
+                    .setMessageType(MessageType.Info)
+                    .setMessage("The queue is empty.");
             InteractionResponse.handle(event.getHook(), response);
             return;
         }
@@ -359,14 +358,12 @@ public class MusicController implements IBotController {
             return;
 
         if (volume > 100 || volume < 0) {
-            event
-                    .getHook()
+            InteractionResponse response = new InteractionResponse()
                     .setEphemeral(true)
-                    .editOriginalEmbeds(
-                            MessageDispatcher.createEmbedMessage(MessageType.Error, "Invalid volume.").build()
-                    )
-                    .queue();
-//            messageDispatcher.replyDisposable(event.getMessageChannel(), MessageType.Error, "Invalid volume.");
+                    .setSuccess(false)
+                    .setMessageType(MessageType.Error)
+                    .setMessage("Invalid volume.");
+            InteractionResponse.handle(event.getHook(), response);
             return;
         }
 
@@ -535,6 +532,7 @@ public class MusicController implements IBotController {
     @BotCommandHandler(name = "setoutputchannel", description = "Set the output channel for the bot.", usage = "/setoutputchannel <channel>")
     private void commandSetOutputChannel(SlashCommandInteractionEvent event) {
         if (!Objects.requireNonNull(event.getMember()).hasPermission(Permission.ADMINISTRATOR)) {
+            event.getHook().deleteOriginal().queue();
             return;
         }
 
@@ -595,15 +593,10 @@ public class MusicController implements IBotController {
                 if (!connectToVoiceChannel(event, guild.getAudioManager()))
                     return;
 
-                event
-                        .getHook()
-                        .editOriginalEmbeds(
-                                MessageDispatcher.createEmbedMessage(
-                                        MessageType.Success,
-                                        String.format("Added to queue: **%s**", track.getInfo().title)
-                                ).build()
-                        )
-                        .queue();
+                InteractionResponse response = new InteractionResponse()
+                        .setMessageType(MessageType.Success)
+                        .setMessage(String.format("Added to queue: **%s**", track.getInfo().title));
+                InteractionResponse.handle(event.getHook(), response);
 
                 if (playNow) {
                     scheduler.playNow(track, false);
@@ -618,16 +611,12 @@ public class MusicController implements IBotController {
             public void playlistLoaded(AudioPlaylist playlist) {
                 List<AudioTrack> tracks = playlist.getTracks();
 
-                if (!isSearchQuery)
-                    event
-                            .getHook()
-                            .editOriginalEmbeds(
-                                    MessageDispatcher.createEmbedMessage(
-                                            MessageType.Success,
-                                            String.format("Loaded playlist: **%s** (Tracks: %s)", playlist.getName(), tracks.size())
-                                    ).build()
-                            )
-                            .queue();
+                if (!isSearchQuery) {
+                    InteractionResponse response = new InteractionResponse()
+                            .setMessageType(MessageType.Success)
+                            .setMessage(String.format("Loaded playlist: **%s** (Tracks: %s)", playlist.getName(), tracks.size()));
+                    InteractionResponse.handle(event.getHook(), response);
+                }
 
                 if (!connectToVoiceChannel(event, guild.getAudioManager()))
                     return;
@@ -665,15 +654,10 @@ public class MusicController implements IBotController {
                     // Otherwise, only play the first result from playlist.
                     AudioTrack track = playlist.getTracks().get(0);
 
-                    event
-                            .getHook()
-                            .editOriginalEmbeds(
-                                    MessageDispatcher.createEmbedMessage(
-                                            MessageType.Success,
-                                            String.format("Added to queue: **%s**", track.getInfo().title)
-                                    ).build()
-                            )
-                            .queue();
+                    InteractionResponse response = new InteractionResponse()
+                            .setMessageType(MessageType.Success)
+                            .setMessage(String.format("Added to queue: **%s**", track.getInfo().title));
+                    InteractionResponse.handle(event.getHook(), response);
 
                     if (playNow) {
                         scheduler.playNow(track, false);
@@ -687,25 +671,20 @@ public class MusicController implements IBotController {
 
             @Override
             public void noMatches() {
-                event
-                        .getHook()
-                        .editOriginalEmbeds(
-                                MessageDispatcher.createEmbedMessage(MessageType.Error, String.format("Nothing found for %s", identifier)).build()
-                        )
-                        .queue();
+                InteractionResponse response = new InteractionResponse()
+                        .setSuccess(false)
+                        .setMessageType(MessageType.Error)
+                        .setMessage(String.format("Nothing found for %s", identifier));
+                InteractionResponse.handle(event.getHook(), response);
             }
 
             @Override
             public void loadFailed(FriendlyException throwable) {
-                event
-                        .getHook()
-                        .editOriginalEmbeds(
-                                MessageDispatcher.createEmbedMessage(
-                                        MessageType.Error,
-                                        String.format("Failed with message: %s (%s)", throwable.getMessage(), throwable.getClass().getSimpleName())
-                                ).build()
-                        )
-                        .queue();
+                InteractionResponse response = new InteractionResponse()
+                        .setSuccess(false)
+                        .setMessageType(MessageType.Error)
+                        .setMessage(String.format("Failed with message: %s (%s)", throwable.getMessage(), throwable.getClass().getSimpleName()));
+                InteractionResponse.handle(event.getHook(), response);
             }
         });
     }
@@ -727,18 +706,19 @@ public class MusicController implements IBotController {
         if (actionData == null)
             return false;
 
-        if (actionData.getEvent().getMember() == null || actionData.getEvent().getGuild() == null)
+        if (actionData.getEvent().getMember() == null || actionData.getEvent().getGuild() == null) {
+            actionData.getHook().deleteOriginal().queue();
             return false;
+        }
 
         // Check permissions
         if (!actionData.getEvent().getGuild().getSelfMember().hasPermission(actionData.getEvent().getGuildChannel(), Permission.VOICE_CONNECT)) {
-            actionData
-                .getHook()
-                .setEphemeral(true)
-                .editOriginalEmbeds(
-                        MessageDispatcher.createEmbedMessage(MessageType.Error, "YEEET does not have permission to join a voice channel.").build()
-                )
-                .queue();
+            InteractionResponse response = new InteractionResponse()
+                    .setEphemeral(true)
+                    .setSuccess(false)
+                    .setMessageType(MessageType.Error)
+                    .setMessage("YEEET does not have permission to join a voice channel.");
+            InteractionResponse.handle(actionData.getHook(), response);
             return false;
         }
 
@@ -749,13 +729,12 @@ public class MusicController implements IBotController {
 
             VoiceChannel memberVoiceChannel = (VoiceChannel) actionData.getEvent().getMember().getVoiceState().getChannel();
             if (memberVoiceChannel == null) {
-                actionData
-                        .getHook()
+                InteractionResponse response = new InteractionResponse()
                         .setEphemeral(true)
-                        .editOriginalEmbeds(
-                                MessageDispatcher.createEmbedMessage(MessageType.Error, "You are not connected to a voice channel.").build()
-                        )
-                        .queue();
+                        .setSuccess(false)
+                        .setMessageType(MessageType.Error)
+                        .setMessage("You are not connected to a voice channel.");
+                InteractionResponse.handle(actionData.getHook(), response);
                 return false;
             }
         }
@@ -773,12 +752,11 @@ public class MusicController implements IBotController {
                     return false;
 
                 if (actionData.getAudioManager().getConnectedChannel().getIdLong() != actionData.getEvent().getMember().getVoiceState().getChannel().getIdLong()) {
-                    actionData
-                            .getHook()
-                            .editOriginalEmbeds(
-                                    MessageDispatcher.createEmbedMessage(MessageType.Error, "YEEET is already connected to another voice channel.").build()
-                            )
-                            .queue();
+                    InteractionResponse response = new InteractionResponse()
+                            .setSuccess(false)
+                            .setMessageType(MessageType.Error)
+                            .setMessage("YEEET is already connected to another voice channel.");
+                    InteractionResponse.handle(actionData.getHook(), response);
                     return false;
                 }
             }
@@ -804,13 +782,12 @@ public class MusicController implements IBotController {
 
         VoiceChannel memberVoiceChannel = (VoiceChannel) member.getVoiceState().getChannel();
         if (memberVoiceChannel == null) {
-            event
-                    .getHook()
+            InteractionResponse response = new InteractionResponse()
                     .setEphemeral(true)
-                    .editOriginalEmbeds(
-                            MessageDispatcher.createEmbedMessage(MessageType.Error, "You are not connected to a voice channel.").build()
-                    )
-                    .queue();
+                    .setSuccess(false)
+                    .setMessageType(MessageType.Error)
+                    .setMessage("You are not connected to a voice channel.");
+            InteractionResponse.handle(event.getHook(), response);
             return false;
         }
 

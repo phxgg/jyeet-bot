@@ -72,7 +72,7 @@ public class InteractionResponse {
     }
 
     public static void handle(InteractionHook hook, InteractionResponse response) {
-        if (response == null)
+        if (hook == null || response == null)
             return;
 
         EmbedBuilder embed = new EmbedBuilder()
