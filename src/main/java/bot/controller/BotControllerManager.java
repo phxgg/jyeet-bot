@@ -17,7 +17,7 @@ import java.util.Map;
 
 public class BotControllerManager {
     @SuppressWarnings("rawtypes")
-    private final List<BotControllerFactory> controllerFactories;
+    private final List<IBotControllerFactory> controllerFactories;
     private final Map<String, Command> commands;
 
     public BotControllerManager() {
@@ -26,7 +26,7 @@ public class BotControllerManager {
     }
 
     @SuppressWarnings("rawtypes")
-    public void registerController(BotControllerFactory factory) {
+    public void registerController(IBotControllerFactory factory) {
         controllerFactories.add(factory);
 
         Class<?> controllerClass = factory.getControllerClass();
@@ -61,7 +61,7 @@ public class BotControllerManager {
         commands.put(command.getName(), command);
     }
 
-    public void destroyPlayer(Map<Class<? extends BotController>, BotController> instances) {
+    public void destroyPlayer(Map<Class<? extends IBotController>, IBotController> instances) {
         instances.forEach((controllerClass, controller) -> {
             if (controller instanceof MusicController) {
                 ((MusicController) controller).destroyPlayer();
@@ -70,7 +70,7 @@ public class BotControllerManager {
         });
     }
 
-    public void waitInVC(Map<Class<? extends BotController>, BotController> instances) {
+    public void waitInVC(Map<Class<? extends IBotController>, IBotController> instances) {
         instances.forEach((controllerClass, controller) -> {
             if (controller instanceof MusicController) {
                 ((MusicController) controller).getScheduler().waitInVC();
@@ -79,9 +79,9 @@ public class BotControllerManager {
     }
 
     public void dispatchSlashCommand(
-            Map<Class<? extends BotController>, BotController> instances,
+            Map<Class<? extends IBotController>, IBotController> instances,
             SlashCommandInteractionEvent event,
-            BotSlashCommandMappingHandler handler
+            IBotSlashCommandMappingHandler handler
     ) {
         String commandName = event.getName();
 
@@ -163,9 +163,9 @@ public class BotControllerManager {
     }
 
     @SuppressWarnings("rawtypes")
-    public List<BotController> createControllers(BotApplicationManager applicationManager, BotGuildContext context, Guild guild) {
-        List<BotController> controllers = new ArrayList<>();
-        for (BotControllerFactory factory : controllerFactories) {
+    public List<IBotController> createControllers(BotApplicationManager applicationManager, BotGuildContext context, Guild guild) {
+        List<IBotController> controllers = new ArrayList<>();
+        for (IBotControllerFactory factory : controllerFactories) {
             controllers.add(factory.create(applicationManager, context, guild));
         }
         return controllers;

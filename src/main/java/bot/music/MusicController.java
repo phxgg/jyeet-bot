@@ -1,13 +1,13 @@
 package bot.music;
 
-import bot.listeners.BotApplicationManager;
-import bot.records.*;
 import bot.api.StatusCodes;
 import bot.api.WebReq;
 import bot.controller.BotCommandHandler;
-import bot.controller.BotController;
-import bot.controller.BotControllerFactory;
+import bot.controller.IBotController;
+import bot.controller.IBotControllerFactory;
 import bot.dto.Response;
+import bot.listeners.BotApplicationManager;
+import bot.records.*;
 import com.google.gson.Gson;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
@@ -20,12 +20,8 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
-import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
-import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.managers.AudioManager;
@@ -39,20 +35,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 
-public class MusicController implements BotController {
+public class MusicController implements IBotController {
     private static final Logger log = LoggerFactory.getLogger(MusicController.class);
     private final BotGuildContext state;
     private final AudioPlayerManager manager;
     private final AudioPlayer player;
-    private final AtomicReference<TextChannel> outputChannel;
     private final MusicScheduler scheduler;
     private final MessageDispatcher messageDispatcher;
     private final Guild guild;
-    private final TrackBoxButtonClick trackBoxButtonClick;
 
     public MusicController(BotApplicationManager manager, BotGuildContext state, Guild guild) {
         this.state = state;
@@ -62,12 +53,10 @@ public class MusicController implements BotController {
         player = manager.getPlayerManager().createPlayer();
         guild.getAudioManager().setSendingHandler(new AudioPlayerSendHandler(player));
 
-        outputChannel = new AtomicReference<>();
-
-        messageDispatcher = new GlobalDispatcher();
+        messageDispatcher = new MessageDispatcher();
         scheduler = new MusicScheduler(guild, player, messageDispatcher, manager.getExecutorService());
 
-        trackBoxButtonClick = new TrackBoxButtonClick(scheduler);
+        messageDispatcher.setTrackBoxButtonClick(new TrackBoxButtonClick(scheduler));
 
         player.addListener(scheduler);
     }
@@ -94,7 +83,7 @@ public class MusicController implements BotController {
 //        guild.getAudioManager().setSendingHandler(null);
         guild.getAudioManager().closeAudioConnection();
         messageDispatcher.sendDisposableMessage(MessageType.Info, "Disconnected.");
-        outputChannel.set(null);
+        messageDispatcher.setOutputChannel(null);
     }
 
     /** ====================================
@@ -240,14 +229,12 @@ public class MusicController implements BotController {
             return;
 
         if (!event.getGuild().getOwnerId().equals(event.getUser().getId())) {
-            event
-                    .getHook()
+            InteractionResponse response = new InteractionResponse()
                     .setEphemeral(true)
-                    .editOriginalEmbeds(
-                            messageDispatcher.createEmbedMessage(MessageType.Warning, "You cannot change the prefix.").build()
-                    )
-                    .queue();
-//            messageDispatcher.replyDisposable(event.getMessageChannel(), MessageType.Warning, "You cannot change the prefix.");
+                    .setSuccess(false)
+                    .setMessageType(MessageType.Warning)
+                    .setMessage("You cannot change the prefix.");
+            InteractionResponse.handle(event.getHook(), response);
             return;
         }
 
@@ -256,7 +243,7 @@ public class MusicController implements BotController {
                     .getHook()
                     .setEphemeral(true)
                     .editOriginalEmbeds(
-                            messageDispatcher.createEmbedMessage(MessageType.Error, "Prefix must be 1 or 2 characters long and cannot contain spaces or the character `.").build()
+                            MessageDispatcher.createEmbedMessage(MessageType.Error, "Prefix must be 1 or 2 characters long and cannot contain spaces or the character `.").build()
                     )
                     .queue();
 //            messageDispatcher.replyDisposable(event.getMessageChannel(), MessageType.Error,
@@ -280,7 +267,7 @@ public class MusicController implements BotController {
                     .getHook()
                     .setEphemeral(true)
                     .editOriginalEmbeds(
-                            messageDispatcher.createEmbedMessage(MessageType.Success, String.format("Prefix updated to `%s`.", newPrefix)).build()
+                            MessageDispatcher.createEmbedMessage(MessageType.Success, String.format("Prefix updated to `%s`.", newPrefix)).build()
                     )
                     .queue();
         } else {
@@ -289,7 +276,7 @@ public class MusicController implements BotController {
                     .getHook()
                     .setEphemeral(true)
                     .editOriginalEmbeds(
-                            messageDispatcher.createEmbedMessage(MessageType.Error, "Failed to update prefix.").build()
+                            MessageDispatcher.createEmbedMessage(MessageType.Error, "Failed to update prefix.").build()
                     )
                     .queue();
         }
@@ -332,13 +319,11 @@ public class MusicController implements BotController {
 
         BlockingDeque<AudioTrack> _queue = scheduler.getQueue();
         if (_queue.isEmpty()) {
-            event
-                    .getHook()
-                    .setEphemeral(true)
-                    .editOriginalEmbeds(
-                            messageDispatcher.createEmbedMessage(MessageType.Info, "The queue is empty.").build()
-                    )
-                    .queue();
+            InteractionResponse response = new InteractionResponse();
+            response.setSuccess(false);
+            response.setMessageType(MessageType.Info);
+            response.setMessage("The queue is empty.");
+            InteractionResponse.handle(event.getHook(), response);
             return;
         }
 
@@ -378,7 +363,7 @@ public class MusicController implements BotController {
                     .getHook()
                     .setEphemeral(true)
                     .editOriginalEmbeds(
-                            messageDispatcher.createEmbedMessage(MessageType.Error, "Invalid volume.").build()
+                            MessageDispatcher.createEmbedMessage(MessageType.Error, "Invalid volume.").build()
                     )
                     .queue();
 //            messageDispatcher.replyDisposable(event.getMessageChannel(), MessageType.Error, "Invalid volume.");
@@ -391,7 +376,7 @@ public class MusicController implements BotController {
                 .setSuccess(true)
                 .setMessageType(MessageType.Info)
                 .setMessage("Volume set to " + volume + ".");
-        handleInteractionResponse(event.getHook(), response);
+        InteractionResponse.handle(event.getHook(), response);
     }
 
     @BotCommandHandler(name = "skip", description = "Skip current track.", usage = "/skip")
@@ -431,8 +416,14 @@ public class MusicController implements BotController {
         if (!canPerformAction(ad))
             return;
 
-        forPlayingTrack(track -> track.setPosition(track.getPosition() + duration * 1000L));
-        event.getHook().deleteOriginal().queue();
+        forPlayingTrack(track -> {
+            track.setPosition(track.getPosition() + duration * 1000L);
+            InteractionResponse response = new InteractionResponse()
+                    .setSuccess(true)
+                    .setMessageType(MessageType.Info)
+                    .setMessage("Track forwarded by " + duration + " seconds.");
+            InteractionResponse.handle(event.getHook(), response);
+        });
     }
 
     /**
@@ -445,8 +436,14 @@ public class MusicController implements BotController {
         if (!canPerformAction(ad))
             return;
 
-        forPlayingTrack(track -> track.setPosition(Math.max(0, track.getPosition() - duration * 1000L)));
-        event.getHook().deleteOriginal().queue();
+        forPlayingTrack(track -> {
+            track.setPosition(Math.max(0, track.getPosition() - duration * 1000L));
+            InteractionResponse response = new InteractionResponse()
+                    .setSuccess(true)
+                    .setMessageType(MessageType.Info)
+                    .setMessage("Track backwarded by " + duration + " seconds.");
+            InteractionResponse.handle(event.getHook(), response);
+        });
     }
 
     @BotCommandHandler(name = "pause", description = "Pause current playing track. Use `/pause` again, or `/resume` to unpause.", usage = "/pause")
@@ -476,8 +473,7 @@ public class MusicController implements BotController {
                     .setSuccess(false)
                     .setMessageType(MessageType.Warning)
                     .setMessage("Nothing is playing.");
-            handleInteractionResponse(event.getHook(), response);
-//            messageDispatcher.replyDisposable(event.getMessageChannel(), MessageType.Warning, "Nothing is playing.");
+            InteractionResponse.handle(event.getHook(), response);
             return;
         }
 
@@ -486,9 +482,7 @@ public class MusicController implements BotController {
         InteractionResponse response = new InteractionResponse()
                 .setMessageType(MessageType.Info)
                 .setMessage(String.format("Currently playing **%s** by **%s**", current.title, current.author));
-
-        handleInteractionResponse(event.getHook(), response);
-//        messageDispatcher.sendMessage(MessageType.Info, "Currently playing **" + current.title + "** by **" + current.author + "**");
+        InteractionResponse.handle(event.getHook(), response);
     }
 
     @BotCommandHandler(name = "clearqueue", description = "Clear the queue.", usage = "/clearqueue")
@@ -502,7 +496,7 @@ public class MusicController implements BotController {
         InteractionResponse response = new InteractionResponse()
                 .setMessageType(MessageType.Success)
                 .setMessage("Cleared queue.");
-        handleInteractionResponse(event.getHook(), response);
+        InteractionResponse.handle(event.getHook(), response);
     }
 
     @BotCommandHandler(name = "shuffle", description = "Shuffle the queue.", usage = "/shuffle")
@@ -512,7 +506,7 @@ public class MusicController implements BotController {
             return;
 
         InteractionResponse response = scheduler.shuffleQueue();
-        handleInteractionResponse(event.getHook(), response);
+        InteractionResponse.handle(event.getHook(), response);
     }
 
     @BotCommandHandler(name = "stop", description = "Stop the player.", usage = "/stop")
@@ -522,7 +516,7 @@ public class MusicController implements BotController {
             return;
 
         InteractionResponse response = scheduler.stopPlayer();
-        handleInteractionResponse(event.getHook(), response);
+        InteractionResponse.handle(event.getHook(), response);
     }
 
     @BotCommandHandler(name = "disconnect", description = "Disconnect the bot from the voice channel.", usage = "/dc")
@@ -547,12 +541,12 @@ public class MusicController implements BotController {
 //        if (!isOwner(event.getUser()))
 //            return;
 
-        outputChannel.set((TextChannel) event.getMessageChannel());
+        messageDispatcher.setOutputChannel((TextChannel) event.getMessageChannel());
 
         InteractionResponse response = new InteractionResponse()
                 .setMessageType(MessageType.Success)
                 .setMessage("Output channel set to **" + event.getChannel().getName() + "**");
-        handleInteractionResponse(event.getHook(), response);
+        InteractionResponse.handle(event.getHook(), response);
     }
 
     @BotCommandHandler(name = "duration", description = "Display the duration of the current playing track.", usage = "/duration")
@@ -561,8 +555,12 @@ public class MusicController implements BotController {
         if (!canPerformAction(ad))
             return;
 
-        forPlayingTrack(track -> messageDispatcher.reply(event.getMessageChannel(), MessageType.Info, "Duration is " + track.getDuration()));
-        event.getHook().deleteOriginal().queue();
+        forPlayingTrack(track -> {
+            InteractionResponse response = new InteractionResponse()
+                    .setMessageType(MessageType.Info)
+                    .setMessage("Duration is " + track.getDuration());
+            InteractionResponse.handle(event.getHook(), response);
+        });
     }
 
     /** ====================================
@@ -575,8 +573,8 @@ public class MusicController implements BotController {
             final String identifier,
             final boolean playNow,
             final boolean playNext) {
-        if (outputChannel.get() == null) {
-            outputChannel.set((TextChannel) event.getMessageChannel());
+        if (messageDispatcher.getOutputChannel() == null) {
+            messageDispatcher.setOutputChannel((TextChannel) event.getMessageChannel());
         }
 
         String searchQuery = identifier;
@@ -600,7 +598,7 @@ public class MusicController implements BotController {
                 event
                         .getHook()
                         .editOriginalEmbeds(
-                                messageDispatcher.createEmbedMessage(
+                                MessageDispatcher.createEmbedMessage(
                                         MessageType.Success,
                                         String.format("Added to queue: **%s**", track.getInfo().title)
                                 ).build()
@@ -624,7 +622,7 @@ public class MusicController implements BotController {
                     event
                             .getHook()
                             .editOriginalEmbeds(
-                                    messageDispatcher.createEmbedMessage(
+                                    MessageDispatcher.createEmbedMessage(
                                             MessageType.Success,
                                             String.format("Loaded playlist: **%s** (Tracks: %s)", playlist.getName(), tracks.size())
                                     ).build()
@@ -670,7 +668,7 @@ public class MusicController implements BotController {
                     event
                             .getHook()
                             .editOriginalEmbeds(
-                                    messageDispatcher.createEmbedMessage(
+                                    MessageDispatcher.createEmbedMessage(
                                             MessageType.Success,
                                             String.format("Added to queue: **%s**", track.getInfo().title)
                                     ).build()
@@ -692,7 +690,7 @@ public class MusicController implements BotController {
                 event
                         .getHook()
                         .editOriginalEmbeds(
-                                messageDispatcher.createEmbedMessage(MessageType.Error, String.format("Nothing found for %s", identifier)).build()
+                                MessageDispatcher.createEmbedMessage(MessageType.Error, String.format("Nothing found for %s", identifier)).build()
                         )
                         .queue();
             }
@@ -702,7 +700,7 @@ public class MusicController implements BotController {
                 event
                         .getHook()
                         .editOriginalEmbeds(
-                                messageDispatcher.createEmbedMessage(
+                                MessageDispatcher.createEmbedMessage(
                                         MessageType.Error,
                                         String.format("Failed with message: %s (%s)", throwable.getMessage(), throwable.getClass().getSimpleName())
                                 ).build()
@@ -738,7 +736,7 @@ public class MusicController implements BotController {
                 .getHook()
                 .setEphemeral(true)
                 .editOriginalEmbeds(
-                        actionData.getMessageDispatcher().createEmbedMessage(MessageType.Error, "YEEET does not have permission to join a voice channel.").build()
+                        MessageDispatcher.createEmbedMessage(MessageType.Error, "YEEET does not have permission to join a voice channel.").build()
                 )
                 .queue();
             return false;
@@ -755,7 +753,7 @@ public class MusicController implements BotController {
                         .getHook()
                         .setEphemeral(true)
                         .editOriginalEmbeds(
-                                actionData.getMessageDispatcher().createEmbedMessage(MessageType.Error, "You are not connected to a voice channel.").build()
+                                MessageDispatcher.createEmbedMessage(MessageType.Error, "You are not connected to a voice channel.").build()
                         )
                         .queue();
                 return false;
@@ -778,7 +776,7 @@ public class MusicController implements BotController {
                     actionData
                             .getHook()
                             .editOriginalEmbeds(
-                                    actionData.getMessageDispatcher().createEmbedMessage(MessageType.Error, "YEEET is already connected to another voice channel.").build()
+                                    MessageDispatcher.createEmbedMessage(MessageType.Error, "YEEET is already connected to another voice channel.").build()
                             )
                             .queue();
                     return false;
@@ -810,7 +808,7 @@ public class MusicController implements BotController {
                     .getHook()
                     .setEphemeral(true)
                     .editOriginalEmbeds(
-                            messageDispatcher.createEmbedMessage(MessageType.Error, "You are not connected to a voice channel.").build()
+                            MessageDispatcher.createEmbedMessage(MessageType.Error, "You are not connected to a voice channel.").build()
                     )
                     .queue();
             return false;
@@ -831,29 +829,6 @@ public class MusicController implements BotController {
         return true;
     }
 
-    public static void handleInteractionResponse(InteractionHook hook, InteractionResponse response) {
-        if (response == null)
-            return;
-
-        EmbedBuilder embed = new EmbedBuilder()
-                .setColor(response.getMessageType().color)
-                .setDescription(response.getMessage());
-
-        hook.setEphemeral(!response.isSuccess());
-        log.info("[{}] Interaction response: {}", response.isSuccess() ? "SUCCESS" : "ERROR", response.getMessage());
-
-        if (response.isNewMessage()) {
-            hook
-                    .sendMessageEmbeds(embed.build())
-                    .queue();
-            return;
-        }
-
-        hook
-                .editOriginalEmbeds(embed.build())
-                .queue();
-    }
-
     private interface TrackOperation {
         void execute(AudioTrack track);
     }
@@ -871,94 +846,7 @@ public class MusicController implements BotController {
         }
     }
 
-    private class GlobalDispatcher implements MessageDispatcher {
-        @Override
-        public void sendMessage(
-                MessageType type,
-                MessageEmbed messageEmbed,
-                Consumer<Message> success,
-                Consumer<Throwable> failure,
-                final boolean isTrackbox) {
-            if (outputChannel.get() == null) {
-                return;
-            }
-
-            TextChannel channel = outputChannel.get();
-
-            if (channel != null) {
-                if (!isTrackbox)
-                    channel.sendMessageEmbeds(messageEmbed).queue(success, failure);
-                else {
-                    removeTrackBoxButtonClickListener(channel.getGuild());
-
-                    log.info("[{}] Added new listener: TrackBoxButtonClick", channel.getGuild().getName());
-                    channel.getJDA().addEventListener(trackBoxButtonClick);
-                    channel.sendMessageEmbeds(messageEmbed).setActionRow(TrackBoxBuilder.sendButtons(channel.getGuild().getId()))
-                            .queue(success, failure);
-                }
-            }
-        }
-
-        @Override
-        public void sendMessage(MessageType type, String message) {
-            if (outputChannel.get() == null) {
-                return;
-            }
-
-            TextChannel channel = outputChannel.get();
-
-            EmbedBuilder eb = new EmbedBuilder();
-            eb.setColor(type.color);
-            eb.setDescription(message);
-
-            if (channel != null) {
-                channel.sendMessageEmbeds(eb.build()).queue();
-            }
-        }
-
-        @Override
-        public void sendDisposableMessage(MessageType type, String message) {
-            if (outputChannel.get() == null) {
-                return;
-            }
-
-            TextChannel channel = outputChannel.get();
-
-            EmbedBuilder eb = new EmbedBuilder();
-//            eb.setTitle(type.toString());
-            eb.setColor(type.color);
-            eb.setDescription(message);
-
-            channel.sendMessageEmbeds(eb.build()).queue(m -> m.delete().queueAfter(MessageDispatcher.deleteSeconds, TimeUnit.SECONDS));
-        }
-
-        @Override
-        public void reply(MessageChannel channel, MessageType type, String message) {
-            EmbedBuilder eb = new EmbedBuilder();
-
-            eb.setColor(type.color);
-            eb.setDescription(message);
-
-            channel.sendMessageEmbeds(eb.build()).queue();
-        }
-
-        @Override
-        public void replyDisposable(MessageChannel channel, MessageType type, String message) {
-            EmbedBuilder eb = new EmbedBuilder();
-
-            eb.setColor(type.color);
-            eb.setDescription(message);
-
-            channel.sendMessageEmbeds(eb.build()).queue(m -> m.delete().queueAfter(MessageDispatcher.deleteSeconds, TimeUnit.SECONDS));
-        }
-
-        @Override
-        public EmbedBuilder createEmbedMessage(MessageType type, String message) {
-            return new EmbedBuilder().setColor(type.color).setDescription(message);
-        }
-    }
-
-    public static class Factory implements BotControllerFactory<MusicController> {
+    public static class Factory implements IBotControllerFactory<MusicController> {
         @Override
         public Class<MusicController> getControllerClass() {
             return MusicController.class;

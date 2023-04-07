@@ -4,9 +4,9 @@ import bot.records.BotGuildContext;
 import bot.records.MessageType;
 import bot.api.StatusCodes;
 import bot.api.WebReq;
-import bot.controller.BotController;
+import bot.controller.IBotController;
 import bot.controller.BotControllerManager;
-import bot.controller.BotSlashCommandMappingHandler;
+import bot.controller.IBotSlashCommandMappingHandler;
 import bot.dto.Response;
 import bot.dto.Server;
 import bot.music.MusicController;
@@ -154,7 +154,7 @@ public class BotApplicationManager extends ListenerAdapter {
 
         BotGuildContext context = new BotGuildContext(guildId, prefix);
 
-        for (BotController controller : controllerManager.createControllers(this, context, guild)) {
+        for (IBotController controller : controllerManager.createControllers(this, context, guild)) {
             context.controllers.put(controller.getClass(), controller);
         }
 
@@ -194,7 +194,7 @@ public class BotApplicationManager extends ListenerAdapter {
 
         String prefix = guildContext.guildPrefix;
 
-        controllerManager.dispatchSlashCommand(guildContext.controllers, event, new BotSlashCommandMappingHandler() {
+        controllerManager.dispatchSlashCommand(guildContext.controllers, event, new IBotSlashCommandMappingHandler() {
             @Override
             public void commandNotFound(String name) {
 

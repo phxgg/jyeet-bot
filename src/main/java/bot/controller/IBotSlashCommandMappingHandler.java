@@ -1,6 +1,6 @@
 package bot.controller;
 
-public interface BotSlashCommandMappingHandler {
+public interface IBotSlashCommandMappingHandler {
     void commandNotFound(String name);
 
     void commandWrongParameterCount(String name, String description, String usage, int given, int required);

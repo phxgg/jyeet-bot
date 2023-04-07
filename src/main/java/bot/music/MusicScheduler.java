@@ -1,8 +1,8 @@
 package bot.music;
 
+import bot.records.InteractionResponse;
 import bot.records.MessageDispatcher;
 import bot.records.MessageType;
-import bot.records.InteractionResponse;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
@@ -96,6 +96,7 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
         if (!(queue.size() > 0)) {
             return new InteractionResponse()
                     .setSuccess(false)
+                    .setEphemeral(true)
                     .setMessageType(MessageType.Warning)
                     .setMessage("Cannot shuffle an empty queue.");
         }
@@ -247,12 +248,12 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
                 message.editMessageEmbeds(box).queue();
             } else {
                 if (creatingBoxMessage.compareAndSet(false, true)) {
-                    messageDispatcher.sendMessage(MessageType.TrackBox, box, created -> {
+                    messageDispatcher.sendTrackBoxMessage(box, created -> {
                         boxMessage.set(created);
                         creatingBoxMessage.set(false);
                     }, error -> {
                         creatingBoxMessage.set(false);
-                    }, true);
+                    });
                 }
             }
         }

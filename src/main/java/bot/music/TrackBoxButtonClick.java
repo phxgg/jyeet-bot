@@ -1,9 +1,9 @@
 package bot.music;
 
-import bot.records.MessageType;
 import bot.records.ActionData;
 import bot.records.InteractionResponse;
-import net.dv8tion.jda.api.EmbedBuilder;
+import bot.records.MessageDispatcher;
+import bot.records.MessageType;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
@@ -57,7 +57,7 @@ public class TrackBoxButtonClick extends ListenerAdapter {
             event.getHook()
                     .setEphemeral(true)
                     .sendMessageEmbeds(
-                            ad.getMessageDispatcher().createEmbedMessage(
+                            MessageDispatcher.createEmbedMessage(
                                     MessageType.Warning, "<@" + event.getInteraction().getUser().getId() + "> " + "Under construction")
                                     .build()
                     )
@@ -70,12 +70,12 @@ public class TrackBoxButtonClick extends ListenerAdapter {
             InteractionResponse response = scheduler.shuffleQueue();
             response.setNewMessage(true);
             response.setMessage("<@" + event.getInteraction().getUser().getId() + "> " + response.getMessage());
-            MusicController.handleInteractionResponse(event.getHook(), response);
+            InteractionResponse.handle(event.getHook(), response);
         } else if (buttonId.equals(stop)) {
             InteractionResponse response = scheduler.stopPlayer();
             response.setNewMessage(true);
             response.setMessage("<@" + event.getInteraction().getUser().getId() + "> " + response.getMessage());
-            MusicController.handleInteractionResponse(event.getHook(), response);
+            InteractionResponse.handle(event.getHook(), response);
 //            event.getGuild().getAudioManager().closeAudioConnection();
         }
     }

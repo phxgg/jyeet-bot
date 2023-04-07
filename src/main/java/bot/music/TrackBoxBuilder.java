@@ -1,9 +1,9 @@
 package bot.music;
 
+import bot.records.MessageType;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.emoji.CustomEmoji;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 
@@ -75,7 +75,7 @@ public class TrackBoxBuilder {
 
         String duration = formatTiming(track.getDuration(), track.getDuration());
 
-        eb.setColor(Color.PINK);
+        eb.setColor(MessageType.TrackBox.color);
         eb.setTitle(String.format(":dvd: Now playing: %s - %s", track.getInfo().author, track.getInfo().title));
         eb.setDescription(buildDurationLine(width - 4, track, isPaused));
 

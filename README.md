@@ -39,9 +39,9 @@ It will display lots of errors in the console, but it will not affect the bot's 
  
 * Let admins set a specific channel for the bot to listen to commands. Also, only reply to that channel.
 
-* Implement the `!previous` command.
+* Implement the `/previous` command.
 
-* Implement the `!loop` command.
+* Implement the `/loop` command.
 
 * IPv6 /64 block -> YouTube IP rotator for rate limiting.<br>
   > __Note__
