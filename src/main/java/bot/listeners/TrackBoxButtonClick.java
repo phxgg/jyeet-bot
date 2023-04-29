@@ -1,5 +1,7 @@
-package bot.music;
+package bot.listeners;
 
+import bot.music.MusicController;
+import bot.music.MusicScheduler;
 import bot.records.ActionData;
 import bot.records.InteractionResponse;
 import bot.records.MessageType;

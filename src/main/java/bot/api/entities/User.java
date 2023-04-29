@@ -1,4 +1,4 @@
-package bot.dto;
+package bot.api.entities;
 
 public class User {
     private String id;

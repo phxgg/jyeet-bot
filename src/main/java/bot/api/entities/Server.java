@@ -1,4 +1,4 @@
-package bot.dto;
+package bot.api.entities;
 
 public class Server {
     private String id;

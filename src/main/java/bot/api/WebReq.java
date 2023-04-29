@@ -1,6 +1,6 @@
 package bot.api;
 
-import bot.dto.Response;
+import bot.api.entities.Response;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
@@ -19,7 +19,7 @@ public class WebReq {
     }};
 
     public static String Get(String url) {
-        HttpClient client = HttpClient.newHttpClient();
+        HttpClient client = HttpClientSingleton.getInstance();
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(API).resolve(url))
                 .setHeader("x-key", headers.get("x-key"))
@@ -37,7 +37,7 @@ public class WebReq {
             throw new RuntimeException(e);
         }
 
-        HttpClient client = HttpClient.newHttpClient();
+        HttpClient client = HttpClientSingleton.getInstance();
         HttpRequest request = HttpRequest.newBuilder()
                 .POST(HttpRequest.BodyPublishers.ofString(requestBody))
                 .uri(URI.create(API).resolve(url))

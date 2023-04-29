@@ -1,4 +1,4 @@
-package bot.music;
+package bot.records;
 
 public class SpotifyConfig {
     public String clientId;

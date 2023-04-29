@@ -37,6 +37,7 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
         this.boxMessage = new AtomicReference<>();
         this.creatingBoxMessage = new AtomicBoolean();
 
+        // execute this.run() every 15 seconds
         executorService.scheduleAtFixedRate(this, 3000L, 15000L, TimeUnit.MILLISECONDS);
     }
 
