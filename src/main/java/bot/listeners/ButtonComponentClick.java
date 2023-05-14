@@ -1,5 +1,6 @@
 package bot.listeners;
 
+import bot.controller.IBotController;
 import bot.music.MusicController;
 import bot.music.MusicScheduler;
 import bot.records.ActionData;
@@ -11,15 +12,15 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
-public class TrackBoxButtonClick extends ListenerAdapter {
-    private final MusicScheduler scheduler;
+public class ButtonComponentClick extends ListenerAdapter {
+    private final BotApplicationManager applicationManager;
 
-    public TrackBoxButtonClick(MusicScheduler _scheduler) {
-        scheduler = _scheduler;
+    public ButtonComponentClick(BotApplicationManager applicationManager) {
+        this.applicationManager = applicationManager;
     }
 
-    public MusicScheduler getScheduler() {
-        return scheduler;
+    public BotApplicationManager getApplicationManager() {
+        return applicationManager;
     }
 
     @Override
@@ -31,29 +32,42 @@ public class TrackBoxButtonClick extends ListenerAdapter {
 
         try {
             ad = new ActionData(
-                    scheduler.getMessageDispatcher(),
                     event,
                     event.getHook(),
                     Objects.requireNonNull(event.getGuild()).getAudioManager()
             );
         } catch (NullPointerException e) {
-            System.out.println("[TrackBoxButtonClick] audioManager is null.");
+            System.out.println("[ButtonComponentClick] audioManager is null.");
             e.printStackTrace();
+            return;
         }
 
         if (!MusicController.canPerformAction(ad, true))
             return;
 
-        final String previous = scheduler.getGuild().getId() + "_trackbox_previous";
-        final String pause = scheduler.getGuild().getId() + "_trackbox_pause";
-        final String next = scheduler.getGuild().getId() + "_trackbox_next";
-        final String shuffle = scheduler.getGuild().getId() + "_trackbox_shuffle";
-        final String stop = scheduler.getGuild().getId() + "_trackbox_stop";
+        final String previous = event.getGuild().getId() + "_trackbox_previous";
+        final String pause = event.getGuild().getId() + "_trackbox_pause";
+        final String next = event.getGuild().getId() + "_trackbox_next";
+        final String shuffle = event.getGuild().getId() + "_trackbox_shuffle";
+        final String stop = event.getGuild().getId() + "_trackbox_stop";
 
         String buttonId = event.getButton().getId();
 
-        // Cannot use 'switch' here because the 'case' requires a constant.
-        assert buttonId != null;
+        // Get music scheduler for Guild
+        MusicScheduler scheduler = null;
+        for (Class<? extends IBotController> controllerClass : applicationManager.getContext(event.getGuild()).controllers.keySet()) {
+            IBotController controller = applicationManager.getContext(event.getGuild()).controllers.get(controllerClass);
+            if (controller instanceof MusicController) {
+                scheduler = ((MusicController) controller).getScheduler();
+                break;
+            }
+        }
+
+        if (scheduler == null || buttonId == null) {
+            System.out.println("[ButtonComponentClick] scheduler or buttonId is null.");
+            return;
+        }
+
         if (buttonId.equals(previous)) {
             InteractionResponse response = new InteractionResponse()
                     .setSuccess(false)

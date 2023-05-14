@@ -6,6 +6,7 @@ import bot.listeners.BotApplicationManager;
 import bot.listeners.CommandManager;
 import bot.api.entities.Response;
 import bot.api.entities.Server;
+import bot.listeners.ButtonComponentClick;
 import com.google.gson.Gson;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -15,6 +16,9 @@ import net.dv8tion.jda.api.sharding.ShardManager;
 public class Main {
     public static void main(String[] args) {
         try {
+            BotApplicationManager applicationManager = new BotApplicationManager();
+            ButtonComponentClick buttonComponentClick = new ButtonComponentClick(applicationManager);
+
             ShardManager shardManager = DefaultShardManagerBuilder.createDefault(System.getProperty("botToken"))
                     .enableIntents(
                             GatewayIntent.GUILD_VOICE_STATES,
@@ -24,7 +28,7 @@ public class Main {
                             GatewayIntent.MESSAGE_CONTENT
                     )
                     .setActivity(Activity.listening("music \uD83C\uDFB6"))
-                    .addEventListeners(new BotApplicationManager(), new CommandManager())
+                    .addEventListeners(applicationManager, new CommandManager(), buttonComponentClick)
                     .build();
 
             Gson gson = new Gson();

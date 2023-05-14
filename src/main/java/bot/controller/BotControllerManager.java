@@ -65,7 +65,6 @@ public class BotControllerManager {
         instances.forEach((controllerClass, controller) -> {
             if (controller instanceof MusicController) {
                 ((MusicController) controller).destroyPlayer();
-                MusicController.removeTrackBoxButtonClickListener(((MusicController) controller).getGuild());
             }
         });
     }

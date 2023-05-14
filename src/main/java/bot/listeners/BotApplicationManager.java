@@ -161,7 +161,7 @@ public class BotApplicationManager extends ListenerAdapter {
         return context;
     }
 
-    private synchronized BotGuildContext getContext(Guild guild) {
+    public synchronized BotGuildContext getContext(Guild guild) {
         long guildId = Long.parseLong(guild.getId());
         BotGuildContext context = guildContexts.get(guildId);
 

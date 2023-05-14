@@ -1,8 +1,6 @@
 package bot.records;
 
-import bot.music.MusicController;
 import bot.music.TrackBoxBuilder;
-import bot.listeners.TrackBoxButtonClick;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -18,7 +16,6 @@ public class MessageDispatcher {
     private static final Logger log = LoggerFactory.getLogger(MessageDispatcher.class);
     private static final int deleteSeconds = 5;
     private final AtomicReference<TextChannel> outputChannel;
-    private TrackBoxButtonClick trackBoxButtonClick;
 
     public MessageDispatcher() {
         this.outputChannel = new AtomicReference<>();
@@ -28,16 +25,8 @@ public class MessageDispatcher {
         return this.outputChannel.get();
     }
 
-    public TrackBoxButtonClick getTrackBoxButtonClick() {
-        return this.trackBoxButtonClick;
-    }
-
     public void setOutputChannel(TextChannel channel) {
         this.outputChannel.set(channel);
-    }
-
-    public void setTrackBoxButtonClick(TrackBoxButtonClick trackBoxButtonClick) {
-        this.trackBoxButtonClick = trackBoxButtonClick;
     }
 
     public void sendTrackBoxMessage(
@@ -51,10 +40,6 @@ public class MessageDispatcher {
         TextChannel channel = outputChannel.get();
 
         if (channel != null) {
-            MusicController.removeTrackBoxButtonClickListener(channel.getGuild());
-
-            log.info("[{}] Added new listener: TrackBoxButtonClick", channel.getGuild().getName());
-            channel.getJDA().addEventListener(trackBoxButtonClick);
             channel.sendMessageEmbeds(messageEmbed).setActionRow(TrackBoxBuilder.sendButtons(channel.getGuild().getId()))
                     .queue(success, failure);
         }
