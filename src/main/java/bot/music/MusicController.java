@@ -477,7 +477,7 @@ public class MusicController implements IBotController {
 
         InteractionResponse response = new InteractionResponse()
                 .setMessageType(MessageType.Info)
-                .setMessage(String.format("Currently playing **%s** by **%s**", current.title, current.author));
+                .setMessage(String.format("Currently playing **[%s](%s)** by **%s**", current.title, current.uri, current.author));
         InteractionResponse.handle(event.getHook(), response);
     }
 
