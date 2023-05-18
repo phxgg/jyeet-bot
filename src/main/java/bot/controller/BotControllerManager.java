@@ -82,8 +82,7 @@ public class BotControllerManager {
             SlashCommandInteractionEvent event,
             IBotSlashCommandMappingHandler handler
     ) {
-        String commandName = event.getName();
-
+        String commandName = event.getFullCommandName(); // event.getName()
         Command command = commands.get(commandName);
 
         if (command == null) {

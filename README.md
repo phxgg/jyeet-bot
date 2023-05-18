@@ -1,7 +1,7 @@
 # jyeet-bot
 
-Discord Music Bot re-coded in Java.<br />
-Original node.js version can be found [here](https://github.com/phxgg/yeet-bot).
+Discord Music Bot in Java.<br />
+Node.js version [here](https://github.com/phxgg/discord-music-bot).
 
 **YEEET bot website:** [yeet-web](https://github.com/phxgg/yeet-web)
 

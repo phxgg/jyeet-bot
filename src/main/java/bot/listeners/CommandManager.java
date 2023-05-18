@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import org.jetbrains.annotations.NotNull;
 
 public class CommandManager extends ListenerAdapter {
@@ -71,6 +72,19 @@ public class CommandManager extends ListenerAdapter {
                 Commands.slash("setoutputchannel", "[ADMIN] Set output channel to current message channel.")
                         .setGuildOnly(true)
                         .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
+//                ,Commands.slash("bank", "Banking commands.")
+//                        .setGuildOnly(true)
+//                        .addSubcommands(
+//                                new SubcommandData("balance", "Shows your balance."),
+//                                new SubcommandData("deposit", "Deposit money to your bank.")
+//                                        .addOptions(
+//                                                new OptionData(OptionType.INTEGER, "amount", "Amount of money you want to deposit.")
+//                                                        .setRequired(true)),
+//                                new SubcommandData("withdraw", "Withdraw money from your bank.")
+//                                        .addOptions(
+//                                                new OptionData(OptionType.INTEGER, "amount", "Amount of money you want to withdraw.")
+//                                                        .setRequired(true))
+//                        )
         ).queue();
 
         System.out.println("Logged in as " + jda.getSelfUser().getName() + "#" + jda.getSelfUser().getDiscriminator());

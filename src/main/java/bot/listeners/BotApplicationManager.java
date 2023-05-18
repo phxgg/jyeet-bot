@@ -32,6 +32,7 @@ import com.sedmelluq.lava.extensions.youtuberotator.tools.ip.Ipv6Block;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.api.events.guild.update.GuildUpdateNameEvent;
@@ -66,6 +67,7 @@ public class BotApplicationManager extends ListenerAdapter {
         controllerManager = new BotControllerManager();
 
         controllerManager.registerController(new MusicController.Factory());
+//        controllerManager.registerController(new BankController.Factory());
 
         SpotifyConfig spotifyConfig = new SpotifyConfig();
         spotifyConfig.setClientId(System.getProperty("spotifyClientId"));
