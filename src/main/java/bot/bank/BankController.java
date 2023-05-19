@@ -20,15 +20,15 @@ public class BankController implements IBotController {
     }
 
     public BotApplicationManager getManager() {
-        return manager;
+        return this.manager;
     }
 
     public BotGuildContext getState() {
-        return state;
+        return this.state;
     }
 
     public Guild getGuild() {
-        return guild;
+        return this.guild;
     }
 
     @BotCommandHandler(name = "bank deposit", description = "Deposit money to bank.", usage = "deposit <amount>")

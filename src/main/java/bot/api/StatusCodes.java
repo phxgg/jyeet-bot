@@ -32,7 +32,7 @@ public enum StatusCodes {
     }
 
     public int getCode() {
-        return code;
+        return this.code;
     }
 
     public static StatusCodes valueOfCode(int code) {

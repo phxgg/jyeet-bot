@@ -27,23 +27,23 @@ public class InteractionResponse {
     }
 
     public boolean isSuccess() {
-        return success;
+        return this.success;
     }
 
     public boolean isEphemeral() {
-        return ephemeral;
+        return this.ephemeral;
     }
 
     public String getMessage() {
-        return message;
+        return this.message;
     }
 
     public MessageType getMessageType() {
-        return messageType;
+        return this.messageType;
     }
 
     public boolean isNewMessage() {
-        return newMessage;
+        return this.newMessage;
     }
 
     public InteractionResponse setSuccess(boolean success) {
@@ -82,14 +82,10 @@ public class InteractionResponse {
         hook.setEphemeral(response.isEphemeral());
 
         if (response.isNewMessage()) {
-            hook
-                    .sendMessageEmbeds(embed.build())
-                    .queue();
+            hook.sendMessageEmbeds(embed.build()).queue();
             return;
         }
 
-        hook
-                .editOriginalEmbeds(embed.build())
-                .queue();
+        hook.editOriginalEmbeds(embed.build()).queue();
     }
 }

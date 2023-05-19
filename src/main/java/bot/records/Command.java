@@ -28,26 +28,26 @@ public class Command {
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
     public String getDescription() {
-        return description;
+        return this.description;
     }
 
     public String getUsage() {
-        return usage;
+        return this.usage;
     }
 
     public List<Class<?>> getParameters() {
-        return parameters;
+        return this.parameters;
     }
 
     public Class<?> getControllerClass() {
-        return controllerClass;
+        return this.controllerClass;
     }
 
     public Method getCommandMethod() {
-        return commandMethod;
+        return this.commandMethod;
     }
 }

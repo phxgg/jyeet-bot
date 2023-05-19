@@ -9,26 +9,26 @@ public class User {
     private String[] roles;
 
     public String getId() {
-        return id;
+        return this.id;
     }
 
     public String getUsername() {
-        return username;
+        return this.username;
     }
 
     public String getEmail() {
-        return email;
+        return this.email;
     }
 
     public String getCreatedAt() {
-        return createdAt;
+        return this.createdAt;
     }
 
     public String getUpdatedAt() {
-        return updatedAt;
+        return this.updatedAt;
     }
 
     public String[] getRoles() {
-        return roles;
+        return this.roles;
     }
 }

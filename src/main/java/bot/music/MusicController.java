@@ -49,23 +49,21 @@ public class MusicController implements IBotController {
         this.manager = manager.getPlayerManager();
         this.guild = guild;
 
-        player = manager.getPlayerManager().createPlayer();
+        this.player = manager.getPlayerManager().createPlayer();
         guild.getAudioManager().setSendingHandler(new AudioPlayerSendHandler(player));
 
-        messageDispatcher = new MessageDispatcher();
-        scheduler = new MusicScheduler(guild, player, messageDispatcher, manager.getExecutorService());
+        this.messageDispatcher = new MessageDispatcher();
+        this.scheduler = new MusicScheduler(guild, this.player, this.messageDispatcher, manager.getExecutorService());
 
-//        messageDispatcher.setTrackBoxButtonClick(new TrackBoxButtonClick(scheduler));
-
-        player.addListener(scheduler);
+        this.player.addListener(this.scheduler);
     }
 
     public Guild getGuild() {
-        return guild;
+        return this.guild;
     }
 
     public MusicScheduler getScheduler() {
-        return scheduler;
+        return this.scheduler;
     }
 
     public void destroyPlayer() {
@@ -246,8 +244,6 @@ public class MusicController implements IBotController {
                     .setMessageType(MessageType.Error)
                     .setMessage("Prefix must be 1 or 2 characters long and cannot contain spaces or the character `.");
             InteractionResponse.handle(event.getHook(), response);
-//            messageDispatcher.replyDisposable(event.getMessageChannel(), MessageType.Error,
-//                    "Prefix must be 1 or 2 characters long and cannot contain spaces or the character `.");
             return;
         }
 
@@ -262,7 +258,7 @@ public class MusicController implements IBotController {
         Response r = gson.fromJson(post, Response.class);
 
         if (r.getCode() == StatusCodes.OK.getCode()) {
-            state.guildPrefix = newPrefix;
+            state.setGuildPrefix(newPrefix);
             InteractionResponse response = new InteractionResponse()
                     .setEphemeral(true)
                     .setSuccess(true)
@@ -270,7 +266,7 @@ public class MusicController implements IBotController {
                     .setMessage(String.format("Prefix updated to `%s`.", newPrefix));
             InteractionResponse.handle(event.getHook(), response);
         } else {
-//            messageDispatcher.replyDisposable(event.getMessageChannel(), MessageType.Error, "Failed to update prefix.");
+//            this.messageDispatcher.replyDisposable(event.getMessageChannel(), MessageType.Error, "Failed to update prefix.");
             InteractionResponse response = new InteractionResponse()
                     .setEphemeral(true)
                     .setSuccess(false)

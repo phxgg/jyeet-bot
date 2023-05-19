@@ -10,30 +10,30 @@ public class Server {
     private String updatedAt;
 
     public String getId() {
-        return id;
+        return this.id;
     }
 
     public String getGuildId() {
-        return guildId;
+        return this.guildId;
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
     public String getOwnerId() {
-        return ownerId;
+        return this.ownerId;
     }
 
     public String getPrefix() {
-        return prefix;
+        return this.prefix;
     }
 
     public String getCreatedAt() {
-        return createdAt;
+        return this.createdAt;
     }
 
     public String getUpdatedAt() {
-        return updatedAt;
+        return this.updatedAt;
     }
 }

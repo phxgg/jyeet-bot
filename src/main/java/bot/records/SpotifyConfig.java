@@ -16,15 +16,15 @@ public class SpotifyConfig {
     }
 
     public String getClientId() {
-        return clientId;
+        return this.clientId;
     }
 
     public String getClientSecret() {
-        return clientSecret;
+        return this.clientSecret;
     }
 
     public String getCountryCode() {
-        return countryCode;
+        return this.countryCode;
     }
 
     public void setClientId(String clientId) {

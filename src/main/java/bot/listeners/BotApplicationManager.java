@@ -32,7 +32,6 @@ import com.sedmelluq.lava.extensions.youtuberotator.tools.ip.Ipv6Block;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.api.events.guild.update.GuildUpdateNameEvent;
@@ -130,11 +129,11 @@ public class BotApplicationManager extends ListenerAdapter {
 //    }
 
     public ScheduledExecutorService getExecutorService() {
-        return executorService;
+        return this.executorService;
     }
 
     public AudioPlayerManager getPlayerManager() {
-        return playerManager;
+        return this.playerManager;
     }
 
     private BotGuildContext createGuildState(long guildId, Guild guild) {
@@ -157,7 +156,7 @@ public class BotApplicationManager extends ListenerAdapter {
         BotGuildContext context = new BotGuildContext(guildId, prefix);
 
         for (IBotController controller : controllerManager.createControllers(this, context, guild)) {
-            context.controllers.put(controller.getClass(), controller);
+            context.getControllers().put(controller.getClass(), controller);
         }
 
         return context;
@@ -194,9 +193,9 @@ public class BotApplicationManager extends ListenerAdapter {
 
         BotGuildContext guildContext = getContext(event.getGuild());
 
-        String prefix = guildContext.guildPrefix;
+        String prefix = guildContext.getGuildPrefix();
 
-        controllerManager.dispatchSlashCommand(guildContext.controllers, event, new IBotSlashCommandMappingHandler() {
+        controllerManager.dispatchSlashCommand(guildContext.getControllers(), event, new IBotSlashCommandMappingHandler() {
             @Override
             public void commandNotFound(String name) {
 
@@ -275,14 +274,14 @@ public class BotApplicationManager extends ListenerAdapter {
 
         // If the bot leaves a voice channel, destroy player.
         if (event.getMember().getUser().equals(event.getJDA().getSelfUser())) {
-            controllerManager.destroyPlayer(guildContext.controllers);
+            controllerManager.destroyPlayer(guildContext.getControllers());
             return;
         }
 
         if (!event.getMember().getUser().equals(event.getJDA().getSelfUser())
                 && event.getChannelLeft().getMembers().size() == 1
                 && event.getChannelLeft().getMembers().contains(event.getGuild().getSelfMember())) {
-            controllerManager.destroyPlayer(guildContext.controllers);
+            controllerManager.destroyPlayer(guildContext.getControllers());
 
             /* TODO:
                 Wait in VC alone for some time before disconnecting,

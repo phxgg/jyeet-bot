@@ -14,18 +14,18 @@ public class Response {
     }
 
     public int getCode() {
-        return code;
+        return this.code;
     }
 
     public String getMessage() {
-        return message;
+        return this.message;
     }
 
     public String getError() {
-        return error;
+        return this.error;
     }
 
     public Object getData() {
-        return data;
+        return this.data;
     }
 }

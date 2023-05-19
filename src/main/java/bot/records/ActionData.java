@@ -19,14 +19,14 @@ public class ActionData {
     }
 
     public GenericInteractionCreateEvent getEvent() {
-        return event;
+        return this.event;
     }
 
     public InteractionHook getHook() {
-        return hook;
+        return this.hook;
     }
 
     public AudioManager getAudioManager() {
-        return audioManager;
+        return this.audioManager;
     }
 }

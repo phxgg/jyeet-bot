@@ -55,8 +55,8 @@ public class ButtonComponentClick extends ListenerAdapter {
 
         // Get music scheduler for Guild
         MusicScheduler scheduler = null;
-        for (Class<? extends IBotController> controllerClass : applicationManager.getContext(event.getGuild()).controllers.keySet()) {
-            IBotController controller = applicationManager.getContext(event.getGuild()).controllers.get(controllerClass);
+        for (Class<? extends IBotController> controllerClass : applicationManager.getContext(event.getGuild()).getControllers().keySet()) {
+            IBotController controller = applicationManager.getContext(event.getGuild()).getControllers().get(controllerClass);
             if (controller instanceof MusicController) {
                 scheduler = ((MusicController) controller).getScheduler();
                 break;
