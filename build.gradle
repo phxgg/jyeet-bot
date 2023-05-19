@@ -34,9 +34,7 @@ task fatJar(type: Jar) {
         attributes 'Main-Class': 'bot.Main'
     }
     archiveClassifier = 'all'
-    configurations.implementation.setCanBeResolved(true)
     from {
-        configurations.implementation.collect { it.isDirectory() ? it : zipTree(it) }
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
     with jar
@@ -48,9 +46,9 @@ task fatJarDev(type: Jar) {
         attributes 'Main-Class': 'bot.Main'
     }
     archiveClassifier = 'dev'
-    configurations.implementation.setCanBeResolved(true)
+//    configurations.implementation.setCanBeResolved(true)
     from {
-        configurations.implementation.collect { it.isDirectory() ? it : zipTree(it) }
+//        configurations.implementation.collect { it.isDirectory() ? it : zipTree(it) }
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
     with jar
