@@ -1,6 +1,7 @@
 package bot.music;
 
 import bot.records.MessageType;
+import bot.records.TrackMetadata;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -30,25 +31,21 @@ public class TrackBoxBuilder {
         int progressBlocks = Math.round(progress * barLength);
 
         StringBuilder builder = new StringBuilder();
-        builder.append("`");
-
+        builder.append("```");
         builder.append(" ".repeat(3 - cornerText.length()));
-
         builder.append(cornerText);
-
         builder.append(" [");
+
         for (int i = 0; i < barLength; i++) {
             builder.append(i < progressBlocks ? PROGRESS_FILL : PROGRESS_EMPTY);
         }
+
         builder.append("]");
-
         builder.append(" ".repeat(Math.max(0, spacing + 1)));
-
         builder.append(position);
         builder.append(" of ");
         builder.append(duration);
-
-        builder.append("`");
+        builder.append("```");
 
         return builder.toString();
     }
@@ -74,17 +71,19 @@ public class TrackBoxBuilder {
 
         String duration = formatTiming(track.getDuration(), track.getDuration());
 
+        eb.setAuthor("Now playing");
+        eb.setTitle(String.format("%s - %s", track.getInfo().author, track.getInfo().title), track.getInfo().uri);
         eb.setColor(MessageType.TrackBox.color);
-        eb.setTitle(String.format(":dvd: Now playing: %s - %s", track.getInfo().author, track.getInfo().title));
         eb.setDescription(buildDurationLine(width - 4, track, isPaused));
-
 //        eb.setThumbnail(track.getInfo().uri);
-        eb.addField("Duration", duration, true);
-        eb.addField("Link", String.format("[Click here](%s)", track.getInfo().uri), true);
-        eb.addField("Volume", volume + "%", true);
-//        eb.addField("Requested by", String.format("%s"), true);
 
-        eb.setFooter("Tracks in queue: " + queueSize);
+        eb.addField("Link", String.format("[Click](%s)", track.getInfo().uri), true);
+        eb.addField("Duration", duration, true);
+        eb.addField("In Queue", String.format("%d tracks", queueSize), true);
+        eb.addField("Volume", volume + "%", true);
+        eb.addField("Requested By", String.format("<@%s>", ((TrackMetadata) track.getUserData()).getRequestedBy().getId()), true);
+
+        eb.setFooter("YEEET", "https://yeeet-bot.netlify.app/assets/images/logo.png");
 
         return eb.build();
     }

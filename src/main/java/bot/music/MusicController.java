@@ -588,6 +588,9 @@ public class MusicController implements IBotController {
                 if (!connectToVoiceChannel(event, guild.getAudioManager()))
                     return;
 
+                // add track metadata
+                track.setUserData(new TrackMetadata().setRequestedBy(event.getUser()));
+
                 InteractionResponse response = new InteractionResponse()
                         .setMessageType(MessageType.Success)
                         .setMessage(String.format("Added to queue: **%s**", track.getInfo().title));
@@ -615,6 +618,9 @@ public class MusicController implements IBotController {
 
                 if (!connectToVoiceChannel(event, guild.getAudioManager()))
                     return;
+
+                // add track metadata
+                playlist.getTracks().forEach(track -> track.setUserData(new TrackMetadata().setRequestedBy(event.getUser())));
 
                 // If it's not a search query then normally load the playlist.
                 if (!isSearchQuery) {
