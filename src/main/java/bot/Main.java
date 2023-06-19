@@ -2,12 +2,14 @@ package bot;
 
 import bot.api.StatusCodes;
 import bot.api.WebReq;
+import bot.initialization.SetupCommands;
 import bot.listeners.BotApplicationManager;
-import bot.listeners.CommandManager;
 import bot.api.entities.Response;
 import bot.api.entities.Server;
 import bot.listeners.ButtonComponentClick;
+import bot.listeners.GeneralEvents;
 import com.google.gson.Gson;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder;
@@ -28,8 +30,11 @@ public class Main {
                             GatewayIntent.MESSAGE_CONTENT
                     )
                     .setActivity(Activity.listening("music \uD83C\uDFB6"))
-                    .addEventListeners(applicationManager, new CommandManager(), buttonComponentClick)
+                    .addEventListeners(applicationManager, new GeneralEvents(), buttonComponentClick)
                     .build();
+
+            JDA jda = shardManager.getShards().get(0);
+            SetupCommands.Setup(jda);
 
             Gson gson = new Gson();
 

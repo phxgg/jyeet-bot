@@ -1,21 +1,14 @@
-package bot.listeners;
+package bot.initialization;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
-import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
-import org.jetbrains.annotations.NotNull;
 
-public class CommandManager extends ListenerAdapter {
-    @Override
-    public void onGuildReady(@NotNull GuildReadyEvent event) {
-        JDA jda = event.getJDA();
-
+public class SetupCommands {
+    public static void Setup(JDA jda) {
         jda.updateCommands().addCommands(
 //                    Commands.slash("playlocal", "play local track"),
                 Commands.slash("help", "Shows the help embed box.")
@@ -87,6 +80,7 @@ public class CommandManager extends ListenerAdapter {
 //                        )
         ).queue();
 
-        System.out.println("Logged in as " + jda.getSelfUser().getName() + "#" + jda.getSelfUser().getDiscriminator());
+        System.out.println("Commands updated.");
+        System.out.println("Logged in as " + jda.getSelfUser().getName());
     }
 }
