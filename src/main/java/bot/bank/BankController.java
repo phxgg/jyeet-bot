@@ -32,17 +32,17 @@ public class BankController implements IBotController {
     }
 
     @BotCommandHandler(name = "bank deposit", description = "Deposit money to bank.", usage = "deposit <amount>")
-    public void deposit(SlashCommandInteractionEvent event, int amount) {
+    public void commandDeposit(SlashCommandInteractionEvent event, int amount) {
         return;
     }
 
     @BotCommandHandler(name = "bank withdraw", description = "Withdraw money from bank.", usage = "withdraw <amount>")
-    public void withdraw(SlashCommandInteractionEvent event, int amount) {
+    public void commandWithdraw(SlashCommandInteractionEvent event, int amount) {
         return;
     }
 
     @BotCommandHandler(name = "bank balance", description = "Check your bank balance.", usage = "balance")
-    public void balance(SlashCommandInteractionEvent event) {
+    public void commandBalance(SlashCommandInteractionEvent event) {
         return;
     }
 

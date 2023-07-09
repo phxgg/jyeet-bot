@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 
 public class SetupCommands {
     public static void Setup(JDA jda) {
@@ -65,6 +66,12 @@ public class SetupCommands {
                 Commands.slash("setoutputchannel", "[ADMIN] Set output channel to current message channel.")
                         .setGuildOnly(true)
                         .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
+                ,Commands.slash("util", "Utility commands.")
+                        .setGuildOnly(true)
+                        .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
+                        .addSubcommands(
+                                new SubcommandData("context", "Show current guild context.")
+                        )
 //                ,Commands.slash("bank", "Banking commands.")
 //                        .setGuildOnly(true)
 //                        .addSubcommands(

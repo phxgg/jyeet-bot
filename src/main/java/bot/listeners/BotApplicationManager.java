@@ -11,13 +11,17 @@ import bot.api.entities.Response;
 import bot.api.entities.Server;
 import bot.music.MusicController;
 import bot.records.SpotifyConfig;
+import bot.utility.UtilityController;
 import com.github.topisenpai.lavasrc.spotify.SpotifySourceManager;
+//import com.github.topi314.lavasrc.spotify.SpotifySourceManager;
 import com.google.gson.Gson;
+import com.sedmelluq.discord.lavaplayer.container.MediaContainerRegistry;
 import com.sedmelluq.discord.lavaplayer.player.AudioConfiguration;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.bandcamp.BandcampAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.beam.BeamAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.getyarn.GetyarnAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.http.HttpAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.local.LocalAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.soundcloud.SoundCloudAudioSourceManager;
@@ -66,6 +70,7 @@ public class BotApplicationManager extends ListenerAdapter {
         controllerManager = new BotControllerManager();
 
         controllerManager.registerController(new MusicController.Factory());
+        controllerManager.registerController(new UtilityController.Factory());
 //        controllerManager.registerController(new BankController.Factory());
 
         SpotifyConfig spotifyConfig = new SpotifyConfig();
@@ -94,7 +99,6 @@ public class BotApplicationManager extends ListenerAdapter {
         playerManager = new DefaultAudioPlayerManager();
 //        playerManager.useRemoteNodes("localhost:8080");
         playerManager.getConfiguration().setResamplingQuality(AudioConfiguration.ResamplingQuality.LOW);
-//        playerManager.registerSourceManager(new SpotifyAudioSourceManager(yasm));
         playerManager.registerSourceManager(new SpotifySourceManager(
                 null,
                 spotifyConfig.getClientId(),
@@ -108,7 +112,8 @@ public class BotApplicationManager extends ListenerAdapter {
         playerManager.registerSourceManager(new VimeoAudioSourceManager());
         playerManager.registerSourceManager(new TwitchStreamAudioSourceManager());
         playerManager.registerSourceManager(new BeamAudioSourceManager());
-        playerManager.registerSourceManager(new HttpAudioSourceManager());
+        playerManager.registerSourceManager(new GetyarnAudioSourceManager());
+        playerManager.registerSourceManager(new HttpAudioSourceManager(MediaContainerRegistry.DEFAULT_REGISTRY));
         playerManager.registerSourceManager(new LocalAudioSourceManager());
 
         executorService = Executors.newScheduledThreadPool(1, new DaemonThreadFactory("bot"));
