@@ -30,6 +30,8 @@ import com.sedmelluq.discord.lavaplayer.source.vimeo.VimeoAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import com.sedmelluq.lava.common.tools.DaemonThreadFactory;
 import com.sedmelluq.lava.extensions.youtuberotator.YoutubeIpRotatorSetup;
+import com.sedmelluq.lava.extensions.youtuberotator.planner.BalancingIpRoutePlanner;
+import com.sedmelluq.lava.extensions.youtuberotator.planner.RotatingIpRoutePlanner;
 import com.sedmelluq.lava.extensions.youtuberotator.planner.RotatingNanoIpRoutePlanner;
 import com.sedmelluq.lava.extensions.youtuberotator.tools.ip.IpBlock;
 import com.sedmelluq.lava.extensions.youtuberotator.tools.ip.Ipv6Block;
@@ -82,7 +84,8 @@ public class BotApplicationManager extends ListenerAdapter {
 
         if (ipv6Block != null && !ipv6Block.isEmpty()) {
             @SuppressWarnings("rawtypes") List<IpBlock> blocks = List.of(new Ipv6Block(ipv6Block));
-            RotatingNanoIpRoutePlanner planner = new RotatingNanoIpRoutePlanner(blocks);
+//            RotatingNanoIpRoutePlanner planner = new RotatingNanoIpRoutePlanner(blocks);
+            BalancingIpRoutePlanner planner = new BalancingIpRoutePlanner(blocks);
             new YoutubeIpRotatorSetup(planner)
                     .withRetryLimit(6)
                     .forSource(yasm).setup();
