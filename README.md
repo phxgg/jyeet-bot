@@ -27,23 +27,13 @@ Run bot with the `-DapiUrl=http://localhost:1010 -DapiKey=<YOUR_API_SECRET>` par
 
 Run bot with the `-Dipv6Block=<IPV6_BLOCK>/64` parameter.
 
-### TODO
+### Notes
 
-* > __Warning__
-  > * Add and remove TrackBoxButtonClick event listeners only when needed and generally review the code.
-  > * Review the message dispatcher code in general.
+The code is ugly and needs a lot of refactoring. I'm aware of that.
 
-* Maybe add a `-DapiEnable` variable when running the application, to enable/disalbe API usage.
-Right now it's enabled by default, but if an API is not running it will throw an exception each time it tries to connect to it.
-It will display lots of errors in the console, but it will not affect the bot's functionality.
- 
-* Let admins set a specific channel for the bot to listen to commands. Also, only reply to that channel.
-
-* Implement the `/previous` command.
-
-* Implement the `/loop` command.
-
-* IPv6 /64 block -> YouTube IP rotator for rate limiting.<br>
-  > __Note__
-  > This feature already works, but an IPv6 Block has not been implemented for usage in the current live Discord Bot.
+> __Note__
+> 
+> IPv6 /64 block -> YouTube IP rotator for rate limiting.
+> 
+> This feature already works, but an IPv6 Block has not been implemented for usage in the current live Discord Bot.
 
