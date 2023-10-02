@@ -30,9 +30,8 @@ import org.slf4j.LoggerFactory;
 import java.awt.*;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.BlockingDeque;
 
 public class MusicController implements IBotController {
@@ -412,8 +411,12 @@ public class MusicController implements IBotController {
         eb.setTitle("History");
         eb.setColor(Color.CYAN);
 
+        // loop through history in reverse order
+        List<AudioTrack> historyReversed = new ArrayList<>(_history);
+        Collections.reverse(historyReversed);
+
         int i = 1;
-        for (AudioTrack track : _history) {
+        for (AudioTrack track : historyReversed) {
             eb.addField(String.format("%d", i), String.format("%s", track.getInfo().title), true);
             i++;
 
