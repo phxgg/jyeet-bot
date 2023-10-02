@@ -43,6 +43,8 @@ public class SetupCommands {
                                         .setRequired(true)),
                 Commands.slash("previous", "Plays previous track.")
                         .setGuildOnly(true),
+                Commands.slash("history", "Shows track history.")
+                        .setGuildOnly(true),
                 Commands.slash("song", "Shows current playing track.")
                         .setGuildOnly(true),
                 Commands.slash("queue", "Display current queue list.")
