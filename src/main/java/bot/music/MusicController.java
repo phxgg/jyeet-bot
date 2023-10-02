@@ -83,9 +83,10 @@ public class MusicController implements IBotController {
         messageDispatcher.setOutputChannel(null);
     }
 
-    /** ====================================
-     *  Start bot commands
-     *  ====================================
+    /**
+     * ====================================
+     * Start bot commands
+     * ====================================
      */
 
     @BotCommandHandler(name = "help", description = "Shows you all the available commands.", usage = "/help")
@@ -337,7 +338,7 @@ public class MusicController implements IBotController {
         }
 
         if (_queue.size() > i) {
-            eb.setFooter(String.format("and %d more...", _queue.size()-i), null);
+            eb.setFooter(String.format("and %d more...", _queue.size() - i), null);
         }
 
         event
@@ -381,15 +382,55 @@ public class MusicController implements IBotController {
         event.getHook().deleteOriginal().queue();
     }
 
-    // TODO: Implement 'previous' command
     @BotCommandHandler(name = "previous", description = "Play previous track.", usage = "/previous")
     private void commandPrevious(SlashCommandInteractionEvent event) {
-        return;
+        ActionData ad = new ActionData(event, event.getHook(), guild.getAudioManager());
+        if (!canPerformAction(ad))
+            return;
 
-//        if (!canPerformAction(messageDispatcher, message, guild.getAudioManager()))
-//            return;
-//
-//        scheduler.playPrevious();
+        scheduler.playPrevious();
+        event.getHook().deleteOriginal().queue();
+    }
+
+    @BotCommandHandler(name = "history", description = "Shows track history.", usage = "/history")
+    private void commandHistory(SlashCommandInteractionEvent event) {
+        ActionData ad = new ActionData(event, event.getHook(), guild.getAudioManager());
+        if (!canPerformAction(ad))
+            return;
+
+        BlockingDeque<AudioTrack> _history = scheduler.getHistory();
+        if (_history.isEmpty()) {
+            InteractionResponse response = new InteractionResponse()
+                    .setSuccess(false)
+                    .setMessageType(MessageType.Info)
+                    .setMessage("The history is empty.");
+            InteractionResponse.handle(event.getHook(), response);
+            return;
+        }
+
+        EmbedBuilder eb = new EmbedBuilder();
+        eb.setTitle("History");
+        eb.setColor(Color.CYAN);
+
+        int i = 1;
+        for (AudioTrack track : _history) {
+            eb.addField(String.format("%d", i), String.format("%s", track.getInfo().title), true);
+            i++;
+
+            // Only display 10 tracks for now
+            if (i > 10) {
+                break;
+            }
+        }
+
+        if (_history.size() > i) {
+            eb.setFooter(String.format("and %d more...", _history.size() - i), null);
+        }
+
+        event
+                .getHook()
+                .editOriginalEmbeds(eb.build())
+                .queue();
     }
 
     // TODO: Implement 'loop' command
@@ -399,7 +440,7 @@ public class MusicController implements IBotController {
     }
 
     /**
-     * @param event The event that triggered the command
+     * @param event    The event that triggered the command
      * @param duration The duration in seconds
      */
     @BotCommandHandler(name = "forward", description = "Forward current track.", usage = "/forward <duration_in_seconds>")
@@ -419,7 +460,7 @@ public class MusicController implements IBotController {
     }
 
     /**
-     * @param event The event that triggered the command
+     * @param event    The event that triggered the command
      * @param duration The duration in seconds
      */
     @BotCommandHandler(name = "backward", description = "Backward current track.", usage = "/backward <duration_in_seconds>")
@@ -556,9 +597,10 @@ public class MusicController implements IBotController {
         });
     }
 
-    /** ====================================
-     *  End bot commands
-     *  ====================================
+    /**
+     * ====================================
+     * End bot commands
+     * ====================================
      */
 
     private void addTrack(
@@ -748,8 +790,8 @@ public class MusicController implements IBotController {
 
                 // Fix warnings
                 if (actionData.getAudioManager().getConnectedChannel() == null
-                    || actionData.getEvent().getMember().getVoiceState() == null
-                    || actionData.getEvent().getMember().getVoiceState().getChannel() == null)
+                        || actionData.getEvent().getMember().getVoiceState() == null
+                        || actionData.getEvent().getMember().getVoiceState().getChannel() == null)
                     return false;
 
                 if (actionData.getAudioManager().getConnectedChannel().getIdLong() != actionData.getEvent().getMember().getVoiceState().getChannel().getIdLong()) {

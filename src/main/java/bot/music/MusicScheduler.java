@@ -3,6 +3,7 @@ package bot.music;
 import bot.records.InteractionResponse;
 import bot.records.MessageDispatcher;
 import bot.records.MessageType;
+import bot.records.TrackMetadata;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
@@ -24,6 +25,7 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
     private final MessageDispatcher messageDispatcher;
     private final ScheduledExecutorService executorService;
     private final BlockingDeque<AudioTrack> queue;
+    private final BlockingDeque<AudioTrack> history;
     private final AtomicReference<Message> boxMessage;
     private final AtomicBoolean creatingBoxMessage;
     private ScheduledFuture<?> waitingInVC;
@@ -34,6 +36,7 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
         this.messageDispatcher = messageDispatcher;
         this.executorService = executorService;
         this.queue = new LinkedBlockingDeque<>();
+        this.history = new LinkedBlockingDeque<>();
         this.boxMessage = new AtomicReference<>();
         this.creatingBoxMessage = new AtomicBoolean();
 
@@ -57,30 +60,47 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
         return queue;
     }
 
-    public ScheduledFuture<?> getWaitingInVC() {
-        return waitingInVC;
+    public BlockingDeque<AudioTrack> getHistory() {
+        return history;
     }
 
-    public void setWaitingInVC(ScheduledFuture<?> waitingInVC) {
-        this.waitingInVC = waitingInVC;
+    public ScheduledFuture<?> getWaitingInVC() {
+        return waitingInVC;
     }
 
     public ScheduledExecutorService getExecutorService() {
         return executorService;
     }
 
-    // TODO: Implement 'previous' command functionality
+    public void setWaitingInVC(ScheduledFuture<?> waitingInVC) {
+        this.waitingInVC = waitingInVC;
+    }
+
     public void playPrevious() {
-        AudioTrack previous = queue.pollFirst(); // pollFirst() returns the head element of the list
+        AudioTrack previous = history.pollLast(); // pollLast() returns the last element in the deque, or null if empty.
 
         if (previous != null) {
-            if (!player.startTrack(previous, false)) {
-                queue.addFirst(previous);
-            }
-        } else {
-            player.stopTrack();
+            // If there is a track in the history:
+            // First add a cloned track of the current track into the normal queue.
+            // Aftewards, change the metadata of the current track to not be added in the history when onTrackEnd() is triggered.
+            AudioTrack current = player.getPlayingTrack();
+            TrackMetadata currentMetadata = (TrackMetadata) current.getUserData();
 
-            messageDispatcher.sendDisposableMessage(MessageType.Info, "Queue finished.");
+            // clone current track and its metadata
+            AudioTrack clonedCurrent = current.makeClone();
+            TrackMetadata clonedCurrentMetadata = currentMetadata.clone();
+            clonedCurrent.setUserData(clonedCurrentMetadata);
+
+            queue.addFirst(clonedCurrent);
+            currentMetadata.setAddInHistory(false);
+            // set previous track metadata to be added in the history
+            TrackMetadata previousMetadata = (TrackMetadata) previous.getUserData();
+            previousMetadata.setAddInHistory(true);
+            // start previous track
+            if (!player.startTrack(previous, false)) {
+                // If the track was not started, put it back in the history.
+                history.addLast(previous.makeClone());
+            }
         }
     }
 
@@ -91,6 +111,7 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
 
     public void clearQueue() {
         queue.clear();
+        history.clear();
     }
 
     public InteractionResponse shuffleQueue() {
@@ -182,7 +203,8 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
             if (!player.startTrack(next, noInterrupt)) {
                 queue.addFirst(next);
             } else {
-                // If a new track has started playing, reset waitingInVC.
+                // A new track has just started playing.
+                // reset waitingInVC.
                 if (waitingInVC != null) {
                     waitingInVC.cancel(true);
                     waitingInVC = null;
@@ -205,6 +227,13 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
 
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
+        TrackMetadata metadata = (TrackMetadata) track.getUserData();
+        if (metadata != null && metadata.shouldAddInHistory()) {
+            AudioTrack clonedTrack = track.makeClone();
+            clonedTrack.setUserData(new TrackMetadata().setRequestedBy(metadata.getRequestedBy()));
+            history.addLast(clonedTrack);
+        }
+
         if (endReason.mayStartNext) {
             startNextTrack(true);
             messageDispatcher.sendDisposableMessage(MessageType.Info, String.format("Track **%s** finished.", track.getInfo().title));

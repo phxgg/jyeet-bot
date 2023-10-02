@@ -41,6 +41,10 @@ public class SetupCommands {
                         .addOptions(
                                 new OptionData(OptionType.STRING, "query", "Could be a song, playlist or album name or link. YouTube & Spotify.")
                                         .setRequired(true)),
+                Commands.slash("previous", "Plays previous track.")
+                        .setGuildOnly(true),
+                Commands.slash("history", "Shows track history.")
+                        .setGuildOnly(true),
                 Commands.slash("song", "Shows current playing track.")
                         .setGuildOnly(true),
                 Commands.slash("queue", "Display current queue list.")

@@ -92,7 +92,7 @@ public class TrackBoxBuilder {
         List<Button> buttons = new ArrayList<>();
 
         // Button IDs should have a 'guild' prefix, so we can know in which guild the button was clicked.
-        buttons.add(Button.secondary(String.format("%s_trackbox_previous", guildId), Emoji.fromCustom("previous", Long.parseLong("965604705298432020"), false)).asDisabled());
+        buttons.add(Button.secondary(String.format("%s_trackbox_previous", guildId), Emoji.fromCustom("previous", Long.parseLong("965604705298432020"), false)));
         buttons.add(Button.secondary(String.format("%s_trackbox_pause", guildId), Emoji.fromCustom("pause_play", Long.parseLong("965604705252282410"), false)));
         buttons.add(Button.secondary(String.format("%s_trackbox_next", guildId), Emoji.fromCustom("next", Long.parseLong("965604705139032074"), false)));
         buttons.add(Button.secondary(String.format("%s_trackbox_shuffle", guildId), Emoji.fromCustom("shuffle", Long.parseLong("965607534318719056"), false)));

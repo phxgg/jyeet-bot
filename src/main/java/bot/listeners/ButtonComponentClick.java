@@ -69,13 +69,7 @@ public class ButtonComponentClick extends ListenerAdapter {
         }
 
         if (buttonId.equals(previous)) {
-            InteractionResponse response = new InteractionResponse()
-                    .setSuccess(false)
-                    .setEphemeral(true)
-                    .setNewMessage(true)
-                    .setMessageType(MessageType.Warning)
-                    .setMessage("<@" + event.getInteraction().getUser().getId() + ">" + "Under construction");
-            InteractionResponse.handle(event.getHook(), response);
+            scheduler.playPrevious();
         } else if (buttonId.equals(pause)) {
             scheduler.getPlayer().setPaused(!scheduler.getPlayer().isPaused());
         } else if (buttonId.equals(next)) {
