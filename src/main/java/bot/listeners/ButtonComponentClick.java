@@ -74,8 +74,10 @@ public class ButtonComponentClick extends ListenerAdapter {
                     .setEphemeral(true)
                     .setNewMessage(true)
                     .setMessageType(MessageType.Warning)
-                    .setMessage("<@" + event.getInteraction().getUser().getId() + ">" + "Under construction");
+                    .setMessage("<@" + event.getInteraction().getUser().getId() + ">" + " Under construction");
             InteractionResponse.handle(event.getHook(), response);
+
+            scheduler.playPrevious();
         } else if (buttonId.equals(pause)) {
             scheduler.getPlayer().setPaused(!scheduler.getPlayer().isPaused());
         } else if (buttonId.equals(next)) {

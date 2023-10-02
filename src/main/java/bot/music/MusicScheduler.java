@@ -24,6 +24,7 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
     private final MessageDispatcher messageDispatcher;
     private final ScheduledExecutorService executorService;
     private final BlockingDeque<AudioTrack> queue;
+    private final BlockingDeque<AudioTrack> history;
     private final AtomicReference<Message> boxMessage;
     private final AtomicBoolean creatingBoxMessage;
     private ScheduledFuture<?> waitingInVC;
@@ -34,6 +35,7 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
         this.messageDispatcher = messageDispatcher;
         this.executorService = executorService;
         this.queue = new LinkedBlockingDeque<>();
+        this.history = new LinkedBlockingDeque<>();
         this.boxMessage = new AtomicReference<>();
         this.creatingBoxMessage = new AtomicBoolean();
 
@@ -71,16 +73,16 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
 
     // TODO: Implement 'previous' command functionality
     public void playPrevious() {
-        AudioTrack previous = queue.pollFirst(); // pollFirst() returns the head element of the list
+        AudioTrack current = player.getPlayingTrack();
+        AudioTrack previous = history.pollLast(); // pollLast() returns the last element in the deque, or null if empty.
 
         if (previous != null) {
-            if (!player.startTrack(previous, false)) {
-                queue.addFirst(previous);
+            // If there is a track in the history, add the current track to the queue.
+            queue.addFirst(current.makeClone());
+            if (!player.startTrack(previous.makeClone(), false)) {
+                // If the track was not started, put it back in the history.
+                history.addLast(previous.makeClone());
             }
-        } else {
-            player.stopTrack();
-
-            messageDispatcher.sendDisposableMessage(MessageType.Info, "Queue finished.");
         }
     }
 
@@ -89,8 +91,16 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
         return;
     }
 
+    public void history() {
+        System.out.println("History: ");
+        for (AudioTrack track : history) {
+            System.out.println(track.getInfo().title);
+        }
+    }
+
     public void clearQueue() {
         queue.clear();
+        history.clear();
     }
 
     public InteractionResponse shuffleQueue() {
@@ -182,7 +192,8 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
             if (!player.startTrack(next, noInterrupt)) {
                 queue.addFirst(next);
             } else {
-                // If a new track has started playing, reset waitingInVC.
+                // A new track has just started playing.
+                // reset waitingInVC.
                 if (waitingInVC != null) {
                     waitingInVC.cancel(true);
                     waitingInVC = null;
@@ -205,6 +216,10 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
 
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
+        // FIXME: If I use the 'previous' command, this event will be triggered and the track will be added to the history again.
+        // I need to find a way to prevent this from happening.
+        history.addLast(track.makeClone());
+
         if (endReason.mayStartNext) {
             startNextTrack(true);
             messageDispatcher.sendDisposableMessage(MessageType.Info, String.format("Track **%s** finished.", track.getInfo().title));

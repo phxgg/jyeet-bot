@@ -384,12 +384,11 @@ public class MusicController implements IBotController {
     // TODO: Implement 'previous' command
     @BotCommandHandler(name = "previous", description = "Play previous track.", usage = "/previous")
     private void commandPrevious(SlashCommandInteractionEvent event) {
-        return;
+        ActionData ad = new ActionData(event, event.getHook(), guild.getAudioManager());
+        if (!canPerformAction(ad))
+            return;
 
-//        if (!canPerformAction(messageDispatcher, message, guild.getAudioManager()))
-//            return;
-//
-//        scheduler.playPrevious();
+        scheduler.playPrevious();
     }
 
     // TODO: Implement 'loop' command

@@ -66,6 +66,11 @@ public class InteractionResponse {
         return this;
     }
 
+    /**
+     * If true, the response will be sent as a new message.
+     * @param newMessage
+     * @return this
+     */
     public InteractionResponse setNewMessage(boolean newMessage) {
         this.newMessage = newMessage;
         return this;
