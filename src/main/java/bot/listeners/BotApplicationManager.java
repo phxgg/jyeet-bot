@@ -87,7 +87,7 @@ public class BotApplicationManager extends ListenerAdapter {
 //            RotatingNanoIpRoutePlanner planner = new RotatingNanoIpRoutePlanner(blocks);
             BalancingIpRoutePlanner planner = new BalancingIpRoutePlanner(blocks);
             new YoutubeIpRotatorSetup(planner)
-                    .withRetryLimit(6)
+                    .withRetryLimit(10)
                     .forSource(yasm).setup();
         }
 //        Optional<Properties> opt = readYoutubeConfig();
