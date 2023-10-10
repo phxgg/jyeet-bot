@@ -10,8 +10,6 @@ import bot.listeners.BotApplicationManager;
 import bot.records.*;
 import com.google.gson.Gson;
 import dev.arbjerg.lavalink.protocol.v4.*;
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
-import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import dev.arbjerg.lavalink.protocol.v4.Exception;
 import dev.schlaubi.lavakord.audio.TrackEndEvent;
 import dev.schlaubi.lavakord.audio.TrackStartEvent;
