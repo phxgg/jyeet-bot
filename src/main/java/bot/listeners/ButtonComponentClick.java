@@ -1,11 +1,9 @@
 package bot.listeners;
 
-import bot.controller.IBotController;
 import bot.music.MusicController;
 import bot.music.MusicScheduler;
 import bot.records.ActionData;
 import bot.records.InteractionResponse;
-import bot.records.MessageType;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
@@ -54,14 +52,15 @@ public class ButtonComponentClick extends ListenerAdapter {
         String buttonId = event.getButton().getId();
 
         // Get music scheduler for Guild
-        MusicScheduler scheduler = null;
-        for (Class<? extends IBotController> controllerClass : applicationManager.getContext(event.getGuild()).getControllers().keySet()) {
-            IBotController controller = applicationManager.getContext(event.getGuild()).getControllers().get(controllerClass);
-            if (controller instanceof MusicController) {
-                scheduler = ((MusicController) controller).getScheduler();
-                break;
-            }
-        }
+        MusicScheduler scheduler = applicationManager.getContext(event.getGuild())
+                .getControllers()
+                .keySet()
+                .stream()
+                .map(controllerClass -> applicationManager.getContext(event.getGuild()).getControllers().get(controllerClass))
+                .filter(controller -> controller instanceof MusicController)
+                .findFirst()
+                .map(controller -> ((MusicController) controller).getScheduler())
+                .orElse(null);
 
         if (scheduler == null || buttonId == null) {
             System.out.println("[ButtonComponentClick] scheduler or buttonId is null.");
@@ -71,7 +70,9 @@ public class ButtonComponentClick extends ListenerAdapter {
         if (buttonId.equals(previous)) {
             scheduler.playPrevious();
         } else if (buttonId.equals(pause)) {
-            scheduler.getPlayer().setPaused(!scheduler.getPlayer().isPaused());
+            scheduler.getPlayer().pause(!scheduler.getPlayer().getPaused()).thenAccept(action -> {
+                scheduler.onPlayerPauseEvent();
+            });
         } else if (buttonId.equals(next)) {
             scheduler.skip();
         } else if (buttonId.equals(shuffle)) {

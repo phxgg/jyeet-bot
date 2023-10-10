@@ -16,22 +16,36 @@ repositories {
     maven {
         url "https://maven.topi.wtf/releases"
     }
+    maven {
+        url "https://maven.topi.wtf/snapshots"
+    }
+    maven {
+        url "https://maven.arbjerg.dev/snapshots"
+    }
+    maven {
+        url "https://s01.oss.sonatype.org/content/repositories/snapshots"
+    }
 }
 
 dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
-    implementation 'net.dv8tion:JDA:5.0.0-beta.15'
+
     implementation 'net.iharder:base64:2.3.9'
-
-//    implementation 'com.sedmelluq:lavaplayer:1.3.78'
-//    implementation 'com.github.walkyst:lavaplayer-fork:1.4.3'
+    implementation 'net.dv8tion:JDA:5.0.0-beta.15'
     implementation 'dev.arbjerg:lavaplayer:2.0.2'
-
     implementation 'dev.arbjerg:lavaplayer-ext-youtube-rotator:2.0.2'
+    implementation 'dev.arbjerg.lavalink:protocol:4.0.0.beta.4'
+    implementation 'com.github.topi314.lavasearch:lavasearch:1.0.0-beta.2'
+    implementation 'com.github.topi314.lavasrc:lavasrc:4.0.0-beta.7'
+
+    implementation 'dev.schlaubi.lavakord:core:5.1.7'
+    implementation 'dev.schlaubi.lavakord:jda:5.1.7'
+    implementation 'dev.schlaubi.lavakord:jda-java:main-SNAPSHOT'
+
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
-    implementation 'com.github.topi314.lavasrc:lavasrc:3.2.9'
     implementation 'com.google.code.gson:gson:2.10'
+
     runtimeOnly 'ch.qos.logback:logback-classic:1.4.5'
 }
 

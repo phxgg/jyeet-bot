@@ -10,31 +10,10 @@ import bot.controller.IBotSlashCommandMappingHandler;
 import bot.api.entities.Response;
 import bot.api.entities.Server;
 import bot.music.MusicController;
-import bot.records.SpotifyConfig;
 import bot.utility.UtilityController;
-import com.github.topisenpai.lavasrc.spotify.SpotifySourceManager;
-//import com.github.topi314.lavasrc.spotify.SpotifySourceManager;
 import com.google.gson.Gson;
-import com.sedmelluq.discord.lavaplayer.container.MediaContainerRegistry;
-import com.sedmelluq.discord.lavaplayer.player.AudioConfiguration;
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
-import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
-import com.sedmelluq.discord.lavaplayer.source.bandcamp.BandcampAudioSourceManager;
-import com.sedmelluq.discord.lavaplayer.source.beam.BeamAudioSourceManager;
-import com.sedmelluq.discord.lavaplayer.source.getyarn.GetyarnAudioSourceManager;
-import com.sedmelluq.discord.lavaplayer.source.http.HttpAudioSourceManager;
-import com.sedmelluq.discord.lavaplayer.source.local.LocalAudioSourceManager;
-import com.sedmelluq.discord.lavaplayer.source.soundcloud.SoundCloudAudioSourceManager;
-import com.sedmelluq.discord.lavaplayer.source.twitch.TwitchStreamAudioSourceManager;
-import com.sedmelluq.discord.lavaplayer.source.vimeo.VimeoAudioSourceManager;
-import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import com.sedmelluq.lava.common.tools.DaemonThreadFactory;
-import com.sedmelluq.lava.extensions.youtuberotator.YoutubeIpRotatorSetup;
-import com.sedmelluq.lava.extensions.youtuberotator.planner.BalancingIpRoutePlanner;
-import com.sedmelluq.lava.extensions.youtuberotator.planner.RotatingIpRoutePlanner;
-import com.sedmelluq.lava.extensions.youtuberotator.planner.RotatingNanoIpRoutePlanner;
-import com.sedmelluq.lava.extensions.youtuberotator.tools.ip.IpBlock;
-import com.sedmelluq.lava.extensions.youtuberotator.tools.ip.Ipv6Block;
+import dev.schlaubi.lavakord.interop.JavaLavakord;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -50,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -58,16 +36,15 @@ import java.util.concurrent.ScheduledExecutorService;
 public class BotApplicationManager extends ListenerAdapter {
     private static final Logger log = LoggerFactory.getLogger(BotApplicationManager.class);
 
+    private final JavaLavakord lavakord;
     private final Map<Long, BotGuildContext> guildContexts;
     private final BotControllerManager controllerManager;
-    private final AudioPlayerManager playerManager;
     private final ScheduledExecutorService executorService; // Interface
     private final Gson gson;
 
-    private final String ipv6Block = System.getProperty("ipv6Block");
-
-    public BotApplicationManager() {
+    public BotApplicationManager(JavaLavakord _lavakord) {
         gson = new Gson();
+        lavakord = _lavakord;
         guildContexts = new HashMap<>();
         controllerManager = new BotControllerManager();
 
@@ -75,73 +52,15 @@ public class BotApplicationManager extends ListenerAdapter {
         controllerManager.registerController(new UtilityController.Factory());
 //        controllerManager.registerController(new BankController.Factory());
 
-        SpotifyConfig spotifyConfig = new SpotifyConfig();
-        spotifyConfig.setClientId(System.getProperty("spotifyClientId"));
-        spotifyConfig.setClientSecret(System.getProperty("spotifyClientSecret"));
-        spotifyConfig.setCountryCode("GR");
-
-        YoutubeAudioSourceManager yasm = new YoutubeAudioSourceManager();
-
-        if (ipv6Block != null && !ipv6Block.isEmpty()) {
-            @SuppressWarnings("rawtypes") List<IpBlock> blocks = List.of(new Ipv6Block(ipv6Block));
-//            RotatingNanoIpRoutePlanner planner = new RotatingNanoIpRoutePlanner(blocks);
-            BalancingIpRoutePlanner planner = new BalancingIpRoutePlanner(blocks);
-            new YoutubeIpRotatorSetup(planner)
-                    .withRetryLimit(10)
-                    .forSource(yasm).setup();
-        }
-//        Optional<Properties> opt = readYoutubeConfig();
-//        if (opt.isPresent()) {
-//            Properties props = opt.get();
-//            String PSID = props.getProperty("PSID");
-//            String PAPISID = props.getProperty("PAPISID");
-//            YoutubeHttpContextFilter.setPSID(PSID);
-//            YoutubeHttpContextFilter.setPAPISID(PAPISID);
-//        }
-
-        playerManager = new DefaultAudioPlayerManager();
-//        playerManager.useRemoteNodes("localhost:8080");
-        playerManager.getConfiguration().setResamplingQuality(AudioConfiguration.ResamplingQuality.LOW);
-        playerManager.registerSourceManager(new SpotifySourceManager(
-                null,
-                spotifyConfig.getClientId(),
-                spotifyConfig.getClientSecret(),
-                spotifyConfig.getCountryCode(),
-                playerManager
-        ));
-        playerManager.registerSourceManager(yasm);
-        playerManager.registerSourceManager(SoundCloudAudioSourceManager.createDefault());
-        playerManager.registerSourceManager(new BandcampAudioSourceManager());
-        playerManager.registerSourceManager(new VimeoAudioSourceManager());
-        playerManager.registerSourceManager(new TwitchStreamAudioSourceManager());
-        playerManager.registerSourceManager(new BeamAudioSourceManager());
-        playerManager.registerSourceManager(new GetyarnAudioSourceManager());
-        playerManager.registerSourceManager(new HttpAudioSourceManager(MediaContainerRegistry.DEFAULT_REGISTRY));
-        playerManager.registerSourceManager(new LocalAudioSourceManager());
-
         executorService = Executors.newScheduledThreadPool(1, new DaemonThreadFactory("bot"));
-
-        // Use this if you want to use setRemoveOnCancelPolicy
-//        executorService = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1, new DaemonThreadFactory("bot"));
-//        executorService.setRemoveOnCancelPolicy(true);
     }
-
-//    public static Optional<Properties> readYoutubeConfig() {
-//        Properties properties = new Properties();
-//        try (InputStream in = Main.class.getResourceAsStream("/youtube.properties")) {
-//            properties.load(in);
-//            return Optional.of(properties);
-//        } catch (IOException e) {
-//            return Optional.empty();
-//        }
-//    }
 
     public ScheduledExecutorService getExecutorService() {
         return this.executorService;
     }
 
-    public AudioPlayerManager getPlayerManager() {
-        return this.playerManager;
+    public JavaLavakord getLavakord() {
+        return this.lavakord;
     }
 
     private BotGuildContext createGuildState(long guildId, Guild guild) {

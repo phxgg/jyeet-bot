@@ -1,17 +1,23 @@
 package bot.music;
 
+import bot.listeners.BotApplicationManager;
 import bot.records.InteractionResponse;
 import bot.records.MessageDispatcher;
 import bot.records.MessageType;
-import bot.records.TrackMetadata;
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
-import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
-import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
+import dev.arbjerg.lavalink.protocol.v4.Track;
+import dev.schlaubi.lavakord.audio.TrackEndEvent;
+import dev.schlaubi.lavakord.audio.TrackStartEvent;
+import dev.schlaubi.lavakord.audio.TrackStuckEvent;
+import dev.schlaubi.lavakord.audio.WebSocketClosedEvent;
+import dev.schlaubi.lavakord.interop.JavaPlayer;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -19,22 +25,26 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class MusicScheduler extends AudioEventAdapter implements Runnable {
+public class MusicScheduler implements Runnable {
+    private final BotApplicationManager appManager;
+    private final MusicController controller;
     private final Guild guild;
-    private final AudioPlayer player;
+    private final JavaPlayer player;
     private final MessageDispatcher messageDispatcher;
     private final ScheduledExecutorService executorService;
-    private final BlockingDeque<AudioTrack> queue;
-    private final BlockingDeque<AudioTrack> history;
+    private final BlockingDeque<Track> queue;
+    private final BlockingDeque<Track> history;
     private final AtomicReference<Message> boxMessage;
     private final AtomicBoolean creatingBoxMessage;
     private ScheduledFuture<?> waitingInVC;
 
-    public MusicScheduler(Guild guild, AudioPlayer player, MessageDispatcher messageDispatcher, ScheduledExecutorService executorService) {
+    public MusicScheduler(BotApplicationManager appManager, Guild guild, MessageDispatcher messageDispatcher, MusicController controller) {
+        this.appManager = appManager;
+        this.controller = controller;
         this.guild = guild;
-        this.player = player;
+        this.player = appManager.getLavakord().getLink(guild.getIdLong()).getPlayer();
         this.messageDispatcher = messageDispatcher;
-        this.executorService = executorService;
+        this.executorService = appManager.getExecutorService();
         this.queue = new LinkedBlockingDeque<>();
         this.history = new LinkedBlockingDeque<>();
         this.boxMessage = new AtomicReference<>();
@@ -44,11 +54,24 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
         executorService.scheduleAtFixedRate(this, 3000L, 15000L, TimeUnit.MILLISECONDS);
     }
 
+    @SuppressWarnings("unchecked")
+    public static <T> T deepCopy(T o) throws Exception {
+        //Serialization of object
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutputStream out = new ObjectOutputStream(bos);
+        out.writeObject(o);
+
+        //De-serialization of object
+        ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
+        ObjectInputStream in = new ObjectInputStream(bis);
+        return (T) in.readObject();
+    }
+
     public MessageDispatcher getMessageDispatcher() {
         return messageDispatcher;
     }
 
-    public AudioPlayer getPlayer() {
+    public JavaPlayer getPlayer() {
         return player;
     }
 
@@ -56,11 +79,11 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
         return guild;
     }
 
-    public BlockingDeque<AudioTrack> getQueue() {
+    public BlockingDeque<Track> getQueue() {
         return queue;
     }
 
-    public BlockingDeque<AudioTrack> getHistory() {
+    public BlockingDeque<Track> getHistory() {
         return history;
     }
 
@@ -77,31 +100,7 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
     }
 
     public void playPrevious() {
-        AudioTrack previous = history.pollLast(); // pollLast() returns the last element in the deque, or null if empty.
-
-        if (previous != null) {
-            // If there is a track in the history:
-            // First add a cloned track of the current track into the normal queue.
-            // Aftewards, change the metadata of the current track to not be added in the history when onTrackEnd() is triggered.
-            AudioTrack current = player.getPlayingTrack();
-            TrackMetadata currentMetadata = (TrackMetadata) current.getUserData();
-
-            // clone current track and its metadata
-            AudioTrack clonedCurrent = current.makeClone();
-            TrackMetadata clonedCurrentMetadata = currentMetadata.clone();
-            clonedCurrent.setUserData(clonedCurrentMetadata);
-
-            queue.addFirst(clonedCurrent);
-            currentMetadata.setAddInHistory(false);
-            // set previous track metadata to be added in the history
-            TrackMetadata previousMetadata = (TrackMetadata) previous.getUserData();
-            previousMetadata.setAddInHistory(true);
-            // start previous track
-            if (!player.startTrack(previous, false)) {
-                // If the track was not started, put it back in the history.
-                history.addLast(previous.makeClone());
-            }
-        }
+        //
     }
 
     // TODO: Implement 'loop' command functionality
@@ -123,7 +122,7 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
                     .setMessage("Cannot shuffle an empty queue.");
         }
 
-        List<AudioTrack> q = drainQueue();
+        List<Track> q = drainQueue();
         Collections.shuffle(q);
         queue.clear();
         queue.addAll(q);
@@ -134,18 +133,18 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
                 .setMessage("Shuffled queue.");
     }
 
-    public void addToQueue(AudioTrack audioTrack) {
+    public void addToQueue(Track audioTrack) {
         queue.addLast(audioTrack);
         startNextTrack(true);
     }
 
-    public List<AudioTrack> drainQueue() {
-        List<AudioTrack> drainedQueue = new ArrayList<>();
+    public List<Track> drainQueue() {
+        List<Track> drainedQueue = new ArrayList<>();
         queue.drainTo(drainedQueue);
         return drainedQueue;
     }
 
-    public void playNow(AudioTrack audioTrack, boolean clearQueue) {
+    public void playNow(Track audioTrack, boolean clearQueue) {
         if (clearQueue) {
             queue.clear();
         }
@@ -154,7 +153,7 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
         startNextTrack(false);
     }
 
-    public void playNext(AudioTrack audioTrack) {
+    public void playNext(Track audioTrack) {
         queue.addFirst(audioTrack);
     }
 
@@ -197,10 +196,33 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
     }
 
     private void startNextTrack(boolean noInterrupt) {
+        Track next = queue.pollFirst();
+
+        if (next != null) {
+            if (noInterrupt && player.getPlayingTrack() != null) {
+                queue.addFirst(next);
+            } else {
+                player.playTrack(next);
+                // A new track has just started playing.
+                // reset waitingInVC.
+                if (waitingInVC != null) {
+                    waitingInVC.cancel(true);
+                    waitingInVC = null;
+                }
+            }
+        } else {
+            player.stopTrack();
+            messageDispatcher.sendDisposableMessage(MessageType.Info, "Queue finished.");
+            waitInVC();
+//            guild.getAudioManager().closeAudioConnection();
+        }
+    }
+
+    /*private void startNextTrack(boolean noInterrupt) {
         AudioTrack next = queue.pollFirst();
 
         if (next != null) {
-            if (!player.startTrack(next, noInterrupt)) {
+            if (!player.playTrack(next, noInterrupt)) {
                 queue.addFirst(next);
             } else {
                 // A new track has just started playing.
@@ -213,52 +235,40 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
         } else {
             player.stopTrack();
             messageDispatcher.sendDisposableMessage(MessageType.Info, "Queue finished.");
-
             waitInVC();
-
 //            guild.getAudioManager().closeAudioConnection();
         }
-    }
+    }*/
 
-    @Override
-    public void onTrackStart(AudioPlayer player, AudioTrack track) {
+    public void onTrackStartEvent(TrackStartEvent event) {
+        System.out.print("Track started playing. " + event.getTrack().getInfo().getTitle());
         updateTrackBox(true);
     }
 
-    @Override
-    public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
-        TrackMetadata metadata = (TrackMetadata) track.getUserData();
-        if (metadata != null && metadata.shouldAddInHistory()) {
-            AudioTrack clonedTrack = track.makeClone();
-            clonedTrack.setUserData(new TrackMetadata().setRequestedBy(metadata.getRequestedBy()));
-            history.addLast(clonedTrack);
-        }
-
-        if (endReason.mayStartNext) {
+    public void onTrackEndEvent(TrackEndEvent event) {
+        System.out.print("Track ended playing. " + event.getTrack().getInfo().getTitle());
+        if (event.getReason().getMayStartNext()) {
             startNextTrack(true);
-            messageDispatcher.sendDisposableMessage(MessageType.Info, String.format("Track **%s** finished.", track.getInfo().title));
+            messageDispatcher.sendDisposableMessage(MessageType.Info, String.format("Track **%s** finished.", event.getTrack().getInfo().getTitle()));
         }
     }
 
-    @Override
-    public void onTrackStuck(AudioPlayer player, AudioTrack track, long thresholdMs) {
-        messageDispatcher.sendDisposableMessage(MessageType.Warning, String.format("Track **%s** got stuck, skipping.", track.getInfo().title));
-
+    public void onTrackStuckEvent(TrackStuckEvent event) {
+        messageDispatcher.sendDisposableMessage(MessageType.Warning, String.format("Track **%s** got stuck, skipping.", event.getTrack().getInfo().getTitle()));
         startNextTrack(false);
     }
 
-    @Override
-    public void onPlayerResume(AudioPlayer player) {
-        updateTrackBox(false);
+    public void onWebSocketClosedEvent(WebSocketClosedEvent event) {
+        messageDispatcher.sendDisposableMessage(MessageType.Warning, "WebSocket closed, stopping player.");
+        this.controller.destroyPlayer();
     }
 
-    @Override
-    public void onPlayerPause(AudioPlayer player) {
+    public void onPlayerPauseEvent() {
         updateTrackBox(false);
     }
 
     private void updateTrackBox(boolean newMessage) {
-        AudioTrack track = player.getPlayingTrack();
+        Track track = player.getPlayingTrack();
 
         if (track == null || newMessage) {
             Message oldMessage = boxMessage.getAndSet(null);
@@ -272,7 +282,8 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
 
         if (track != null) {
             Message message = boxMessage.get();
-            MessageEmbed box = TrackBoxBuilder.buildTrackBox(50, track, player.isPaused(), player.getVolume(), queue.size());
+//            MessageEmbed box = TrackBoxBuilder.buildTrackBox(50, track, player.getPaused(), player.getVolume(), queue.size());
+            MessageEmbed box = TrackBoxBuilder.buildTrackBox(50, track, false, 100, queue.size());
 
             if (message != null) {
                 message.editMessageEmbeds(box).queue();
