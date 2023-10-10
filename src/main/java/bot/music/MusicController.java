@@ -36,23 +36,25 @@ import java.util.concurrent.BlockingDeque;
 
 public class MusicController implements IBotController {
     private static final Logger log = LoggerFactory.getLogger(MusicController.class);
+    private final BotApplicationManager appManager;
     private final BotGuildContext state;
-    private final AudioPlayerManager manager;
+    private final AudioPlayerManager playerManager;
     private final AudioPlayer player;
     private final MusicScheduler scheduler;
     private final MessageDispatcher messageDispatcher;
     private final Guild guild;
 
-    public MusicController(BotApplicationManager manager, BotGuildContext state, Guild guild) {
+    public MusicController(BotApplicationManager appManager, BotGuildContext state, Guild guild) {
+        this.appManager = appManager;
         this.state = state;
-        this.manager = manager.getPlayerManager();
+        this.playerManager = appManager.getPlayerManager();
         this.guild = guild;
 
-        this.player = manager.getPlayerManager().createPlayer();
+        this.player = appManager.getPlayerManager().createPlayer();
         guild.getAudioManager().setSendingHandler(new AudioPlayerSendHandler(player));
 
         this.messageDispatcher = new MessageDispatcher();
-        this.scheduler = new MusicScheduler(guild, this.player, this.messageDispatcher, manager.getExecutorService());
+        this.scheduler = new MusicScheduler(appManager, guild, this.player, this.messageDispatcher);
 
         this.player.addListener(this.scheduler);
     }
@@ -627,7 +629,7 @@ public class MusicController implements IBotController {
 
         Boolean isSearchQuery = (!searchQuery.equals(identifier));
 
-        manager.loadItemOrdered(this, searchQuery, new AudioLoadResultHandler() {
+        playerManager.loadItemOrdered(this, searchQuery, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
                 if (!connectToVoiceChannel(event, guild.getAudioManager()))
