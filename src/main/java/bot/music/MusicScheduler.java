@@ -26,7 +26,6 @@ public class MusicScheduler implements Runnable {
     private final BotApplicationManager appManager;
     private final MusicController controller;
     private final Guild guild;
-    private final Link link;
     private final MessageDispatcher messageDispatcher;
     private final ScheduledExecutorService executorService;
     private final BlockingDeque<Track> queue;
@@ -39,7 +38,6 @@ public class MusicScheduler implements Runnable {
         this.appManager = appManager;
         this.controller = controller;
         this.guild = guild;
-        this.link = appManager.getLavalinkClient().getLink(guild.getIdLong());
         this.messageDispatcher = messageDispatcher;
         this.executorService = appManager.getExecutorService();
         this.queue = new LinkedBlockingDeque<>();
@@ -69,11 +67,11 @@ public class MusicScheduler implements Runnable {
     }
 
     public Link getLink() {
-        return link;
+        return appManager.getLavalinkClient().getLink(guild.getIdLong());
     }
 
     public LavalinkPlayer getPlayer() {
-        return link.getPlayer().block();
+        return getLink().getPlayer().block();
     }
 
     public Guild getGuild() {
@@ -164,7 +162,7 @@ public class MusicScheduler implements Runnable {
 
     public InteractionResponse stopPlayer() {
         clearQueue();
-        link.destroyPlayer().subscribe((ignored) -> {
+        getLink().destroyPlayer().subscribe((ignored) -> {
             updateTrackBox(false);
             waitInVC();
         });
@@ -203,7 +201,7 @@ public class MusicScheduler implements Runnable {
             if (noInterrupt && getPlayer().getTrack() != null) {
                 queue.addFirst(next);
             } else {
-                link.createOrUpdatePlayer()
+                getLink().createOrUpdatePlayer()
                         .setEncodedTrack(next.getEncoded())
                         .asMono()
                         .subscribe((ignored) -> {
@@ -217,7 +215,7 @@ public class MusicScheduler implements Runnable {
             }
         } else {
 //            getPlayer().clearEncodedTrack().asMono().block();
-            link.destroyPlayer().subscribe((ignored) -> {
+            getLink().destroyPlayer().subscribe((ignored) -> {
                 messageDispatcher.sendDisposableMessage(MessageType.Info, "Queue finished.");
                 waitInVC();
             });
@@ -257,6 +255,7 @@ public class MusicScheduler implements Runnable {
     public void onTrackEndEvent(TrackEndEvent data) {
         dev.arbjerg.lavalink.protocol.v4.Message.EmittedEvent.TrackEndEvent event = data.getEvent();
         System.out.print("Track ended playing. " + event.getTrack().getInfo().getTitle());
+        getPlayer().clearEncodedTrack().asMono().block();
         if (event.getReason().getMayStartNext()) {
             startNextTrack(true);
             messageDispatcher.sendDisposableMessage(MessageType.Info, String.format("Track **%s** finished.", event.getTrack().getInfo().getTitle()));
@@ -281,9 +280,9 @@ public class MusicScheduler implements Runnable {
     }
 
     public void onPlayerUpdateEvent(PlayerUpdateEvent data) {
-        dev.arbjerg.lavalink.protocol.v4.Message.EmittedEvent.PlayerUpdateEvent event = data.getEvent();
-        messageDispatcher.sendDisposableMessage(MessageType.Error, String.format("Player update event:\nPing: %s", event.getState().getPing()));
-        updateTrackBox(false);
+//        dev.arbjerg.lavalink.protocol.v4.Message.EmittedEvent.PlayerUpdateEvent event = data.getEvent();
+//        messageDispatcher.sendDisposableMessage(MessageType.Info, String.format("Player update event:\nPing: %s", event.getState().getPing()));
+//        updateTrackBox(false);
     }
 
     private void updateTrackBox(boolean newMessage) {

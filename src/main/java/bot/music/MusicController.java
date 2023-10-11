@@ -34,7 +34,6 @@ public class MusicController implements IBotController {
     private static final Logger log = LoggerFactory.getLogger(MusicController.class);
     private final BotApplicationManager appManager;
     private final BotGuildContext state;
-    private final Link link;
     private final MusicScheduler scheduler;
     private final MessageDispatcher messageDispatcher;
     private final Guild guild;
@@ -43,8 +42,6 @@ public class MusicController implements IBotController {
         this.appManager = appManager;
         this.state = state;
         this.guild = guild;
-
-        this.link = appManager.getLavalinkClient().getLink(guild.getIdLong());
 //        guild.getAudioManager().setSendingHandler(new AudioPlayerSendHandler(player));
 
         this.messageDispatcher = new MessageDispatcher();
@@ -68,11 +65,11 @@ public class MusicController implements IBotController {
     }
 
     public Link getLink() {
-        return this.link;
+        return this.appManager.getLavalinkClient().getLink(guild.getIdLong());
     }
 
     public LavalinkPlayer getPlayer() {
-        return this.link.getPlayer().block();
+        return getLink().getPlayer().block();
     }
 
     public MusicScheduler getScheduler() {
@@ -86,7 +83,7 @@ public class MusicController implements IBotController {
         }
 
         scheduler.clearQueue();
-        link.destroyPlayer().subscribe((ignored) -> {
+        getLink().destroyPlayer().subscribe((ignored) -> {
             guild.getJDA().getDirectAudioController().disconnect(guild);
             messageDispatcher.sendDisposableMessage(MessageType.Info, "Disconnected.");
             messageDispatcher.setOutputChannel(null);
@@ -374,13 +371,16 @@ public class MusicController implements IBotController {
             return;
         }
 
-//        jPlayer.setVolume(volume);
-
-        InteractionResponse response = new InteractionResponse()
-                .setSuccess(true)
-                .setMessageType(MessageType.Info)
-                .setMessage("Volume set to " + volume + ".");
-        InteractionResponse.handle(event.getHook(), response);
+        getLink()
+                .getPlayer()
+                .flatMap(player -> player.setVolume(volume).asMono())
+                .subscribe((ignored) -> {
+                    InteractionResponse response = new InteractionResponse()
+                            .setSuccess(true)
+                            .setMessageType(MessageType.Info)
+                            .setMessage("Volume set to " + volume + ".");
+                    InteractionResponse.handle(event.getHook(), response);
+                });
     }
 
     @BotCommandHandler(name = "skip", description = "Skip current track.", usage = "/skip")
@@ -502,8 +502,12 @@ public class MusicController implements IBotController {
         if (!canPerformAction(ad))
             return;
 
-        getPlayer().setPaused(!getPlayer().getPaused()).asMono().block();
-        event.getHook().deleteOriginal().queue();
+        getLink()
+                .getPlayer()
+                .flatMap(player -> player.setPaused(!player.getPaused()).asMono())
+                .subscribe(player -> {
+                    event.getHook().deleteOriginal().queue();
+                });
     }
 
     @BotCommandHandler(name = "resume", description = "Resume currently paused track.", usage = "/resume")
@@ -512,13 +516,18 @@ public class MusicController implements IBotController {
         if (!canPerformAction(ad))
             return;
 
-        getPlayer().setPaused(false).asMono().block();
-        event.getHook().deleteOriginal().queue();
+        getLink()
+                .getPlayer()
+                .flatMap(player -> player.setPaused(false).asMono())
+                .subscribe(player -> {
+                    event.getHook().deleteOriginal().queue();
+                });
     }
 
     @BotCommandHandler(name = "song", description = "Display current playing track.", usage = "/song")
     private void commandSong(SlashCommandInteractionEvent event) {
-        if (getPlayer().getTrack() == null) {
+        Track current = getPlayer().getTrack();
+        if (current == null) {
             InteractionResponse response = new InteractionResponse()
                     .setSuccess(false)
                     .setMessageType(MessageType.Warning)
@@ -527,11 +536,10 @@ public class MusicController implements IBotController {
             return;
         }
 
-        TrackInfo current = getPlayer().getTrack().getInfo();
-
+        TrackInfo trackInfo = current.getInfo();
         InteractionResponse response = new InteractionResponse()
                 .setMessageType(MessageType.Info)
-                .setMessage(String.format("Currently playing **[%s](%s)** by **%s**", current.getTitle(), current.getUri(), current.getAuthor()));
+                .setMessage(String.format("Currently playing **[%s](%s)** by **%s**", trackInfo.getTitle(), trackInfo.getUri(), trackInfo.getAuthor()));
         InteractionResponse.handle(event.getHook(), response);
     }
 

@@ -28,6 +28,12 @@ public class Main {
     private final LavalinkClient lavalinkClient;
 
     public static void main(String[] args) {
+        /* FIXME:
+            If I start playing something, and then use the stop button in the trackbox,
+            the next time I try to play anything it is not gonna send any audio.
+            I have to manually disconnect the bot from the voice channel (or use /disconnect) and then use /play again.
+         */
+
         new Main();
     }
 
@@ -49,9 +55,6 @@ public class Main {
                 .setActivity(Activity.listening("music \uD83C\uDFB6"))
                 .setVoiceDispatchInterceptor(new JDAVoiceUpdateListener(lavalinkClient))
                 .build();
-
-//            lavakord.addNode("ws://135.125.190.158:2333", "youshallnotpass");
-//            lavakord.addNode("ws://localhost:2333", "youshallnotpass");
 
         BotApplicationManager applicationManager = new BotApplicationManager(lavalinkClient);
         ButtonComponentClick buttonComponentClick = new ButtonComponentClick(applicationManager);
