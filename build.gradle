@@ -75,6 +75,20 @@ task fatJarDev(type: Jar) {
     duplicatesStrategy DuplicatesStrategy.EXCLUDE
 }
 
+task fatJarLavalink(type: Jar) {
+    manifest {
+        attributes 'Main-Class': 'bot.Main'
+    }
+    archiveClassifier = 'lavalink'
+//    configurations.implementation.setCanBeResolved(true)
+    from {
+//        configurations.implementation.collect { it.isDirectory() ? it : zipTree(it) }
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    with jar
+    duplicatesStrategy DuplicatesStrategy.EXCLUDE
+}
+
 test {
     useJUnitPlatform()
 }
