@@ -502,7 +502,6 @@ public class MusicController implements IBotController {
         if (!canPerformAction(ad))
             return;
 
-        // FIXME: for some reason getPaused keeps returning false even when the player is paused
         getPlayer().setPaused(!getPlayer().getPaused()).asMono().block();
         event.getHook().deleteOriginal().queue();
     }
