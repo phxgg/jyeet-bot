@@ -101,6 +101,17 @@ public class BotApplicationManager extends ListenerAdapter {
         return context;
     }
 
+    public synchronized BotGuildContext getContextById(long guildId) {
+        BotGuildContext context = guildContexts.get(guildId);
+
+//        if (context == null) {
+//            context = createGuildState(guildId, guild);
+//            guildContexts.put(guildId, context);
+//        }
+
+        return context;
+    }
+
     @Override
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
         event.deferReply().queue();
@@ -119,8 +130,7 @@ public class BotApplicationManager extends ListenerAdapter {
         }
 
         BotGuildContext guildContext = getContext(event.getGuild());
-
-        String prefix = guildContext.getGuildPrefix();
+//        String prefix = guildContext.getGuildPrefix();
 
         controllerManager.dispatchSlashCommand(guildContext.getControllers(), event, new IBotSlashCommandMappingHandler() {
             @Override

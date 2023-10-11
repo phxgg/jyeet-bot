@@ -4,7 +4,6 @@ import bot.listeners.BotApplicationManager;
 import bot.records.InteractionResponse;
 import bot.records.MessageDispatcher;
 import bot.records.MessageType;
-import bot.trackbox.TrackBoxBuilder;
 import dev.arbjerg.lavalink.client.*;
 import dev.arbjerg.lavalink.protocol.v4.Track;
 import net.dv8tion.jda.api.entities.Guild;
@@ -34,7 +33,7 @@ public class MusicScheduler implements Runnable {
     private final AtomicBoolean creatingBoxMessage;
     private ScheduledFuture<?> waitingInVC;
 
-    public MusicScheduler(BotApplicationManager appManager, Guild guild, MessageDispatcher messageDispatcher, MusicController controller) {
+    public MusicScheduler(BotApplicationManager appManager, MusicController controller, Guild guild, MessageDispatcher messageDispatcher) {
         this.appManager = appManager;
         this.controller = controller;
         this.guild = guild;
@@ -113,7 +112,7 @@ public class MusicScheduler implements Runnable {
     }
 
     public InteractionResponse shuffleQueue() {
-        if (!(queue.size() > 0)) {
+        if (queue.isEmpty()) {
             return new InteractionResponse()
                     .setSuccess(false)
                     .setEphemeral(true)
@@ -162,10 +161,9 @@ public class MusicScheduler implements Runnable {
 
     public InteractionResponse stopPlayer() {
         clearQueue();
-        getLink().destroyPlayer().subscribe((ignored) -> {
-            updateTrackBox(false);
-            waitInVC();
-        });
+        getLink().destroyPlayer().block();
+        updateTrackBox(false);
+        waitInVC();
 
         return new InteractionResponse()
                 .setSuccess(true)
@@ -194,7 +192,7 @@ public class MusicScheduler implements Runnable {
         }, 5, TimeUnit.MINUTES);
     }
 
-    private void startNextTrack(boolean noInterrupt) {
+    public void startNextTrack(boolean noInterrupt) {
         Track next = queue.pollFirst();
 
         if (next != null) {
@@ -215,10 +213,9 @@ public class MusicScheduler implements Runnable {
             }
         } else {
 //            getPlayer().clearEncodedTrack().asMono().block();
-            getLink().destroyPlayer().subscribe((ignored) -> {
-                messageDispatcher.sendDisposableMessage(MessageType.Info, "Queue finished.");
-                waitInVC();
-            });
+            getLink().destroyPlayer().block();
+            messageDispatcher.sendDisposableMessage(MessageType.Info, "Queue finished.");
+            waitInVC();
         }
     }
 
@@ -276,7 +273,7 @@ public class MusicScheduler implements Runnable {
     public void onWebSocketClosedEvent(WebSocketClosedEvent data) {
         dev.arbjerg.lavalink.protocol.v4.Message.EmittedEvent.WebSocketClosedEvent event = data.getEvent();
         messageDispatcher.sendDisposableMessage(MessageType.Error, String.format("WebSocket closed, stopping player. Reason:\n%s", event.getReason()));
-        this.controller.destroyPlayer();
+        getLink().destroyPlayer().block();
     }
 
     public void onPlayerUpdateEvent(PlayerUpdateEvent data) {
@@ -285,7 +282,7 @@ public class MusicScheduler implements Runnable {
 //        updateTrackBox(false);
     }
 
-    private void updateTrackBox(boolean newMessage) {
+    public void updateTrackBox(boolean newMessage) {
         Track track = getPlayer().getTrack();
 
         if (track == null || newMessage) {
@@ -309,9 +306,7 @@ public class MusicScheduler implements Runnable {
                     messageDispatcher.sendTrackBoxMessage(box, created -> {
                         boxMessage.set(created);
                         creatingBoxMessage.set(false);
-                    }, error -> {
-                        creatingBoxMessage.set(false);
-                    });
+                    }, error -> creatingBoxMessage.set(false));
                 }
             }
         }

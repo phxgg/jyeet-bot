@@ -1,4 +1,4 @@
-package bot.trackbox;
+package bot.music;
 
 import bot.records.MessageType;
 import dev.arbjerg.lavalink.client.LavalinkPlayer;

@@ -29,11 +29,7 @@ public class ButtonComponentClick extends ListenerAdapter {
         ActionData ad = null;
 
         try {
-            ad = new ActionData(
-                    event,
-                    event.getHook(),
-                    Objects.requireNonNull(event.getGuild()).getAudioManager()
-            );
+            ad = new ActionData(event, event.getHook());
         } catch (NullPointerException e) {
             System.out.println("[ButtonComponentClick] audioManager is null.");
             e.printStackTrace();

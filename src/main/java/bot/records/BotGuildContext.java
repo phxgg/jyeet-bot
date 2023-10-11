@@ -3,12 +3,11 @@ package bot.records;
 import bot.controller.IBotController;
 
 import java.util.HashMap;
-import java.util.Map;
 
 public class BotGuildContext {
     private final long guildId;
     private String guildPrefix;
-    private final Map<Class<? extends IBotController>, IBotController> controllers;
+    private final HashMap<Class<? extends IBotController>, IBotController> controllers;
 
     public BotGuildContext(long guildId, String guildPrefix) {
         this.guildId = guildId;
@@ -24,7 +23,7 @@ public class BotGuildContext {
         return this.guildPrefix;
     }
 
-    public Map<Class<? extends IBotController>, IBotController> getControllers() {
+    public HashMap<Class<? extends IBotController>, IBotController> getControllers() {
         return this.controllers;
     }
 

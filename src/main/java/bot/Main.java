@@ -8,14 +8,17 @@ import bot.api.entities.Response;
 import bot.api.entities.Server;
 import bot.listeners.ButtonComponentClick;
 import bot.listeners.GeneralEvents;
+import bot.music.MusicController;
+import bot.records.BotGuildContext;
+import bot.records.MessageType;
 import com.google.gson.Gson;
 import dev.arbjerg.lavalink.client.*;
 import dev.arbjerg.lavalink.client.loadbalancing.RegionGroup;
 import dev.arbjerg.lavalink.client.loadbalancing.builtin.VoiceRegionPenaltyProvider;
 import dev.arbjerg.lavalink.libraries.jda.JDAVoiceUpdateListener;
 import dev.arbjerg.lavalink.protocol.v4.Message;
+import dev.arbjerg.lavalink.protocol.v4.VoiceState;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder;
@@ -26,12 +29,16 @@ import java.util.List;
 
 public class Main {
     private final LavalinkClient lavalinkClient;
+    private BotApplicationManager appManager;
+    private ButtonComponentClick buttonComponentClick;
+    private GeneralEvents generalEvents;
 
     public static void main(String[] args) {
         /* FIXME:
             If I start playing something, and then use the stop button in the trackbox,
             the next time I try to play anything it is not gonna send any audio.
             I have to manually disconnect the bot from the voice channel (or use /disconnect) and then use /play again.
+            Also if that helps PlayerState.getConnected() returns false.
          */
 
         new Main();
@@ -40,9 +47,6 @@ public class Main {
     public Main() {
         lavalinkClient = new LavalinkClient(Helpers.getUserIdFromToken(System.getProperty("botToken")));
         lavalinkClient.getLoadBalancer().addPenaltyProvider(new VoiceRegionPenaltyProvider());
-
-        this.registerLavalinkListeners();
-        this.registerLavalinkNodes();
 
         ShardManager shardManager = DefaultShardManagerBuilder.createDefault(System.getProperty("botToken"))
                 .enableIntents(
@@ -56,10 +60,13 @@ public class Main {
                 .setVoiceDispatchInterceptor(new JDAVoiceUpdateListener(lavalinkClient))
                 .build();
 
-        BotApplicationManager applicationManager = new BotApplicationManager(lavalinkClient);
-        ButtonComponentClick buttonComponentClick = new ButtonComponentClick(applicationManager);
-        GeneralEvents generalEvents = new GeneralEvents();
-        shardManager.addEventListener(applicationManager, buttonComponentClick, generalEvents);
+        appManager = new BotApplicationManager(lavalinkClient);
+        buttonComponentClick = new ButtonComponentClick(appManager);
+        generalEvents = new GeneralEvents();
+        shardManager.addEventListener(appManager, buttonComponentClick, generalEvents);
+
+        this.registerLavalinkListeners();
+        this.registerLavalinkNodes();
 
         JDA jda = shardManager.getShards().get(0);
         SetupCommands.Setup(jda);
@@ -82,7 +89,7 @@ public class Main {
     }
 
     private void registerLavalinkListeners() {
-        this.lavalinkClient.on(dev.arbjerg.lavalink.client.ReadyEvent.class).subscribe((data) -> {
+        this.lavalinkClient.on(ReadyEvent.class).subscribe((data) -> {
             final LavalinkNode node = data.getNode();
             final Message.ReadyEvent event = data.getEvent();
 
@@ -110,7 +117,7 @@ public class Main {
         List.of(
                 lavalinkClient.addNode(
                         "Testnode",
-                        URI.create("ws://192.168.1.4:2333"),
+                        URI.create("ws://localhost:2333"),
                         "youshallnotpass",
                         RegionGroup.EUROPE
                 )
@@ -124,13 +131,70 @@ public class Main {
             node.on(TrackStartEvent.class).subscribe((data) -> {
                 final LavalinkNode node1 = data.getNode();
                 final var event = data.getEvent();
-
-                System.out.printf(
-                        "%s: track started: %s%n",
-                        node1.getName(),
-                        event.getTrack().getInfo()
-                );
+                forMusicController(event.getGuildId(), (controller) -> {
+                    System.out.printf("Track started playing %s%n", event.getTrack().getInfo().getTitle());
+                    controller.getScheduler().updateTrackBox(true);
+                });
+            });
+            node.on(TrackEndEvent.class).subscribe((data) -> {
+                final var event = data.getEvent();
+                forMusicController(event.getGuildId(), (controller) -> {
+                    System.out.print("Track ended playing. " + event.getTrack().getInfo().getTitle());
+                    controller.getPlayer().clearEncodedTrack().asMono().block();
+                    if (event.getReason().getMayStartNext()) {
+                        controller.getScheduler().startNextTrack(true);
+                        controller.getMessageDispatcher().sendDisposableMessage(MessageType.Info, String.format("Track **%s** finished.", event.getTrack().getInfo().getTitle()));
+                    }
+                });
+            });
+            node.on(TrackStuckEvent.class).subscribe((data) -> {
+                final var event = data.getEvent();
+                forMusicController(event.getGuildId(), (controller) -> {
+                    System.out.printf("Track got stuck %s%n", event.getTrack().getInfo().getTitle());
+                    controller.getMessageDispatcher().sendDisposableMessage(MessageType.Warning, String.format("Track **%s** got stuck, skipping.", event.getTrack().getInfo().getTitle()));
+                    controller.getScheduler().startNextTrack(false);
+                });
+            });
+            node.on(TrackExceptionEvent.class).subscribe((data) -> {
+                final var event = data.getEvent();
+                forMusicController(event.getGuildId(), (controller) -> {
+                    System.out.printf("Track got exception %s%n", event.getTrack().getInfo().getTitle());
+                    controller.getMessageDispatcher().sendDisposableMessage(MessageType.Warning, String.format("Track **%s** got exception, skipping.", event.getTrack().getInfo().getTitle()));
+                    controller.getScheduler().startNextTrack(false);
+                });
+            });
+            node.on(WebSocketClosedEvent.class).subscribe((data) -> {
+                final var event = data.getEvent();
+                forMusicController(event.getGuildId(), (controller) -> {
+                    System.out.printf("Websocket closed %s%n", event.getReason());
+                    controller.getMessageDispatcher().sendDisposableMessage(MessageType.Error, String.format("WebSocket closed, stopping player. Reason:\n%s", event.getReason()));
+                    controller.getLink().destroyPlayer().block();
+                });
+            });
+            node.on(PlayerUpdateEvent.class).subscribe((data) -> {
+                final var event = data.getEvent();
+                System.out.printf("Connected: %s%n", data.getEvent().getState().getConnected());
+                System.out.printf("OP: %s%n", data.getEvent().getOp().getValue());
+                System.out.printf("Ping: %s%n", data.getEvent().getState().getPing());
             });
         });
+    }
+
+    private void forMusicController(long guildId, GuildOperation operation) {
+        BotGuildContext context = appManager.getContextById(guildId);
+        if (context != null) {
+            MusicController controller = (MusicController) context.getControllers().get(MusicController.class);
+            if (controller != null) {
+                operation.execute(controller);
+            }
+        }
+    }
+
+    private void forMusicController(String guildId, GuildOperation operation) {
+        forMusicController(Long.parseLong(guildId), operation);
+    }
+
+    private interface GuildOperation {
+        void execute(MusicController controller);
     }
 }
