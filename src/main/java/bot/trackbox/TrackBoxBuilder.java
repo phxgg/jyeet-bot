@@ -1,6 +1,7 @@
-package bot.music;
+package bot.trackbox;
 
 import bot.records.MessageType;
+import dev.arbjerg.lavalink.client.LavalinkPlayer;
 import dev.arbjerg.lavalink.protocol.v4.Track;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -14,19 +15,22 @@ public class TrackBoxBuilder {
     private static final String PROGRESS_FILL = "\u25a0";
     private static final String PROGRESS_EMPTY = "\u2015";
 
-    public static MessageEmbed buildTrackBox(int width, Track track, boolean isPaused, int volume, int queueSize) {
-        return boxify(width, track, isPaused, volume, queueSize);
+    public static MessageEmbed buildTrackBox(int width, LavalinkPlayer player, int queueSize) {
+        return boxify(width, player, queueSize);
     }
 
-    private static String buildDurationLine(int width, Track track, boolean isPaused) {
+    private static String buildDurationLine(int width, LavalinkPlayer player, boolean isPaused) {
+        Track track = player.getTrack();
+        assert (track != null);
+
         String cornerText = isPaused ? "\u23F8" : "\uD83D\uDCFB";
 
         String duration = formatTiming(track.getInfo().getLength(), track.getInfo().getLength());
-        String position = formatTiming(track.getInfo().getPosition(), track.getInfo().getLength());
+        String position = formatTiming(player.getPosition(), track.getInfo().getLength());
         int spacing = duration.length() - position.length();
         int barLength = width - duration.length() - position.length() - spacing - 14;
 
-        float progress = (float) Math.min(track.getInfo().getPosition(), track.getInfo().getLength()) / (float) Math.max(track.getInfo().getLength(), 1);
+        float progress = (float) Math.min(player.getPosition(), track.getInfo().getLength()) / (float) Math.max(track.getInfo().getLength(), 1);
         int progressBlocks = Math.round(progress * barLength);
 
         StringBuilder builder = new StringBuilder();
@@ -65,7 +69,10 @@ public class TrackBoxBuilder {
         }
     }
 
-    private static MessageEmbed boxify(int width, Track track, boolean isPaused, int volume, int queueSize) {
+    private static MessageEmbed boxify(int width, LavalinkPlayer player, int queueSize) {
+        Track track = player.getTrack();
+        assert (track != null);
+
         EmbedBuilder eb = new EmbedBuilder();
 
         String duration = formatTiming(track.getInfo().getLength(), track.getInfo().getLength());
@@ -73,13 +80,13 @@ public class TrackBoxBuilder {
         eb.setAuthor("Now playing");
         eb.setTitle(String.format("%s - %s", track.getInfo().getAuthor(), track.getInfo().getTitle()), track.getInfo().getUri());
         eb.setColor(MessageType.TrackBox.color);
-        eb.setDescription(buildDurationLine(width - 4, track, isPaused));
+        eb.setDescription(buildDurationLine(width - 4, player, player.getPaused()));
         eb.setThumbnail(track.getInfo().getArtworkUrl());
 
         eb.addField("Link", String.format("[Click](%s)", track.getInfo().getUri()), true);
         eb.addField("Duration", duration, true);
         eb.addField("In Queue", String.format("%d tracks", queueSize), true);
-        eb.addField("Volume", volume + "%", true);
+        eb.addField("Volume", player.getVolume() + "%", true);
 //        eb.addField("Requested By", String.format("<@%s>", ((TrackMetadata) track.getUserData()).getRequestedBy().getId()), true);
 
         eb.setFooter("YEEET", "https://yeeet-bot.netlify.app/assets/images/logo.png");

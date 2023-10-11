@@ -9,23 +9,17 @@ import bot.api.entities.Response;
 import bot.listeners.BotApplicationManager;
 import bot.records.*;
 import com.google.gson.Gson;
+import dev.arbjerg.lavalink.client.*;
 import dev.arbjerg.lavalink.protocol.v4.*;
 import dev.arbjerg.lavalink.protocol.v4.Exception;
-import dev.schlaubi.lavakord.audio.TrackEndEvent;
-import dev.schlaubi.lavakord.audio.TrackStartEvent;
-import dev.schlaubi.lavakord.audio.TrackStuckEvent;
-import dev.schlaubi.lavakord.audio.WebSocketClosedEvent;
-import dev.schlaubi.lavakord.interop.JavaLink;
-import dev.schlaubi.lavakord.interop.JavaPlayer;
-import dev.schlaubi.lavakord.interop.TrackUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.GuildVoiceState;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.managers.AudioManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,8 +34,7 @@ public class MusicController implements IBotController {
     private static final Logger log = LoggerFactory.getLogger(MusicController.class);
     private final BotApplicationManager appManager;
     private final BotGuildContext state;
-    private final JavaLink link;
-    private final JavaPlayer player;
+    private final Link link;
     private final MusicScheduler scheduler;
     private final MessageDispatcher messageDispatcher;
     private final Guild guild;
@@ -51,29 +44,35 @@ public class MusicController implements IBotController {
         this.state = state;
         this.guild = guild;
 
-        this.link = appManager.getLavakord().getLink(guild.getIdLong());
-        this.player = link.getPlayer();
+        this.link = appManager.getLavalinkClient().getLink(guild.getIdLong());
 //        guild.getAudioManager().setSendingHandler(new AudioPlayerSendHandler(player));
 
         this.messageDispatcher = new MessageDispatcher();
         this.scheduler = new MusicScheduler(appManager, guild, this.messageDispatcher, this);
 
-        this.player.on(TrackStartEvent.class, this.scheduler::onTrackStartEvent);
-        this.player.on(TrackEndEvent.class, this.scheduler::onTrackEndEvent);
-        this.player.on(TrackStuckEvent.class, this.scheduler::onTrackStuckEvent);
-        this.player.on(WebSocketClosedEvent.class, this.scheduler::onWebSocketClosedEvent);
+        this.appManager.getLavalinkClient().on(TrackStartEvent.class).subscribe((data) -> {
+            Message.EmittedEvent.TrackStartEvent event = data.getEvent();
+            System.out.printf("[%s] Started playing track: %s%n", event.getGuildId(), event.getTrack().getInfo().getTitle());
+        });
+
+        // TODO: These events are on the node level and not on player level. They should be handled by checking the guild id.
+        this.getLink().getNode().on(TrackStartEvent.class).subscribe(this.scheduler::onTrackStartEvent);
+        this.getLink().getNode().on(TrackEndEvent.class).subscribe(this.scheduler::onTrackEndEvent);
+        this.getLink().getNode().on(TrackStuckEvent.class).subscribe(this.scheduler::onTrackStuckEvent);
+        this.getLink().getNode().on(WebSocketClosedEvent.class).subscribe(this.scheduler::onWebSocketClosedEvent);
+        this.getLink().getNode().on(PlayerUpdateEvent.class).subscribe(this.scheduler::onPlayerUpdateEvent);
     }
 
     public Guild getGuild() {
         return this.guild;
     }
 
-    public JavaLink getLink() {
+    public Link getLink() {
         return this.link;
     }
 
-    public JavaPlayer getPlayer() {
-        return this.player;
+    public LavalinkPlayer getPlayer() {
+        return this.link.getPlayer().block();
     }
 
     public MusicScheduler getScheduler() {
@@ -87,11 +86,11 @@ public class MusicController implements IBotController {
         }
 
         scheduler.clearQueue();
-        link.destroy();
-//        guild.getAudioManager().setSendingHandler(null);
-        guild.getAudioManager().closeAudioConnection();
-        messageDispatcher.sendDisposableMessage(MessageType.Info, "Disconnected.");
-        messageDispatcher.setOutputChannel(null);
+        link.destroyPlayer().subscribe((ignored) -> {
+            guild.getJDA().getDirectAudioController().disconnect(guild);
+            messageDispatcher.sendDisposableMessage(MessageType.Info, "Disconnected.");
+            messageDispatcher.setOutputChannel(null);
+        });
     }
 
     /**
@@ -294,7 +293,7 @@ public class MusicController implements IBotController {
         if (!canPerformAction(ad, true))
             return;
 
-        addTrackLavakord(event, identifier, false, false);
+        addTrackLavalink(event, identifier, false, false);
         //addTrack(event, identifier, false, false);
     }
 
@@ -304,7 +303,7 @@ public class MusicController implements IBotController {
         if (!canPerformAction(ad, true))
             return;
 
-        addTrackLavakord(event, identifier, true, false);
+        addTrackLavalink(event, identifier, true, false);
     }
 
     @BotCommandHandler(name = "playnext", description = "Adds in queue the provided track right after the current track.", usage = "/playnext <name_of_track/link/playlist>")
@@ -313,7 +312,7 @@ public class MusicController implements IBotController {
         if (!canPerformAction(ad, true))
             return;
 
-        addTrackLavakord(event, identifier, false, true);
+        addTrackLavalink(event, identifier, false, true);
     }
 
     @BotCommandHandler(name = "queue", description = "Display current queue list.", usage = "/queue")
@@ -465,8 +464,8 @@ public class MusicController implements IBotController {
         if (!canPerformAction(ad))
             return;
 
-        if (player.getPlayingTrack() != null) {
-            player.seekTo(player.getPosition() + duration * 1000L).thenAccept(action -> {
+        if (getPlayer().getTrack() != null) {
+            getPlayer().setPosition(getPlayer().getPosition() + duration * 1000L).asMono().subscribe((ignored) -> {
                 InteractionResponse response = new InteractionResponse()
                         .setSuccess(true)
                         .setMessageType(MessageType.Info)
@@ -486,8 +485,8 @@ public class MusicController implements IBotController {
         if (!canPerformAction(ad))
             return;
 
-        if (player.getPlayingTrack() != null) {
-            player.seekTo(Math.max(0, player.getPosition() - duration * 1000L)).thenAccept(action -> {
+        if (getPlayer().getTrack() != null) {
+            getPlayer().setPosition(Math.max(0, getPlayer().getPosition() - duration * 1000L)).asMono().subscribe((ignored) -> {
                 InteractionResponse response = new InteractionResponse()
                         .setSuccess(true)
                         .setMessageType(MessageType.Info)
@@ -503,9 +502,8 @@ public class MusicController implements IBotController {
         if (!canPerformAction(ad))
             return;
 
-        player.pause(!player.getPaused()).thenAccept(action -> {
-            this.scheduler.onPlayerPauseEvent();
-        });
+        // FIXME: for some reason getPaused keeps returning false even when the player is paused
+        getPlayer().setPaused(!getPlayer().getPaused()).asMono().block();
         event.getHook().deleteOriginal().queue();
     }
 
@@ -515,15 +513,13 @@ public class MusicController implements IBotController {
         if (!canPerformAction(ad))
             return;
 
-        player.pause(false).thenAccept(action -> {
-            this.scheduler.onPlayerPauseEvent();
-        });
+        getPlayer().setPaused(false).asMono().block();
         event.getHook().deleteOriginal().queue();
     }
 
     @BotCommandHandler(name = "song", description = "Display current playing track.", usage = "/song")
     private void commandSong(SlashCommandInteractionEvent event) {
-        if (player.getPlayingTrack() == null) {
+        if (getPlayer().getTrack() == null) {
             InteractionResponse response = new InteractionResponse()
                     .setSuccess(false)
                     .setMessageType(MessageType.Warning)
@@ -532,7 +528,7 @@ public class MusicController implements IBotController {
             return;
         }
 
-        TrackInfo current = player.getPlayingTrack().getInfo();
+        TrackInfo current = getPlayer().getTrack().getInfo();
 
         InteractionResponse response = new InteractionResponse()
                 .setMessageType(MessageType.Info)
@@ -622,10 +618,10 @@ public class MusicController implements IBotController {
         if (!canPerformAction(ad))
             return;
 
-        if (player.getPlayingTrack() != null) {
+        if (getPlayer().getTrack() != null) {
             InteractionResponse response = new InteractionResponse()
                     .setMessageType(MessageType.Info)
-                    .setMessage("Duration is " + player.getPlayingTrack().getInfo().getLength());
+                    .setMessage("Duration is " + getPlayer().getTrack().getInfo().getLength());
             InteractionResponse.handle(event.getHook(), response);
         }
     }
@@ -636,7 +632,7 @@ public class MusicController implements IBotController {
      * ====================================
      */
 
-    private void addTrackLavakord(
+    private void addTrackLavalink(
             final SlashCommandInteractionEvent event,
             final String identifier,
             final boolean playNow,
@@ -657,9 +653,9 @@ public class MusicController implements IBotController {
 
         boolean isSearchQuery = (!searchQuery.equals(identifier));
 
-        TrackUtil.loadItem(this.link, searchQuery).thenAccept(result -> {
+        getLink().loadItem(searchQuery).subscribe(result -> {
             if (result instanceof LoadResult.TrackLoaded trackLoaded) {
-                if (!connectToVoiceChannel(event, guild.getAudioManager()))
+                if (!connectToVoiceChannel(event))
                     return;
 
                 // add track metadata
@@ -688,7 +684,7 @@ public class MusicController implements IBotController {
                     InteractionResponse.handle(event.getHook(), response);
                 }
 
-                if (!connectToVoiceChannel(event, guild.getAudioManager()))
+                if (!connectToVoiceChannel(event))
                     return;
 
                 // add track metadata
@@ -715,7 +711,7 @@ public class MusicController implements IBotController {
                     }
                 }
             } else if (result instanceof LoadResult.SearchResult searchResult) {
-                if (!connectToVoiceChannel(event, guild.getAudioManager()))
+                if (!connectToVoiceChannel(event))
                     return;
 
                 LoadResult.SearchResult.Data searchResultData = searchResult.getData();
@@ -963,7 +959,7 @@ public class MusicController implements IBotController {
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    private boolean connectToVoiceChannel(final SlashCommandInteractionEvent event, AudioManager audioManager) {
+    private boolean connectToVoiceChannel(final SlashCommandInteractionEvent event) {
         Member member = event.getMember();
         if (member == null)
             return false;
@@ -973,12 +969,12 @@ public class MusicController implements IBotController {
         // We're only going to play if the user is connected to a voice channel, there's no reason
         // for admins to be able to bypass this, as done in canPerformAction().
 
+        final GuildVoiceState memberVoiceState = member.getVoiceState();
         // Fix warnings
-        if (member.getVoiceState() == null)
+        if (memberVoiceState == null)
             return false;
 
-        VoiceChannel memberVoiceChannel = (VoiceChannel) member.getVoiceState().getChannel();
-        if (memberVoiceChannel == null) {
+        if (!memberVoiceState.inAudioChannel() || memberVoiceState.getChannel() == null) {
             InteractionResponse response = new InteractionResponse()
                     .setEphemeral(true)
                     .setSuccess(false)
@@ -989,17 +985,9 @@ public class MusicController implements IBotController {
         }
 
         // Join voice channel of user.
-        if (!audioManager.isConnected()) {
-//            audioManager.openAudioConnection(memberVoiceChannel);
-//            audioManager.setSelfDeafened(true);
-            link.connectAudio(memberVoiceChannel.getIdLong());
-
-            // Server deafen the bot, so it looks red instead of the classic grey self deafen color.
-//            if (event.getGuild().getSelfMember().hasPermission(Permission.ADMINISTRATOR)) {
-//                // This fails because we have to wait for the user to connect to the voice channel.
-//                event.getGuild().getSelfMember().deafen(true);
-//            }
-        }
+//        audioManager.openAudioConnection(memberVoiceState.getChannel());
+//        audioManager.setSelfDeafened(true);
+        event.getJDA().getDirectAudioController().connect(memberVoiceState.getChannel());
 
         return true;
     }

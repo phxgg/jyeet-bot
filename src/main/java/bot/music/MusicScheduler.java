@@ -4,12 +4,9 @@ import bot.listeners.BotApplicationManager;
 import bot.records.InteractionResponse;
 import bot.records.MessageDispatcher;
 import bot.records.MessageType;
+import bot.trackbox.TrackBoxBuilder;
+import dev.arbjerg.lavalink.client.*;
 import dev.arbjerg.lavalink.protocol.v4.Track;
-import dev.schlaubi.lavakord.audio.TrackEndEvent;
-import dev.schlaubi.lavakord.audio.TrackStartEvent;
-import dev.schlaubi.lavakord.audio.TrackStuckEvent;
-import dev.schlaubi.lavakord.audio.WebSocketClosedEvent;
-import dev.schlaubi.lavakord.interop.JavaPlayer;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -29,7 +26,7 @@ public class MusicScheduler implements Runnable {
     private final BotApplicationManager appManager;
     private final MusicController controller;
     private final Guild guild;
-    private final JavaPlayer player;
+    private final Link link;
     private final MessageDispatcher messageDispatcher;
     private final ScheduledExecutorService executorService;
     private final BlockingDeque<Track> queue;
@@ -42,7 +39,7 @@ public class MusicScheduler implements Runnable {
         this.appManager = appManager;
         this.controller = controller;
         this.guild = guild;
-        this.player = appManager.getLavakord().getLink(guild.getIdLong()).getPlayer();
+        this.link = appManager.getLavalinkClient().getLink(guild.getIdLong());
         this.messageDispatcher = messageDispatcher;
         this.executorService = appManager.getExecutorService();
         this.queue = new LinkedBlockingDeque<>();
@@ -71,8 +68,12 @@ public class MusicScheduler implements Runnable {
         return messageDispatcher;
     }
 
-    public JavaPlayer getPlayer() {
-        return player;
+    public Link getLink() {
+        return link;
+    }
+
+    public LavalinkPlayer getPlayer() {
+        return link.getPlayer().block();
     }
 
     public Guild getGuild() {
@@ -163,10 +164,10 @@ public class MusicScheduler implements Runnable {
 
     public InteractionResponse stopPlayer() {
         clearQueue();
-        player.stopTrack();
-        updateTrackBox(false);
-
-        waitInVC();
+        link.destroyPlayer().subscribe((ignored) -> {
+            updateTrackBox(false);
+            waitInVC();
+        });
 
         return new InteractionResponse()
                 .setSuccess(true)
@@ -188,8 +189,8 @@ public class MusicScheduler implements Runnable {
         }
 
         waitingInVC = executorService.schedule(() -> {
-            if (player.getPlayingTrack() == null) {
-                guild.getAudioManager().closeAudioConnection();
+            if (getPlayer().getTrack() == null) {
+                guild.getJDA().getDirectAudioController().disconnect(guild);
                 messageDispatcher.sendDisposableMessage(MessageType.Warning, "I have been inactive for 5 minutes, I guess I'm leaving...");
             }
         }, 5, TimeUnit.MINUTES);
@@ -199,22 +200,27 @@ public class MusicScheduler implements Runnable {
         Track next = queue.pollFirst();
 
         if (next != null) {
-            if (noInterrupt && player.getPlayingTrack() != null) {
+            if (noInterrupt && getPlayer().getTrack() != null) {
                 queue.addFirst(next);
             } else {
-                player.playTrack(next);
-                // A new track has just started playing.
-                // reset waitingInVC.
-                if (waitingInVC != null) {
-                    waitingInVC.cancel(true);
-                    waitingInVC = null;
-                }
+                link.createOrUpdatePlayer()
+                        .setEncodedTrack(next.getEncoded())
+                        .asMono()
+                        .subscribe((ignored) -> {
+                            // A new track has just started playing.
+                            // reset waitingInVC.
+                            if (waitingInVC != null) {
+                                waitingInVC.cancel(true);
+                                waitingInVC = null;
+                            }
+                        });
             }
         } else {
-            player.stopTrack();
-            messageDispatcher.sendDisposableMessage(MessageType.Info, "Queue finished.");
-            waitInVC();
-//            guild.getAudioManager().closeAudioConnection();
+//            getPlayer().clearEncodedTrack().asMono().block();
+            link.destroyPlayer().subscribe((ignored) -> {
+                messageDispatcher.sendDisposableMessage(MessageType.Info, "Queue finished.");
+                waitInVC();
+            });
         }
     }
 
@@ -240,12 +246,16 @@ public class MusicScheduler implements Runnable {
         }
     }*/
 
-    public void onTrackStartEvent(TrackStartEvent event) {
+    public void onTrackStartEvent(TrackStartEvent data) {
+        dev.arbjerg.lavalink.protocol.v4.Message.EmittedEvent.TrackStartEvent event = data.getEvent();
+//        LavalinkNode node = data.getNode();
+//        LavalinkPlayer p = node.getPlayer(Long.parseLong(event.getGuildId())).block();
         System.out.print("Track started playing. " + event.getTrack().getInfo().getTitle());
         updateTrackBox(true);
     }
 
-    public void onTrackEndEvent(TrackEndEvent event) {
+    public void onTrackEndEvent(TrackEndEvent data) {
+        dev.arbjerg.lavalink.protocol.v4.Message.EmittedEvent.TrackEndEvent event = data.getEvent();
         System.out.print("Track ended playing. " + event.getTrack().getInfo().getTitle());
         if (event.getReason().getMayStartNext()) {
             startNextTrack(true);
@@ -253,22 +263,31 @@ public class MusicScheduler implements Runnable {
         }
     }
 
-    public void onTrackStuckEvent(TrackStuckEvent event) {
+    public void onTrackStuckEvent(TrackStuckEvent data) {
+        dev.arbjerg.lavalink.protocol.v4.Message.EmittedEvent.TrackStuckEvent event = data.getEvent();
         messageDispatcher.sendDisposableMessage(MessageType.Warning, String.format("Track **%s** got stuck, skipping.", event.getTrack().getInfo().getTitle()));
         startNextTrack(false);
     }
 
-    public void onWebSocketClosedEvent(WebSocketClosedEvent event) {
-        messageDispatcher.sendDisposableMessage(MessageType.Warning, "WebSocket closed, stopping player.");
+    public void onTrackExceptionEvent(TrackExceptionEvent data) {
+        dev.arbjerg.lavalink.protocol.v4.Message.EmittedEvent.TrackExceptionEvent event = data.getEvent();
+        messageDispatcher.sendDisposableMessage(MessageType.Error, String.format("Exception on track **%s**:\n%s", event.getTrack().getInfo().getTitle(), event.getException().getMessage()));
+    }
+
+    public void onWebSocketClosedEvent(WebSocketClosedEvent data) {
+        dev.arbjerg.lavalink.protocol.v4.Message.EmittedEvent.WebSocketClosedEvent event = data.getEvent();
+        messageDispatcher.sendDisposableMessage(MessageType.Error, String.format("WebSocket closed, stopping player. Reason:\n%s", event.getReason()));
         this.controller.destroyPlayer();
     }
 
-    public void onPlayerPauseEvent() {
+    public void onPlayerUpdateEvent(PlayerUpdateEvent data) {
+        dev.arbjerg.lavalink.protocol.v4.Message.EmittedEvent.PlayerUpdateEvent event = data.getEvent();
+        messageDispatcher.sendDisposableMessage(MessageType.Error, String.format("Player update event:\nPing: %s", event.getState().getPing()));
         updateTrackBox(false);
     }
 
     private void updateTrackBox(boolean newMessage) {
-        Track track = player.getPlayingTrack();
+        Track track = getPlayer().getTrack();
 
         if (track == null || newMessage) {
             Message oldMessage = boxMessage.getAndSet(null);
@@ -282,8 +301,7 @@ public class MusicScheduler implements Runnable {
 
         if (track != null) {
             Message message = boxMessage.get();
-//            MessageEmbed box = TrackBoxBuilder.buildTrackBox(50, track, player.getPaused(), player.getVolume(), queue.size());
-            MessageEmbed box = TrackBoxBuilder.buildTrackBox(50, track, false, 100, queue.size());
+            MessageEmbed box = TrackBoxBuilder.buildTrackBox(50, getPlayer(), queue.size());
 
             if (message != null) {
                 message.editMessageEmbeds(box).queue();

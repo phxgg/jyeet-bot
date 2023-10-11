@@ -70,9 +70,7 @@ public class ButtonComponentClick extends ListenerAdapter {
         if (buttonId.equals(previous)) {
             scheduler.playPrevious();
         } else if (buttonId.equals(pause)) {
-            scheduler.getPlayer().pause(!scheduler.getPlayer().getPaused()).thenAccept(action -> {
-                scheduler.onPlayerPauseEvent();
-            });
+            scheduler.getPlayer().setPaused(!scheduler.getPlayer().getPaused());
         } else if (buttonId.equals(next)) {
             scheduler.skip();
         } else if (buttonId.equals(shuffle)) {

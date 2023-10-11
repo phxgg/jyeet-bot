@@ -41,9 +41,7 @@ dependencies {
     implementation 'com.github.topi314.lavasearch:lavasearch:1.0.0-beta.2'
     implementation 'com.github.topi314.lavasrc:lavasrc:4.0.0-beta.7'
 
-    implementation 'dev.schlaubi.lavakord:core:5.1.7'
-    implementation 'dev.schlaubi.lavakord:jda:5.1.7'
-    implementation 'dev.schlaubi.lavakord:jda-java:main-SNAPSHOT'
+    implementation 'dev.arbjerg:lavalink-client:3d812b49864288211fda3f189dc4847a511832ab-SNAPSHOT'
 
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
     implementation 'com.google.code.gson:gson:2.10'

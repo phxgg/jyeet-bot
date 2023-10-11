@@ -13,7 +13,7 @@ import bot.music.MusicController;
 import bot.utility.UtilityController;
 import com.google.gson.Gson;
 import com.sedmelluq.lava.common.tools.DaemonThreadFactory;
-import dev.schlaubi.lavakord.interop.JavaLavakord;
+import dev.arbjerg.lavalink.client.LavalinkClient;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -36,15 +36,15 @@ import java.util.concurrent.ScheduledExecutorService;
 public class BotApplicationManager extends ListenerAdapter {
     private static final Logger log = LoggerFactory.getLogger(BotApplicationManager.class);
 
-    private final JavaLavakord lavakord;
+    private final LavalinkClient lavalinkClient;
     private final Map<Long, BotGuildContext> guildContexts;
     private final BotControllerManager controllerManager;
     private final ScheduledExecutorService executorService; // Interface
     private final Gson gson;
 
-    public BotApplicationManager(JavaLavakord _lavakord) {
+    public BotApplicationManager(LavalinkClient _lavalinkClient) {
         gson = new Gson();
-        lavakord = _lavakord;
+        lavalinkClient = _lavalinkClient;
         guildContexts = new HashMap<>();
         controllerManager = new BotControllerManager();
 
@@ -59,8 +59,8 @@ public class BotApplicationManager extends ListenerAdapter {
         return this.executorService;
     }
 
-    public JavaLavakord getLavakord() {
-        return this.lavakord;
+    public LavalinkClient getLavalinkClient() {
+        return this.lavalinkClient;
     }
 
     private BotGuildContext createGuildState(long guildId, Guild guild) {
