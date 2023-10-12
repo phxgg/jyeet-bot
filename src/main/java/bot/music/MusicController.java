@@ -656,7 +656,7 @@ public class MusicController implements IBotController {
 
                 InteractionResponse response = new InteractionResponse()
                         .setMessageType(MessageType.Success)
-                        .setMessage(String.format("Added to queue: **%s**", track.getInfo().title));
+                        .setMessage(String.format("Added to queue: **[%s](%s)**", track.getInfo().title, track.getInfo().uri));
                 InteractionResponse.handle(event.getHook(), response);
 
                 if (playNow) {
@@ -689,13 +689,6 @@ public class MusicController implements IBotController {
                 if (!isSearchQuery) {
                     AudioTrack selected = playlist.getSelectedTrack();
 
-                    /*if (selected != null) {
-                        messageDispatcher.sendDisposableMessage(MessageType.Success, "Selected track from playlist: **" + selected.getInfo().title + "**");
-                    } else {
-                        selected = tracks.get(0);
-                        messageDispatcher.sendDisposableMessage(MessageType.Success, "Added first track from playlist: **" + selected.getInfo().title + "**");
-                    }*/
-
                     if (selected == null) {
                         selected = tracks.get(0);
                     }
@@ -720,7 +713,7 @@ public class MusicController implements IBotController {
 
                     InteractionResponse response = new InteractionResponse()
                             .setMessageType(MessageType.Success)
-                            .setMessage(String.format("Added to queue: **%s**", track.getInfo().title));
+                            .setMessage(String.format("Added to queue: **[%s](%s)**", track.getInfo().title, track.getInfo().uri));
                     InteractionResponse.handle(event.getHook(), response);
 
                     if (playNow) {
