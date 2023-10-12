@@ -62,19 +62,17 @@ public class BotControllerManager {
     }
 
     public void destroyPlayer(Map<Class<? extends IBotController>, IBotController> instances) {
-        instances.forEach((controllerClass, controller) -> {
-            if (controller instanceof MusicController) {
-                ((MusicController) controller).destroyPlayer();
-            }
-        });
+        MusicController controller = (MusicController) instances.get(MusicController.class);
+        if (controller != null) {
+            controller.destroyPlayer();
+        }
     }
 
     public void waitInVC(Map<Class<? extends IBotController>, IBotController> instances) {
-        instances.forEach((controllerClass, controller) -> {
-            if (controller instanceof MusicController) {
-                ((MusicController) controller).getScheduler().waitInVC();
-            }
-        });
+        MusicController controller = (MusicController) instances.get(MusicController.class);
+        if (controller != null) {
+            controller.getScheduler().waitInVC();
+        }
     }
 
     public void dispatchSlashCommand(
