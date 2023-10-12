@@ -28,9 +28,9 @@ import java.util.List;
 
 public class Main {
     private final LavalinkClient lavalinkClient;
-    private BotApplicationManager appManager;
-    private ButtonComponentClick buttonComponentClick;
-    private GeneralEvents generalEvents;
+    private final BotApplicationManager appManager;
+    private final ButtonComponentClick buttonComponentClick;
+    private final GeneralEvents generalEvents;
 
     public static void main(String[] args) {
         /* FIXME:
