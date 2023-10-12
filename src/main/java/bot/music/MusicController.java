@@ -170,11 +170,19 @@ public class MusicController implements IBotController {
                 false
         );
 
+        // history
+        eb.addField(
+                String.format("`%shistory`",
+                        prefix),
+                "Display the history list.",
+                false
+        );
+
         // clearqueue
         eb.addField(
                 String.format("`%sclearqueue`",
                         prefix),
-                "Clears the queue.",
+                "Clears the queue and history.",
                 false
         );
 
@@ -191,6 +199,14 @@ public class MusicController implements IBotController {
                 String.format("`%sskip`",
                         prefix),
                 "Skip the current track.",
+                false
+        );
+
+        // previous
+        eb.addField(
+                String.format("`%sprevious`",
+                        prefix),
+                "Play previous track.",
                 false
         );
 
@@ -348,51 +364,6 @@ public class MusicController implements IBotController {
                 .queue();
     }
 
-    @BotCommandHandler(name = "volume", description = "Set the player volume.", usage = "/volume <0-100>")
-    private void commandVolume(SlashCommandInteractionEvent event, int volume) {
-        ActionData ad = new ActionData(event, event.getHook(), guild.getAudioManager());
-        if (!canPerformAction(ad))
-            return;
-
-        if (volume > 100 || volume < 0) {
-            InteractionResponse response = new InteractionResponse()
-                    .setEphemeral(true)
-                    .setSuccess(false)
-                    .setMessageType(MessageType.Error)
-                    .setMessage("Invalid volume.");
-            InteractionResponse.handle(event.getHook(), response);
-            return;
-        }
-
-        player.setVolume(volume);
-
-        InteractionResponse response = new InteractionResponse()
-                .setSuccess(true)
-                .setMessageType(MessageType.Info)
-                .setMessage("Volume set to " + volume + ".");
-        InteractionResponse.handle(event.getHook(), response);
-    }
-
-    @BotCommandHandler(name = "skip", description = "Skip current track.", usage = "/skip")
-    private void commandSkip(SlashCommandInteractionEvent event) {
-        ActionData ad = new ActionData(event, event.getHook(), guild.getAudioManager());
-        if (!canPerformAction(ad))
-            return;
-
-        scheduler.skip();
-        event.getHook().deleteOriginal().queue();
-    }
-
-    @BotCommandHandler(name = "previous", description = "Play previous track.", usage = "/previous")
-    private void commandPrevious(SlashCommandInteractionEvent event) {
-        ActionData ad = new ActionData(event, event.getHook(), guild.getAudioManager());
-        if (!canPerformAction(ad))
-            return;
-
-        scheduler.playPrevious();
-        event.getHook().deleteOriginal().queue();
-    }
-
     @BotCommandHandler(name = "history", description = "Shows track history.", usage = "/history")
     private void commandHistory(SlashCommandInteractionEvent event) {
         ActionData ad = new ActionData(event, event.getHook(), guild.getAudioManager());
@@ -436,6 +407,51 @@ public class MusicController implements IBotController {
                 .getHook()
                 .editOriginalEmbeds(eb.build())
                 .queue();
+    }
+
+    @BotCommandHandler(name = "volume", description = "Set the player volume.", usage = "/volume <0-100>")
+    private void commandVolume(SlashCommandInteractionEvent event, int volume) {
+        ActionData ad = new ActionData(event, event.getHook(), guild.getAudioManager());
+        if (!canPerformAction(ad))
+            return;
+
+        if (volume > 100 || volume < 0) {
+            InteractionResponse response = new InteractionResponse()
+                    .setEphemeral(true)
+                    .setSuccess(false)
+                    .setMessageType(MessageType.Error)
+                    .setMessage("Invalid volume.");
+            InteractionResponse.handle(event.getHook(), response);
+            return;
+        }
+
+        player.setVolume(volume);
+
+        InteractionResponse response = new InteractionResponse()
+                .setSuccess(true)
+                .setMessageType(MessageType.Info)
+                .setMessage("Volume set to " + volume + ".");
+        InteractionResponse.handle(event.getHook(), response);
+    }
+
+    @BotCommandHandler(name = "skip", description = "Skip current track.", usage = "/skip")
+    private void commandSkip(SlashCommandInteractionEvent event) {
+        ActionData ad = new ActionData(event, event.getHook(), guild.getAudioManager());
+        if (!canPerformAction(ad))
+            return;
+
+        scheduler.skip();
+        event.getHook().deleteOriginal().queue();
+    }
+
+    @BotCommandHandler(name = "previous", description = "Play previous track.", usage = "/previous")
+    private void commandPrevious(SlashCommandInteractionEvent event) {
+        ActionData ad = new ActionData(event, event.getHook(), guild.getAudioManager());
+        if (!canPerformAction(ad))
+            return;
+
+        scheduler.playPrevious();
+        event.getHook().deleteOriginal().queue();
     }
 
     // TODO: Implement 'loop' command
@@ -621,7 +637,7 @@ public class MusicController implements IBotController {
 
         try {
             // If it's a URL, continue.
-            URL url = new URL(searchQuery);
+            new URL(searchQuery);
         } catch (MalformedURLException e) {
             // Not a URL. Perform a YouTube search and only play the first result.
             searchQuery = "ytsearch: " + identifier;

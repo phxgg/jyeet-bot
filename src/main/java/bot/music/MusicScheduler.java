@@ -118,7 +118,7 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
     }
 
     public InteractionResponse shuffleQueue() {
-        if (!(queue.size() > 0)) {
+        if (queue.isEmpty()) {
             return new InteractionResponse()
                     .setSuccess(false)
                     .setEphemeral(true)
@@ -216,9 +216,7 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
         } else {
             player.stopTrack();
             messageDispatcher.sendDisposableMessage(MessageType.Info, "Queue finished.");
-
             waitInVC();
-
 //            guild.getAudioManager().closeAudioConnection();
         }
     }
@@ -246,7 +244,6 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
     @Override
     public void onTrackStuck(AudioPlayer player, AudioTrack track, long thresholdMs) {
         messageDispatcher.sendDisposableMessage(MessageType.Warning, String.format("Track **%s** got stuck, skipping.", track.getInfo().title));
-
         startNextTrack(false);
     }
 
