@@ -1,4 +1,4 @@
-package bot.music;
+package bot.controller.impl.music;
 
 import bot.records.MessageType;
 import bot.records.TrackMetadata;

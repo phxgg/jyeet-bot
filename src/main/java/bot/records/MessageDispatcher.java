@@ -1,6 +1,6 @@
 package bot.records;
 
-import bot.music.TrackBoxBuilder;
+import bot.controller.impl.music.TrackBoxBuilder;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;

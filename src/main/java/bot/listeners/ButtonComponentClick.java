@@ -1,11 +1,10 @@
 package bot.listeners;
 
 import bot.controller.IBotController;
-import bot.music.MusicController;
-import bot.music.MusicScheduler;
+import bot.controller.impl.music.MusicController;
+import bot.controller.impl.music.MusicScheduler;
 import bot.records.ActionData;
 import bot.records.InteractionResponse;
-import bot.records.MessageType;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
