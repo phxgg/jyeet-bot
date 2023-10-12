@@ -63,6 +63,10 @@ public class BotApplicationManager extends ListenerAdapter {
         return this.lavalinkClient;
     }
 
+    public BotControllerManager getControllerManager() {
+        return this.controllerManager;
+    }
+
     private BotGuildContext createGuildState(long guildId, Guild guild) {
         HashMap<String, ?> data = new HashMap<>() {{
             put("guildId", String.valueOf(guildId));
@@ -199,7 +203,7 @@ public class BotApplicationManager extends ListenerAdapter {
 
     @Override
     public void onGuildVoiceUpdate(@NotNull GuildVoiceUpdateEvent event) {
-        BotGuildContext guildContext = getContext(event.getGuild());
+        BotGuildContext context = getContext(event.getGuild());
 
         // Get number of members in voice channel
         // If there's only one member in the channel, check if it's the bot.
@@ -211,14 +215,14 @@ public class BotApplicationManager extends ListenerAdapter {
 
         // If the bot leaves a voice channel, destroy player.
         if (event.getMember().getUser().equals(event.getJDA().getSelfUser())) {
-            controllerManager.destroyPlayer(guildContext.getControllers());
+            controllerManager.destroyPlayer(context);
             return;
         }
 
         if (!event.getMember().getUser().equals(event.getJDA().getSelfUser())
                 && event.getChannelLeft().getMembers().size() == 1
                 && event.getChannelLeft().getMembers().contains(event.getGuild().getSelfMember())) {
-            controllerManager.destroyPlayer(guildContext.getControllers());
+            controllerManager.destroyPlayer(context);
 
             /* FIXME:
                 Bot does not disconnect when left alone? Maybe look into controllerManager.destroyPlayer()
@@ -227,7 +231,7 @@ public class BotApplicationManager extends ListenerAdapter {
             /* TODO:
                 Wait in VC alone for some time before disconnecting,
                 but let the bot be able to start playing in a new channel if asked to while being alone in a VC.
-                Look into: controllerManager.waitInVC(guildContext.controllers);
+                Look into: controllerManager.waitInVC(context);
             */
 
             return;

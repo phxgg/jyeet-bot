@@ -53,7 +53,7 @@ public class TrackBoxBuilder {
         return builder.toString();
     }
 
-    private static String formatTiming(long timing, long maximum) {
+    public static String formatTiming(long timing, long maximum) {
         timing = Math.min(timing, maximum) / 1000;
 
         long seconds = timing % 60;

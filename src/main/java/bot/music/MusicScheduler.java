@@ -161,7 +161,8 @@ public class MusicScheduler implements Runnable {
 
     public InteractionResponse stopPlayer() {
         clearQueue();
-        getLink().destroyPlayer().block();
+        // TODO: getLink().destroyPlayer().block(); ?
+        getPlayer().clearEncodedTrack().asMono().block();
         updateTrackBox(false);
         waitInVC();
 
@@ -212,8 +213,8 @@ public class MusicScheduler implements Runnable {
                         });
             }
         } else {
-//            getPlayer().clearEncodedTrack().asMono().block();
-            getLink().destroyPlayer().block();
+            // TODO: getLink().destroyPlayer().block(); ?
+            getPlayer().clearEncodedTrack().asMono().block();
             messageDispatcher.sendDisposableMessage(MessageType.Info, "Queue finished.");
             waitInVC();
         }

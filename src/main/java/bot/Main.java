@@ -98,7 +98,6 @@ public class Main {
                     event.getSessionId()
             );
         });
-
         this.lavalinkClient.on(StatsEvent.class).subscribe((data) -> {
             final LavalinkNode node = data.getNode();
             final Message.StatsEvent event = data.getEvent();
@@ -109,6 +108,12 @@ public class Main {
                     event.getPlayingPlayers(),
                     event.getPlayers()
             );
+        });
+        this.lavalinkClient.on(PlayerUpdateEvent.class).subscribe((data) -> {
+            final var event = data.getEvent();
+            System.out.printf("Connected: %s%n", event.getState().getConnected());
+            System.out.printf("OP: %s%n", event.getOp().getValue());
+            System.out.printf("Ping: %s%n", event.getState().getPing());
         });
     }
 
@@ -164,17 +169,7 @@ public class Main {
             });
             node.on(WebSocketClosedEvent.class).subscribe((data) -> {
                 final var event = data.getEvent();
-                forMusicController(event.getGuildId(), (controller) -> {
-                    System.out.printf("Websocket closed %s%n", event.getReason());
-                    controller.getMessageDispatcher().sendDisposableMessage(MessageType.Error, String.format("WebSocket closed, stopping player. Reason:\n%s", event.getReason()));
-                    controller.getLink().destroyPlayer().block();
-                });
-            });
-            node.on(PlayerUpdateEvent.class).subscribe((data) -> {
-                final var event = data.getEvent();
-                System.out.printf("Connected: %s%n", data.getEvent().getState().getConnected());
-                System.out.printf("OP: %s%n", data.getEvent().getOp().getValue());
-                System.out.printf("Ping: %s%n", data.getEvent().getState().getPing());
+                System.out.printf("Websocket closed %s%n", event.getReason());
             });
         });
     }

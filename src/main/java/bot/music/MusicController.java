@@ -604,10 +604,12 @@ public class MusicController implements IBotController {
         if (!canPerformAction(ad))
             return;
 
-        if (getPlayer().getTrack() != null) {
+        Track current = getPlayer().getTrack();
+        if (current != null) {
+            String duration = TrackBoxBuilder.formatTiming(current.getInfo().getLength(), current.getInfo().getLength());
             InteractionResponse response = new InteractionResponse()
                     .setMessageType(MessageType.Info)
-                    .setMessage("Duration is " + getPlayer().getTrack().getInfo().getLength());
+                    .setMessage("Duration is " + duration);
             InteractionResponse.handle(event.getHook(), response);
         }
     }

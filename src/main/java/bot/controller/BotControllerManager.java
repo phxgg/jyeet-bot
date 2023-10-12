@@ -61,15 +61,15 @@ public class BotControllerManager {
         commands.put(command.getName(), command);
     }
 
-    public void destroyPlayer(Map<Class<? extends IBotController>, IBotController> instances) {
-        MusicController controller = (MusicController) instances.get(MusicController.class);
+    public void destroyPlayer(BotGuildContext context) {
+        MusicController controller = (MusicController) context.getControllers().get(MusicController.class);
         if (controller != null) {
             controller.destroyPlayer();
         }
     }
 
-    public void waitInVC(Map<Class<? extends IBotController>, IBotController> instances) {
-        MusicController controller = (MusicController) instances.get(MusicController.class);
+    public void waitInVC(BotGuildContext context) {
+        MusicController controller = (MusicController) context.getControllers().get(MusicController.class);
         if (controller != null) {
             controller.getScheduler().waitInVC();
         }
