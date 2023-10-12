@@ -169,7 +169,10 @@ public class Main {
             });
             node.on(WebSocketClosedEvent.class).subscribe((data) -> {
                 final var event = data.getEvent();
-                System.out.printf("Websocket closed %s%n", event.getReason());
+                forMusicController(event.getGuildId(), (controller) -> {
+                    System.out.printf("Websocket closed %s%n", event.getReason());
+                    controller.getGuild().getJDA().getDirectAudioController().disconnect(controller.getGuild());
+                });
             });
         });
     }
