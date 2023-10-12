@@ -2,7 +2,7 @@ package bot.controller;
 
 import bot.listeners.BotApplicationManager;
 import bot.records.BotGuildContext;
-import bot.music.MusicController;
+import bot.controller.impl.music.MusicController;
 import bot.records.Command;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;

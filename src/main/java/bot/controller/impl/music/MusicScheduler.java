@@ -1,4 +1,4 @@
-package bot.music;
+package bot.controller.impl.music;
 
 import bot.listeners.BotApplicationManager;
 import bot.records.InteractionResponse;

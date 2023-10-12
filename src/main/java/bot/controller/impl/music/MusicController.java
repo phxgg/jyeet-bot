@@ -1,4 +1,4 @@
-package bot.music;
+package bot.controller.impl.music;
 
 import bot.api.StatusCodes;
 import bot.api.WebReq;

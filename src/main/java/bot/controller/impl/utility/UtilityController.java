@@ -1,4 +1,4 @@
-package bot.utility;
+package bot.controller.impl.utility;
 
 import bot.controller.BotCommandHandler;
 import bot.controller.IBotController;
