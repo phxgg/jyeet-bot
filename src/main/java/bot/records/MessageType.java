@@ -3,8 +3,8 @@ package bot.records;
 import java.awt.*;
 
 public enum MessageType {
-    Info(Color.CYAN),
-    Success(Color.GREEN),
+    Info(Color.DARK_GRAY),
+    Success(new Color(0x2ECC71)), // dark green
     Error(Color.RED),
     Warning(Color.ORANGE),
     TrackBox(Color.PINK);

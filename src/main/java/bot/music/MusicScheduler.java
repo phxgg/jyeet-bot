@@ -69,10 +69,6 @@ public class MusicScheduler implements Runnable {
         return appManager.getLavalinkClient().getLink(guild.getIdLong());
     }
 
-    public LavalinkPlayer getPlayer() {
-        return getLink().getPlayer().block();
-    }
-
     public Guild getGuild() {
         return guild;
     }
@@ -131,9 +127,11 @@ public class MusicScheduler implements Runnable {
                 .setMessage("Shuffled queue.");
     }
 
-    public void addToQueue(Track audioTrack) {
+    public void addToQueue(Track audioTrack, boolean callStartNext) {
         queue.addLast(audioTrack);
-        startNextTrack(true);
+        if (callStartNext) {
+            startNextTrack(true);
+        }
     }
 
     public List<Track> drainQueue() {
@@ -161,11 +159,10 @@ public class MusicScheduler implements Runnable {
 
     public InteractionResponse stopPlayer() {
         clearQueue();
-        // TODO: getLink().destroyPlayer().block(); ?
-        getPlayer().clearEncodedTrack().asMono().block();
-        updateTrackBox(false);
-        waitInVC();
-
+        getLink().getPlayer().flatMap(player -> player.setEncodedTrack(null).asMono()).subscribe((ignored) -> {
+            updateTrackBox(false);
+            waitInVC();
+        });
         return new InteractionResponse()
                 .setSuccess(true)
                 .setMessageType(MessageType.Warning)
@@ -186,10 +183,12 @@ public class MusicScheduler implements Runnable {
         }
 
         waitingInVC = executorService.schedule(() -> {
-            if (getPlayer().getTrack() == null) {
-                guild.getJDA().getDirectAudioController().disconnect(guild);
-                messageDispatcher.sendDisposableMessage(MessageType.Warning, "I have been inactive for 5 minutes, I guess I'm leaving...");
-            }
+            getLink().getPlayer().subscribe(player -> {
+                if (player.getTrack() == null) {
+                    guild.getJDA().getDirectAudioController().disconnect(guild);
+                    messageDispatcher.sendDisposableMessage(MessageType.Warning, "I have been inactive for 5 minutes, I guess I'm leaving...");
+                }
+            });
         }, 5, TimeUnit.MINUTES);
     }
 
@@ -197,26 +196,29 @@ public class MusicScheduler implements Runnable {
         Track next = queue.pollFirst();
 
         if (next != null) {
-            if (noInterrupt && getPlayer().getTrack() != null) {
-                queue.addFirst(next);
-            } else {
-                getLink().createOrUpdatePlayer()
-                        .setEncodedTrack(next.getEncoded())
-                        .asMono()
-                        .subscribe((ignored) -> {
-                            // A new track has just started playing.
-                            // reset waitingInVC.
-                            if (waitingInVC != null) {
-                                waitingInVC.cancel(true);
-                                waitingInVC = null;
-                            }
-                        });
-            }
+
+            getLink().getPlayer().subscribe(player -> {
+                if (noInterrupt && player.getTrack() != null) {
+                    queue.addFirst(next);
+                } else {
+                    getLink().createOrUpdatePlayer()
+                            .setEncodedTrack(next.getEncoded())
+                            .asMono()
+                            .subscribe((ignored) -> {
+                                // A new track has just started playing.
+                                // reset waitingInVC.
+                                if (waitingInVC != null) {
+                                    waitingInVC.cancel(true);
+                                    waitingInVC = null;
+                                }
+                            });
+                }
+            });
         } else {
-            // TODO: getLink().destroyPlayer().block(); ?
-            getPlayer().clearEncodedTrack().asMono().block();
-            messageDispatcher.sendDisposableMessage(MessageType.Info, "Queue finished.");
-            waitInVC();
+            getLink().getPlayer().flatMap(player -> player.setEncodedTrack(null).asMono()).subscribe((ignored) -> {
+                messageDispatcher.sendDisposableMessage(MessageType.Info, "Queue finished.");
+                waitInVC();
+            });
         }
     }
 
@@ -253,7 +255,7 @@ public class MusicScheduler implements Runnable {
     public void onTrackEndEvent(TrackEndEvent data) {
         dev.arbjerg.lavalink.protocol.v4.Message.EmittedEvent.TrackEndEvent event = data.getEvent();
         System.out.print("Track ended playing. " + event.getTrack().getInfo().getTitle());
-        getPlayer().clearEncodedTrack().asMono().block();
+        controller.getLink().getPlayer().flatMap(player -> player.clearEncodedTrack().asMono()).block();
         if (event.getReason().getMayStartNext()) {
             startNextTrack(true);
             messageDispatcher.sendDisposableMessage(MessageType.Info, String.format("Track **%s** finished.", event.getTrack().getInfo().getTitle()));
@@ -274,7 +276,6 @@ public class MusicScheduler implements Runnable {
     public void onWebSocketClosedEvent(WebSocketClosedEvent data) {
         dev.arbjerg.lavalink.protocol.v4.Message.EmittedEvent.WebSocketClosedEvent event = data.getEvent();
         messageDispatcher.sendDisposableMessage(MessageType.Error, String.format("WebSocket closed, stopping player. Reason:\n%s", event.getReason()));
-        getLink().destroyPlayer().block();
     }
 
     public void onPlayerUpdateEvent(PlayerUpdateEvent data) {
@@ -284,33 +285,35 @@ public class MusicScheduler implements Runnable {
     }
 
     public void updateTrackBox(boolean newMessage) {
-        Track track = getPlayer().getTrack();
+        getLink().getPlayer().subscribe(player -> {
+            Track track = player.getTrack();
 
-        if (track == null || newMessage) {
-            Message oldMessage = boxMessage.getAndSet(null);
+            if (track == null || newMessage) {
+                Message oldMessage = boxMessage.getAndSet(null);
 
-            if (oldMessage != null) {
-                // Will throw an exception if message has already been deleted by a user.
-                // Just ignore.
-                oldMessage.delete().queue();
-            }
-        }
-
-        if (track != null) {
-            Message message = boxMessage.get();
-            MessageEmbed box = TrackBoxBuilder.buildTrackBox(50, getPlayer(), queue.size());
-
-            if (message != null) {
-                message.editMessageEmbeds(box).queue();
-            } else {
-                if (creatingBoxMessage.compareAndSet(false, true)) {
-                    messageDispatcher.sendTrackBoxMessage(box, created -> {
-                        boxMessage.set(created);
-                        creatingBoxMessage.set(false);
-                    }, error -> creatingBoxMessage.set(false));
+                if (oldMessage != null) {
+                    // Will throw an exception if message has already been deleted by a user.
+                    // Just ignore.
+                    oldMessage.delete().queue();
                 }
             }
-        }
+
+            if (track != null) {
+                Message message = boxMessage.get();
+                MessageEmbed box = TrackBoxBuilder.buildTrackBox(50, player, queue.size());
+
+                if (message != null) {
+                    message.editMessageEmbeds(box).queue();
+                } else {
+                    if (creatingBoxMessage.compareAndSet(false, true)) {
+                        messageDispatcher.sendTrackBoxMessage(box, created -> {
+                            boxMessage.set(created);
+                            creatingBoxMessage.set(false);
+                        }, error -> creatingBoxMessage.set(false));
+                    }
+                }
+            }
+        });
     }
 
     @Override

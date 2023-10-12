@@ -224,10 +224,6 @@ public class BotApplicationManager extends ListenerAdapter {
                 && event.getChannelLeft().getMembers().contains(event.getGuild().getSelfMember())) {
             controllerManager.destroyPlayer(context);
 
-            /* FIXME:
-                Bot does not disconnect when left alone? Maybe look into controllerManager.destroyPlayer()
-             */
-
             /* TODO:
                 Wait in VC alone for some time before disconnecting,
                 but let the bot be able to start playing in a new channel if asked to while being alone in a VC.

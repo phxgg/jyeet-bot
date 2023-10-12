@@ -57,10 +57,6 @@ public class MusicController implements IBotController {
         return this.appManager.getLavalinkClient().getLink(guild.getIdLong());
     }
 
-    public LavalinkPlayer getPlayer() {
-        return getLink().getPlayer().block();
-    }
-
     public MusicScheduler getScheduler() {
         return this.scheduler;
     }
@@ -456,15 +452,15 @@ public class MusicController implements IBotController {
         if (!canPerformAction(ad))
             return;
 
-        if (getPlayer().getTrack() != null) {
-            getPlayer().setPosition(getPlayer().getPosition() + duration * 1000L).asMono().subscribe((ignored) -> {
-                InteractionResponse response = new InteractionResponse()
-                        .setSuccess(true)
-                        .setMessageType(MessageType.Info)
-                        .setMessage("Track forwarded by " + duration + " seconds.");
-                InteractionResponse.handle(event.getHook(), response);
-            });
-        }
+        getLink().getPlayer()
+                .flatMap(player -> player.setPosition(player.getPosition() + duration * 1000L).asMono())
+                .subscribe(player -> {
+                    InteractionResponse response = new InteractionResponse()
+                            .setSuccess(true)
+                            .setMessageType(MessageType.Info)
+                            .setMessage("Track forwarded by " + duration + " seconds.");
+                    InteractionResponse.handle(event.getHook(), response);
+                });
     }
 
     /**
@@ -477,15 +473,15 @@ public class MusicController implements IBotController {
         if (!canPerformAction(ad))
             return;
 
-        if (getPlayer().getTrack() != null) {
-            getPlayer().setPosition(Math.max(0, getPlayer().getPosition() - duration * 1000L)).asMono().subscribe((ignored) -> {
-                InteractionResponse response = new InteractionResponse()
-                        .setSuccess(true)
-                        .setMessageType(MessageType.Info)
-                        .setMessage("Track backwarded by " + duration + " seconds.");
-                InteractionResponse.handle(event.getHook(), response);
-            });
-        }
+        getLink().getPlayer()
+                .flatMap(player -> player.setPosition(Math.max(0, player.getPosition() - duration * 1000L)).asMono())
+                .subscribe(player -> {
+                    InteractionResponse response = new InteractionResponse()
+                            .setSuccess(true)
+                            .setMessageType(MessageType.Info)
+                            .setMessage("Track backwarded by " + duration + " seconds.");
+                    InteractionResponse.handle(event.getHook(), response);
+                });
     }
 
     @BotCommandHandler(name = "pause", description = "Pause current playing track. Use `/pause` again, or `/resume` to unpause.", usage = "/pause")
@@ -514,21 +510,23 @@ public class MusicController implements IBotController {
 
     @BotCommandHandler(name = "song", description = "Display current playing track.", usage = "/song")
     private void commandSong(SlashCommandInteractionEvent event) {
-        Track current = getPlayer().getTrack();
-        if (current == null) {
-            InteractionResponse response = new InteractionResponse()
-                    .setSuccess(false)
-                    .setMessageType(MessageType.Warning)
-                    .setMessage("Nothing is playing.");
-            InteractionResponse.handle(event.getHook(), response);
-            return;
-        }
+        getLink().getPlayer().subscribe(player -> {
+            Track current = player.getTrack();
+            if (current == null) {
+                InteractionResponse response = new InteractionResponse()
+                        .setSuccess(false)
+                        .setMessageType(MessageType.Warning)
+                        .setMessage("Nothing is playing.");
+                InteractionResponse.handle(event.getHook(), response);
+                return;
+            }
 
-        TrackInfo trackInfo = current.getInfo();
-        InteractionResponse response = new InteractionResponse()
-                .setMessageType(MessageType.Info)
-                .setMessage(String.format("Currently playing **[%s](%s)** by **%s**", trackInfo.getTitle(), trackInfo.getUri(), trackInfo.getAuthor()));
-        InteractionResponse.handle(event.getHook(), response);
+            TrackInfo trackInfo = current.getInfo();
+            InteractionResponse response = new InteractionResponse()
+                    .setMessageType(MessageType.Info)
+                    .setMessage(String.format("Currently playing **[%s](%s)** by **%s**", trackInfo.getTitle(), trackInfo.getUri(), trackInfo.getAuthor()));
+            InteractionResponse.handle(event.getHook(), response);
+        });
     }
 
     @BotCommandHandler(name = "clearqueue", description = "Clear the queue.", usage = "/clearqueue")
@@ -536,9 +534,7 @@ public class MusicController implements IBotController {
         ActionData ad = new ActionData(event, event.getHook());
         if (!canPerformAction(ad))
             return;
-
         scheduler.clearQueue();
-
         InteractionResponse response = new InteractionResponse()
                 .setMessageType(MessageType.Success)
                 .setMessage("Cleared queue.");
@@ -604,14 +600,16 @@ public class MusicController implements IBotController {
         if (!canPerformAction(ad))
             return;
 
-        Track current = getPlayer().getTrack();
-        if (current != null) {
-            String duration = TrackBoxBuilder.formatTiming(current.getInfo().getLength(), current.getInfo().getLength());
-            InteractionResponse response = new InteractionResponse()
-                    .setMessageType(MessageType.Info)
-                    .setMessage("Duration is " + duration);
-            InteractionResponse.handle(event.getHook(), response);
-        }
+        getLink().getPlayer().subscribe(player -> {
+            Track current = player.getTrack();
+            if (current != null) {
+                String duration = TrackBoxBuilder.formatTiming(current.getInfo().getLength(), current.getInfo().getLength());
+                InteractionResponse response = new InteractionResponse()
+                        .setMessageType(MessageType.Info)
+                        .setMessage("Duration is " + duration);
+                InteractionResponse.handle(event.getHook(), response);
+            }
+        });
     }
 
     /**
@@ -643,6 +641,8 @@ public class MusicController implements IBotController {
 
         getLink().loadItem(searchQuery).subscribe(result -> {
             if (result instanceof LoadResult.TrackLoaded trackLoaded) {
+                final var track = trackLoaded.getData();
+
                 if (!connectToVoiceChannel(event))
                     return;
 
@@ -651,18 +651,18 @@ public class MusicController implements IBotController {
 
                 InteractionResponse response = new InteractionResponse()
                         .setMessageType(MessageType.Success)
-                        .setMessage(String.format("Added to queue: **%s**", trackLoaded.getData().getInfo().getTitle()));
+                        .setMessage(String.format("Added to queue: **[%s](%s)**", track.getInfo().getTitle(), track.getInfo().getUri()));
                 InteractionResponse.handle(event.getHook(), response);
 
                 if (playNow) {
-                    scheduler.playNow(trackLoaded.getData(), false);
+                    scheduler.playNow(track, false);
                 } else if (playNext) {
-                    scheduler.playNext(trackLoaded.getData());
+                    scheduler.playNext(track);
                 } else {
-                    scheduler.addToQueue(trackLoaded.getData());
+                    scheduler.addToQueue(track, true);
                 }
             } else if (result instanceof LoadResult.PlaylistLoaded playlistLoaded) {
-                Playlist playlist = playlistLoaded.getData();
+                final var playlist = playlistLoaded.getData();
                 List<Track> tracks = playlist.getTracks();
 
                 if (!isSearchQuery) {
@@ -687,29 +687,29 @@ public class MusicController implements IBotController {
                     } else if (playNext) {
                         scheduler.playNext(selected);
                     } else {
-                        scheduler.addToQueue(selected);
+                        scheduler.addToQueue(selected, true);
                     }
 
                     // Maximum of 1000 tracks.
                     for (int i = 0; i < Math.min(1000, playlist.getTracks().size()); i++) {
                         if (tracks.get(i) != selected) {
                             System.out.println("Adding to queue: " + tracks.get(i).getInfo().getTitle());
-                            scheduler.addToQueue(tracks.get(i));
+                            scheduler.addToQueue(tracks.get(i), false);
                         }
                     }
                 }
             } else if (result instanceof LoadResult.SearchResult searchResult) {
+                final var searchResultData = searchResult.getData();
+
                 if (!connectToVoiceChannel(event))
                     return;
-
-                LoadResult.SearchResult.Data searchResultData = searchResult.getData();
 
                 // Only play the first result from playlist.
                 Track track = searchResultData.getTracks().get(0);
 
                 InteractionResponse response = new InteractionResponse()
                         .setMessageType(MessageType.Success)
-                        .setMessage(String.format("Added to queue: **%s**", track.getInfo().getTitle()));
+                        .setMessage(String.format("Added to queue: **[%s](%s)**", track.getInfo().getTitle(), track.getInfo().getUri()));
                 InteractionResponse.handle(event.getHook(), response);
 
                 if (playNow) {
@@ -717,7 +717,7 @@ public class MusicController implements IBotController {
                 } else if (playNext) {
                     scheduler.playNext(track);
                 } else {
-                    scheduler.addToQueue(track);
+                    scheduler.addToQueue(track, true);
                 }
             } else if (result instanceof LoadResult.NoMatches) {
                 InteractionResponse response = new InteractionResponse()

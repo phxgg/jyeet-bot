@@ -34,11 +34,10 @@ public class Main {
 
     public static void main(String[] args) {
         /* FIXME:
-            If I start playing something, and then use the stop button in the trackbox,
-            the next time I try to play anything it is not gonna send any audio.
-            I have to manually disconnect the bot from the voice channel (or use /disconnect) and then use /play again.
-            Also if that helps PlayerState.getConnected() returns false.
+            Need to call updateTrackBox(false) on player pause/resume.
          */
+
+        // TODO: Implement history queue.
 
         new Main();
     }
@@ -144,7 +143,8 @@ public class Main {
                 final var event = data.getEvent();
                 forMusicController(event.getGuildId(), (controller) -> {
                     System.out.print("Track ended playing. " + event.getTrack().getInfo().getTitle());
-                    controller.getPlayer().clearEncodedTrack().asMono().block();
+                    controller.getLink().getPlayer().flatMap(player -> player.clearEncodedTrack().asMono()).block();
+//                    controller.getPlayer().setEncodedTrack(null).asMono().block();
                     if (event.getReason().getMayStartNext()) {
                         controller.getScheduler().startNextTrack(true);
                         controller.getMessageDispatcher().sendDisposableMessage(MessageType.Info, String.format("Track **%s** finished.", event.getTrack().getInfo().getTitle()));
