@@ -2,6 +2,7 @@ package bot;
 
 import bot.api.StatusCodes;
 import bot.api.WebReq;
+import bot.controller.IBotController;
 import bot.initialization.SetupCommands;
 import bot.listeners.BotApplicationManager;
 import bot.api.entities.Response;
@@ -11,6 +12,7 @@ import bot.listeners.GeneralEvents;
 import bot.music.MusicController;
 import bot.records.BotGuildContext;
 import bot.records.MessageType;
+import bot.utility.UtilityController;
 import com.google.gson.Gson;
 import dev.arbjerg.lavalink.client.*;
 import dev.arbjerg.lavalink.client.loadbalancing.RegionGroup;
@@ -134,64 +136,64 @@ public class Main {
             node.on(TrackStartEvent.class).subscribe((data) -> {
                 final LavalinkNode node1 = data.getNode();
                 final var event = data.getEvent();
-                forMusicController(event.getGuildId(), (controller) -> {
-                    System.out.printf("Track started playing %s%n", event.getTrack().getInfo().getTitle());
-                    controller.getScheduler().updateTrackBox(true);
+                forController(MusicController.class, event.getGuildId(), (controller) -> {
+                    MusicController cast = (MusicController) controller;
+                    cast.getScheduler().updateTrackBox(true);
                 });
             });
             node.on(TrackEndEvent.class).subscribe((data) -> {
                 final var event = data.getEvent();
-                forMusicController(event.getGuildId(), (controller) -> {
-                    System.out.print("Track ended playing. " + event.getTrack().getInfo().getTitle());
-                    controller.getLink().getPlayer().flatMap(player -> player.clearEncodedTrack().asMono()).block();
+                forController(MusicController.class, event.getGuildId(), (controller) -> {
+                    MusicController cast = (MusicController) controller;
+                    cast.getLink().getPlayer().flatMap(player -> player.clearEncodedTrack().asMono()).block();
 //                    controller.getPlayer().setEncodedTrack(null).asMono().block();
                     if (event.getReason().getMayStartNext()) {
-                        controller.getScheduler().startNextTrack(true);
-                        controller.getMessageDispatcher().sendDisposableMessage(MessageType.Info, String.format("Track **%s** finished.", event.getTrack().getInfo().getTitle()));
+                        cast.getScheduler().startNextTrack(true);
+                        cast.getMessageDispatcher().sendDisposableMessage(MessageType.Info, String.format("Track **%s** finished.", event.getTrack().getInfo().getTitle()));
                     }
                 });
             });
             node.on(TrackStuckEvent.class).subscribe((data) -> {
                 final var event = data.getEvent();
-                forMusicController(event.getGuildId(), (controller) -> {
-                    System.out.printf("Track got stuck %s%n", event.getTrack().getInfo().getTitle());
-                    controller.getMessageDispatcher().sendDisposableMessage(MessageType.Warning, String.format("Track **%s** got stuck, skipping.", event.getTrack().getInfo().getTitle()));
-                    controller.getScheduler().startNextTrack(false);
+                forController(MusicController.class, event.getGuildId(), (controller) -> {
+                    MusicController cast = (MusicController) controller;
+                    cast.getMessageDispatcher().sendDisposableMessage(MessageType.Warning, String.format("Track **%s** got stuck, skipping.", event.getTrack().getInfo().getTitle()));
+                    cast.getScheduler().startNextTrack(false);
                 });
             });
             node.on(TrackExceptionEvent.class).subscribe((data) -> {
                 final var event = data.getEvent();
-                forMusicController(event.getGuildId(), (controller) -> {
-                    System.out.printf("Track got exception %s%n", event.getTrack().getInfo().getTitle());
-                    controller.getMessageDispatcher().sendDisposableMessage(MessageType.Warning, String.format("Track **%s** got exception, skipping.", event.getTrack().getInfo().getTitle()));
-                    controller.getScheduler().startNextTrack(false);
+                forController(MusicController.class, event.getGuildId(), (controller) -> {
+                    MusicController cast = (MusicController) controller;
+                    cast.getMessageDispatcher().sendDisposableMessage(MessageType.Warning, String.format("Track **%s** got exception, skipping.", event.getTrack().getInfo().getTitle()));
+                    cast.getScheduler().startNextTrack(false);
                 });
             });
             node.on(WebSocketClosedEvent.class).subscribe((data) -> {
                 final var event = data.getEvent();
-                forMusicController(event.getGuildId(), (controller) -> {
-                    System.out.printf("Websocket closed %s%n", event.getReason());
-                    controller.getGuild().getJDA().getDirectAudioController().disconnect(controller.getGuild());
+                forController(MusicController.class, event.getGuildId(), (controller) -> {
+                    MusicController cast = (MusicController) controller;
+                    cast.getGuild().getJDA().getDirectAudioController().disconnect(cast.getGuild());
                 });
             });
         });
     }
 
-    private void forMusicController(long guildId, GuildOperation operation) {
+    private void forController(Class<? extends IBotController> controllerClass, long guildId, GuildOperation operation) {
         BotGuildContext context = appManager.getContextById(guildId);
         if (context != null) {
-            MusicController controller = (MusicController) context.getControllers().get(MusicController.class);
+            IBotController controller = context.getControllers().get(controllerClass);
             if (controller != null) {
                 operation.execute(controller);
             }
         }
     }
 
-    private void forMusicController(String guildId, GuildOperation operation) {
-        forMusicController(Long.parseLong(guildId), operation);
+    private void forController(Class<? extends IBotController> controllerClass, String guildId, GuildOperation operation) {
+        forController(controllerClass, Long.parseLong(guildId), operation);
     }
 
     private interface GuildOperation {
-        void execute(MusicController controller);
+        void execute(IBotController controller);
     }
 }
