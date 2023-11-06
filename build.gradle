@@ -22,10 +22,10 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
     implementation 'net.iharder:base64:2.3.9'
-    implementation 'net.dv8tion:JDA:5.0.0-beta.15'
+    implementation 'net.dv8tion:JDA:5.0.0-beta.17'
 
-    implementation 'dev.arbjerg:lavaplayer:2.0.2'
-    implementation 'dev.arbjerg:lavaplayer-ext-youtube-rotator:2.0.2'
+    implementation 'dev.arbjerg:lavaplayer:2.0.3'
+    implementation 'dev.arbjerg:lavaplayer-ext-youtube-rotator:2.0.3'
     implementation 'com.github.topi314.lavasrc:lavasrc:4.0.0-beta.7'
 
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
