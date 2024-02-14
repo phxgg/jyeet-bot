@@ -31,6 +31,8 @@ Run bot with the `-Dipv6Block=<IPV6_BLOCK>/64` parameter.
 
 The code is ugly and needs a lot of refactoring. I'm aware of that.
 
+This was initially designed for personal use, but I decided to make it public. Many features are missing, and some of them are for testing purposes only.
+
 > __Note__
 > 
 > IPv6 /64 block -> YouTube IP rotator for rate limiting.
