@@ -9,11 +9,11 @@ import bot.controller.BotControllerManager;
 import bot.controller.IBotSlashCommandMappingHandler;
 import bot.api.entities.Response;
 import bot.api.entities.Server;
-import bot.music.MusicController;
+import bot.controller.impl.music.MusicController;
 import bot.records.SpotifyConfig;
-import bot.utility.UtilityController;
-import com.github.topisenpai.lavasrc.spotify.SpotifySourceManager;
-//import com.github.topi314.lavasrc.spotify.SpotifySourceManager;
+import bot.controller.impl.utility.UtilityController;
+//import com.github.topisenpai.lavasrc.spotify.SpotifySourceManager;
+import com.github.topi314.lavasrc.spotify.SpotifySourceManager;
 import com.google.gson.Gson;
 import com.sedmelluq.discord.lavaplayer.container.MediaContainerRegistry;
 import com.sedmelluq.discord.lavaplayer.player.AudioConfiguration;
@@ -31,8 +31,6 @@ import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager
 import com.sedmelluq.lava.common.tools.DaemonThreadFactory;
 import com.sedmelluq.lava.extensions.youtuberotator.YoutubeIpRotatorSetup;
 import com.sedmelluq.lava.extensions.youtuberotator.planner.BalancingIpRoutePlanner;
-import com.sedmelluq.lava.extensions.youtuberotator.planner.RotatingIpRoutePlanner;
-import com.sedmelluq.lava.extensions.youtuberotator.planner.RotatingNanoIpRoutePlanner;
 import com.sedmelluq.lava.extensions.youtuberotator.tools.ip.IpBlock;
 import com.sedmelluq.lava.extensions.youtuberotator.tools.ip.Ipv6Block;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -87,17 +85,9 @@ public class BotApplicationManager extends ListenerAdapter {
 //            RotatingNanoIpRoutePlanner planner = new RotatingNanoIpRoutePlanner(blocks);
             BalancingIpRoutePlanner planner = new BalancingIpRoutePlanner(blocks);
             new YoutubeIpRotatorSetup(planner)
-                    .withRetryLimit(6)
+                    .withRetryLimit(10)
                     .forSource(yasm).setup();
         }
-//        Optional<Properties> opt = readYoutubeConfig();
-//        if (opt.isPresent()) {
-//            Properties props = opt.get();
-//            String PSID = props.getProperty("PSID");
-//            String PAPISID = props.getProperty("PAPISID");
-//            YoutubeHttpContextFilter.setPSID(PSID);
-//            YoutubeHttpContextFilter.setPAPISID(PAPISID);
-//        }
 
         playerManager = new DefaultAudioPlayerManager();
 //        playerManager.useRemoteNodes("localhost:8080");
@@ -125,16 +115,6 @@ public class BotApplicationManager extends ListenerAdapter {
 //        executorService = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1, new DaemonThreadFactory("bot"));
 //        executorService.setRemoveOnCancelPolicy(true);
     }
-
-//    public static Optional<Properties> readYoutubeConfig() {
-//        Properties properties = new Properties();
-//        try (InputStream in = Main.class.getResourceAsStream("/youtube.properties")) {
-//            properties.load(in);
-//            return Optional.of(properties);
-//        } catch (IOException e) {
-//            return Optional.empty();
-//        }
-//    }
 
     public ScheduledExecutorService getExecutorService() {
         return this.executorService;

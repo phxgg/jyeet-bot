@@ -2,7 +2,7 @@ package bot.controller;
 
 import bot.listeners.BotApplicationManager;
 import bot.records.BotGuildContext;
-import bot.music.MusicController;
+import bot.controller.impl.music.MusicController;
 import bot.records.Command;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -62,19 +62,17 @@ public class BotControllerManager {
     }
 
     public void destroyPlayer(Map<Class<? extends IBotController>, IBotController> instances) {
-        instances.forEach((controllerClass, controller) -> {
-            if (controller instanceof MusicController) {
-                ((MusicController) controller).destroyPlayer();
-            }
-        });
+        MusicController controller = (MusicController) instances.get(MusicController.class);
+        if (controller != null) {
+            controller.destroyPlayer();
+        }
     }
 
     public void waitInVC(Map<Class<? extends IBotController>, IBotController> instances) {
-        instances.forEach((controllerClass, controller) -> {
-            if (controller instanceof MusicController) {
-                ((MusicController) controller).getScheduler().waitInVC();
-            }
-        });
+        MusicController controller = (MusicController) instances.get(MusicController.class);
+        if (controller != null) {
+            controller.getScheduler().waitInVC();
+        }
     }
 
     public void dispatchSlashCommand(

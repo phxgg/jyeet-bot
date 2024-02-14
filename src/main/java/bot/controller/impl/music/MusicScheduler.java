@@ -1,5 +1,6 @@
-package bot.music;
+package bot.controller.impl.music;
 
+import bot.listeners.BotApplicationManager;
 import bot.records.InteractionResponse;
 import bot.records.MessageDispatcher;
 import bot.records.MessageType;
@@ -20,6 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class MusicScheduler extends AudioEventAdapter implements Runnable {
+    private final BotApplicationManager appManager;
     private final Guild guild;
     private final AudioPlayer player;
     private final MessageDispatcher messageDispatcher;
@@ -30,11 +32,12 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
     private final AtomicBoolean creatingBoxMessage;
     private ScheduledFuture<?> waitingInVC;
 
-    public MusicScheduler(Guild guild, AudioPlayer player, MessageDispatcher messageDispatcher, ScheduledExecutorService executorService) {
+    public MusicScheduler(BotApplicationManager appManager, Guild guild, AudioPlayer player, MessageDispatcher messageDispatcher) {
+        this.appManager = appManager;
         this.guild = guild;
         this.player = player;
         this.messageDispatcher = messageDispatcher;
-        this.executorService = executorService;
+        this.executorService = appManager.getExecutorService();
         this.queue = new LinkedBlockingDeque<>();
         this.history = new LinkedBlockingDeque<>();
         this.boxMessage = new AtomicReference<>();
@@ -115,7 +118,7 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
     }
 
     public InteractionResponse shuffleQueue() {
-        if (!(queue.size() > 0)) {
+        if (queue.isEmpty()) {
             return new InteractionResponse()
                     .setSuccess(false)
                     .setEphemeral(true)
@@ -213,9 +216,7 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
         } else {
             player.stopTrack();
             messageDispatcher.sendDisposableMessage(MessageType.Info, "Queue finished.");
-
             waitInVC();
-
 //            guild.getAudioManager().closeAudioConnection();
         }
     }
@@ -243,7 +244,6 @@ public class MusicScheduler extends AudioEventAdapter implements Runnable {
     @Override
     public void onTrackStuck(AudioPlayer player, AudioTrack track, long thresholdMs) {
         messageDispatcher.sendDisposableMessage(MessageType.Warning, String.format("Track **%s** got stuck, skipping.", track.getInfo().title));
-
         startNextTrack(false);
     }
 

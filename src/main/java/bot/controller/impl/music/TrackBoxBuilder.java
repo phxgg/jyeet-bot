@@ -1,4 +1,4 @@
-package bot.music;
+package bot.controller.impl.music;
 
 import bot.records.MessageType;
 import bot.records.TrackMetadata;
@@ -75,7 +75,7 @@ public class TrackBoxBuilder {
         eb.setTitle(String.format("%s - %s", track.getInfo().author, track.getInfo().title), track.getInfo().uri);
         eb.setColor(MessageType.TrackBox.color);
         eb.setDescription(buildDurationLine(width - 4, track, isPaused));
-//        eb.setThumbnail(track.getInfo().uri);
+        eb.setThumbnail(track.getInfo().artworkUrl);
 
         eb.addField("Link", String.format("[Click](%s)", track.getInfo().uri), true);
         eb.addField("Duration", duration, true);

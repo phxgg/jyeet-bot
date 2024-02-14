@@ -1,4 +1,4 @@
-package bot.bank;
+package bot.controller.impl.bank;
 
 import bot.controller.BotCommandHandler;
 import bot.controller.IBotController;
