@@ -27,12 +27,16 @@ import com.sedmelluq.discord.lavaplayer.source.local.LocalAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.soundcloud.SoundCloudAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.twitch.TwitchStreamAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.vimeo.VimeoAudioSourceManager;
-import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import com.sedmelluq.lava.common.tools.DaemonThreadFactory;
 import com.sedmelluq.lava.extensions.youtuberotator.YoutubeIpRotatorSetup;
 import com.sedmelluq.lava.extensions.youtuberotator.planner.BalancingIpRoutePlanner;
 import com.sedmelluq.lava.extensions.youtuberotator.tools.ip.IpBlock;
 import com.sedmelluq.lava.extensions.youtuberotator.tools.ip.Ipv6Block;
+import dev.lavalink.youtube.YoutubeAudioSourceManager;
+import dev.lavalink.youtube.clients.AndroidWithThumbnail;
+import dev.lavalink.youtube.clients.MusicWithThumbnail;
+import dev.lavalink.youtube.clients.WebWithThumbnail;
+import dev.lavalink.youtube.clients.skeleton.Client;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -78,15 +82,19 @@ public class BotApplicationManager extends ListenerAdapter {
         spotifyConfig.setClientSecret(System.getProperty("spotifyClientSecret"));
         spotifyConfig.setCountryCode("GR");
 
-        YoutubeAudioSourceManager yasm = new YoutubeAudioSourceManager();
+        // same as the 'common' module but there are additional clients that provide video thumbnails in the returned metadata.
+        YoutubeAudioSourceManager yasm = new YoutubeAudioSourceManager(/*allowSearch:*/ true, new Client[] { new MusicWithThumbnail(), new WebWithThumbnail(), new AndroidWithThumbnail() });
+//        YoutubeAudioSourceManager yasm = new YoutubeAudioSourceManager();
 
         if (ipv6Block != null && !ipv6Block.isEmpty()) {
             @SuppressWarnings("rawtypes") List<IpBlock> blocks = List.of(new Ipv6Block(ipv6Block));
 //            RotatingNanoIpRoutePlanner planner = new RotatingNanoIpRoutePlanner(blocks);
             BalancingIpRoutePlanner planner = new BalancingIpRoutePlanner(blocks);
-            new YoutubeIpRotatorSetup(planner)
+            YoutubeIpRotatorSetup rotator = new YoutubeIpRotatorSetup(planner);
+            rotator.forConfiguration(yasm.getHttpInterfaceManager(), false)
                     .withRetryLimit(10)
-                    .forSource(yasm).setup();
+                    .withMainDelegateFilter(null)
+                    .setup();
         }
 
         playerManager = new DefaultAudioPlayerManager();
