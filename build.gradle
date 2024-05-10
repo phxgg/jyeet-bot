@@ -24,9 +24,9 @@ dependencies {
     implementation 'net.iharder:base64:2.3.9'
     implementation 'net.dv8tion:JDA:5.0.0-beta.20'
 
-    implementation 'dev.arbjerg:lavaplayer:2.1.1'
-    implementation 'dev.arbjerg:lavaplayer-ext-youtube-rotator:2.1.1'
-    implementation 'com.github.topi314.lavasrc:lavasrc:4.0.1'
+    implementation 'dev.arbjerg:lavaplayer:2.1.2'
+    implementation 'dev.arbjerg:lavaplayer-ext-youtube-rotator:2.1.2'
+    implementation 'com.github.topi314.lavasrc:lavasrc:4.1.0'
 
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
     implementation 'com.google.code.gson:gson:2.10'
