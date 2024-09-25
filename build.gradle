@@ -22,19 +22,19 @@ repositories {
 }
 
 dependencies {
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.3'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
     implementation 'net.iharder:base64:2.3.9'
     implementation 'net.dv8tion:JDA:5.0.2'
 
-    implementation 'dev.arbjerg:lavaplayer:2.2.1'
-    implementation 'dev.arbjerg:lavaplayer-ext-youtube-rotator:2.2.1'
-    implementation 'dev.lavalink.youtube:v2:1.7.1'
+    implementation 'dev.arbjerg:lavaplayer:2.2.2'
+    implementation 'dev.arbjerg:lavaplayer-ext-youtube-rotator:2.2.2'
+    implementation 'dev.lavalink.youtube:v2:1.8.1'
     implementation 'com.github.topi314.lavasrc:lavasrc:4.2.0'
 
-    implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
+    implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.15.0'
     implementation 'com.google.code.gson:gson:2.10'
-    runtimeOnly 'ch.qos.logback:logback-classic:1.4.5'
+    runtimeOnly 'ch.qos.logback:logback-classic:1.5.6'
 }
 
 task fatJar(type: Jar) {
