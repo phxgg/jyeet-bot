@@ -35,6 +35,7 @@ import com.sedmelluq.lava.extensions.youtuberotator.tools.ip.Ipv6Block;
 import dev.lavalink.youtube.YoutubeAudioSourceManager;
 import dev.lavalink.youtube.clients.AndroidWithThumbnail;
 import dev.lavalink.youtube.clients.MusicWithThumbnail;
+import dev.lavalink.youtube.clients.Web;
 import dev.lavalink.youtube.clients.WebWithThumbnail;
 import dev.lavalink.youtube.clients.skeleton.Client;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -83,6 +84,13 @@ public class BotApplicationManager extends ListenerAdapter {
         spotifyConfig.setCountryCode("GR");
 
         // same as the 'common' module but there are additional clients that provide video thumbnails in the returned metadata.
+        String poToken = System.getProperty("poToken");
+        String visitorData = System.getProperty("visitorData");
+        if (poToken != null && !poToken.isEmpty()
+                && visitorData != null && !visitorData.isEmpty()
+        ) {
+            Web.setPoTokenAndVisitorData(poToken, visitorData);
+        }
         YoutubeAudioSourceManager yasm = new YoutubeAudioSourceManager(/*allowSearch:*/ true, new Client[] { new MusicWithThumbnail(), new WebWithThumbnail(), new AndroidWithThumbnail() });
 //        YoutubeAudioSourceManager yasm = new YoutubeAudioSourceManager();
 
