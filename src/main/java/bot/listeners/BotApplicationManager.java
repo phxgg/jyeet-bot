@@ -91,7 +91,7 @@ public class BotApplicationManager extends ListenerAdapter {
         ) {
             Web.setPoTokenAndVisitorData(poToken, visitorData);
         }
-        YoutubeAudioSourceManager yasm = new YoutubeAudioSourceManager(/*allowSearch:*/ true, new Client[] { new MusicWithThumbnail(), new WebWithThumbnail(), new AndroidWithThumbnail() });
+        YoutubeAudioSourceManager yasm = new YoutubeAudioSourceManager(true, new Client[] { new MusicWithThumbnail(), new WebWithThumbnail(), new AndroidWithThumbnail() });
 //        YoutubeAudioSourceManager yasm = new YoutubeAudioSourceManager();
 
         if (ipv6Block != null && !ipv6Block.isEmpty()) {
