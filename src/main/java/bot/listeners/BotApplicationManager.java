@@ -92,7 +92,10 @@ public class BotApplicationManager extends ListenerAdapter {
             Web.setPoTokenAndVisitorData(poToken, visitorData);
         }
         YoutubeAudioSourceManager yasm = new YoutubeAudioSourceManager(true, new Client[] { new MusicWithThumbnail(), new WebWithThumbnail(), new AndroidWithThumbnail() });
-//        YoutubeAudioSourceManager yasm = new YoutubeAudioSourceManager();
+        String oauthRefreshToken = System.getProperty("oauthRefreshToken");
+        if (oauthRefreshToken != null && !oauthRefreshToken.isEmpty()) {
+            yasm.useOauth2(oauthRefreshToken, true);
+        }
 
         if (ipv6Block != null && !ipv6Block.isEmpty()) {
             @SuppressWarnings("rawtypes") List<IpBlock> blocks = List.of(new Ipv6Block(ipv6Block));
