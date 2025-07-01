@@ -31,6 +31,7 @@ dependencies {
     implementation 'dev.arbjerg:lavaplayer-ext-youtube-rotator:2.2.4'
     implementation 'dev.lavalink.youtube:v2:1.13.0'
     implementation 'com.github.topi314.lavasrc:lavasrc:4.7.2'
+    implementation 'club.minnced:udpqueue-native-win-x86-64:0.2.9'
 
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.15.0'
     implementation 'com.google.code.gson:gson:2.10'

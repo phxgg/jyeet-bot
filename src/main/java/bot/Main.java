@@ -9,6 +9,7 @@ import bot.api.entities.Server;
 import bot.listeners.ButtonComponentClick;
 import bot.listeners.GeneralEvents;
 import com.google.gson.Gson;
+import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -29,6 +30,7 @@ public class Main {
                             GatewayIntent.GUILD_MEMBERS,
                             GatewayIntent.MESSAGE_CONTENT
                     )
+                    .setAudioSendFactory(new NativeAudioSendFactory())
                     .setActivity(Activity.listening("music \uD83C\uDFB6"))
                     .addEventListeners(applicationManager, new GeneralEvents(), buttonComponentClick)
                     .build();
