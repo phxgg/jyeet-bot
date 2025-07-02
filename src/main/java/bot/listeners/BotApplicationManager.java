@@ -33,10 +33,7 @@ import com.sedmelluq.lava.extensions.youtuberotator.planner.BalancingIpRoutePlan
 import com.sedmelluq.lava.extensions.youtuberotator.tools.ip.IpBlock;
 import com.sedmelluq.lava.extensions.youtuberotator.tools.ip.Ipv6Block;
 import dev.lavalink.youtube.YoutubeAudioSourceManager;
-import dev.lavalink.youtube.clients.AndroidWithThumbnail;
-import dev.lavalink.youtube.clients.MusicWithThumbnail;
-import dev.lavalink.youtube.clients.Web;
-import dev.lavalink.youtube.clients.WebWithThumbnail;
+import dev.lavalink.youtube.clients.*;
 import dev.lavalink.youtube.clients.skeleton.Client;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
@@ -91,7 +88,7 @@ public class BotApplicationManager extends ListenerAdapter {
         ) {
             Web.setPoTokenAndVisitorData(poToken, visitorData);
         }
-        YoutubeAudioSourceManager yasm = new YoutubeAudioSourceManager(true, new Client[] { new MusicWithThumbnail(), new WebWithThumbnail(), new AndroidWithThumbnail() });
+        YoutubeAudioSourceManager yasm = new YoutubeAudioSourceManager(true, new Client[] { new MusicWithThumbnail(), new WebWithThumbnail() });
         String oauthRefreshToken = System.getProperty("oauthRefreshToken");
         if (oauthRefreshToken != null && !oauthRefreshToken.isEmpty()) {
             yasm.useOauth2(oauthRefreshToken, true);
