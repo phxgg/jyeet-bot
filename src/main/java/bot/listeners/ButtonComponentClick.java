@@ -50,7 +50,7 @@ public class ButtonComponentClick extends ListenerAdapter {
         final String shuffle = event.getGuild().getId() + "_trackbox_shuffle";
         final String stop = event.getGuild().getId() + "_trackbox_stop";
 
-        String buttonId = event.getButton().getId();
+        String buttonId = event.getButton().getCustomId();
 
         // Get music scheduler for Guild
         MusicScheduler scheduler = null;

@@ -2,6 +2,7 @@ package bot.records;
 
 import bot.controller.impl.music.TrackBoxBuilder;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -40,8 +41,9 @@ public class MessageDispatcher {
         TextChannel channel = outputChannel.get();
 
         if (channel != null) {
-            channel.sendMessageEmbeds(messageEmbed).setActionRow(TrackBoxBuilder.sendButtons(channel.getGuild().getId()))
-                    .queue(success, failure);
+//            channel.sendMessageEmbeds(messageEmbed).setActionRow(TrackBoxBuilder.sendButtons(channel.getGuild().getId()))
+//                    .queue(success, failure);
+            channel.sendMessageEmbeds(messageEmbed).addComponents(ActionRow.of(TrackBoxBuilder.sendButtons(channel.getGuild().getId())));
         }
     }
 
