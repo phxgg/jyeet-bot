@@ -43,7 +43,13 @@ public class MessageDispatcher {
         if (channel != null) {
 //            channel.sendMessageEmbeds(messageEmbed).setActionRow(TrackBoxBuilder.sendButtons(channel.getGuild().getId()))
 //                    .queue(success, failure);
-            channel.sendMessageEmbeds(messageEmbed).addComponents(ActionRow.of(TrackBoxBuilder.sendButtons(channel.getGuild().getId())));
+            channel.sendMessageEmbeds(messageEmbed)
+                    .addComponents(
+                            ActionRow.of(
+                                    TrackBoxBuilder.sendButtons(channel.getGuild().getId())
+                            )
+                    )
+                    .queue(success, failure);
         }
     }
 
