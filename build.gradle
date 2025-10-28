@@ -2,22 +2,22 @@ plugins {
     id 'java'
 }
 
-group 'org.phxgg'
-version '1.0-SNAPSHOT'
+group = 'org.phxgg'
+version = '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
     maven {
-        url 'https://m2.dv8tion.net/releases'
+        url = 'https://m2.dv8tion.net/releases'
     }
     maven {
-        url 'https://jitpack.io'
+        url = 'https://jitpack.io'
     }
     maven {
-        url "https://maven.topi.wtf/releases"
+        url = "https://maven.topi.wtf/releases"
     }
     maven {
-        url "https://maven.lavalink.dev/releases"
+        url = "https://maven.lavalink.dev/releases"
     }
 }
 
@@ -33,7 +33,7 @@ dependencies {
     implementation 'com.github.topi314.lavasrc:lavasrc:4.8.1'
     implementation 'club.minnced:udpqueue-native-win-x86-64:0.2.9'
 
-    implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.15.0'
+    implementation 'org.apache.commons:commons-lang3:3.15.0'
     implementation 'com.google.code.gson:gson:2.10'
     runtimeOnly 'ch.qos.logback:logback-classic:1.5.6'
 }
@@ -47,7 +47,7 @@ task fatJar(type: Jar) {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
     with jar
-    duplicatesStrategy DuplicatesStrategy.EXCLUDE
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 task fatJarDev(type: Jar) {
@@ -61,11 +61,9 @@ task fatJarDev(type: Jar) {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
     with jar
-    duplicatesStrategy DuplicatesStrategy.EXCLUDE
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 test {
     useJUnitPlatform()
 }
-sourceCompatibility = JavaVersion.VERSION_17
-targetCompatibility = JavaVersion.VERSION_17
