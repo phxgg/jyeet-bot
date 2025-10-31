@@ -29,6 +29,8 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.*;
 import java.util.List;
@@ -637,8 +639,10 @@ public class MusicController implements IBotController {
 
         try {
             // If it's a URL, continue.
-            new URL(searchQuery);
-        } catch (MalformedURLException e) {
+//            new URL(searchQuery); // deprecated
+            URI uri = new URI(searchQuery);
+            URL url = uri.toURL();
+        } catch (MalformedURLException | URISyntaxException e) {
             // Not a URL. Perform a YouTube search and only play the first result.
             searchQuery = "ytsearch: " + identifier;
         }
