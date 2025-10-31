@@ -38,7 +38,7 @@ dependencies {
     runtimeOnly 'ch.qos.logback:logback-classic:1.5.6'
 }
 
-task fatJar(type: Jar) {
+tasks.register('fatJar', Jar) {
     manifest {
         attributes 'Main-Class': 'bot.Main'
     }
@@ -50,7 +50,7 @@ task fatJar(type: Jar) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
-task fatJarDev(type: Jar) {
+tasks.register('fatJarDev', Jar) {
     manifest {
         attributes 'Main-Class': 'bot.Main'
     }
@@ -62,6 +62,10 @@ task fatJarDev(type: Jar) {
     }
     with jar
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += ['-Xlint:deprecation']
 }
 
 test {
