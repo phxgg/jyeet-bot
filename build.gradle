@@ -26,11 +26,11 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
 
     implementation 'net.iharder:base64:2.3.9'
-    implementation 'net.dv8tion:JDA:6.1.1'
+    implementation 'net.dv8tion:JDA:6.3.1'
 
     implementation 'dev.arbjerg:lavaplayer:2.2.6'
     implementation 'dev.arbjerg:lavaplayer-ext-youtube-rotator:2.2.6'
-    implementation 'dev.lavalink.youtube:v2:1.16.0'
+    implementation 'dev.lavalink.youtube:v2:1.18.0'
     implementation 'com.github.topi314.lavasrc:lavasrc:4.8.1'
     implementation 'club.minnced:udpqueue-native-win-x86-64:0.2.9'
 
